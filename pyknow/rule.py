@@ -9,22 +9,28 @@ class FactState(Enum):
 
 
 class Rule(metaclass=ABCMeta):
-    def __init__(self, **conds):
-        self.conds = conds
+    def __init__(self, *args, **patterns):
+        self.args = args
+        self.patterns = patterns
         
     @abstractmethod
     def __eval__(self, facts=None):
         pass
 
-    def __call__(self, fn):
-        @wraps(fn)
-        def wrapper(facts=None, *args, **kwargs):
-            p = partial(fn, *args, **kwargs)
-            return (self.__eval__(facts), p)
-        return wrapper
+    def __call__(self, fn_or_facts=None):
+        if callable(fn_or_facts):
+            fn = fn_or_facts
+            @wraps(fn)
+            def wrapper(facts=None, *args, **kwargs):
+                p = partial(fn, *args, **kwargs)
+                return (self.__eval__(facts), p)
+            return wrapper
+        else:
+            facts = fn_or_facts
+            return (self.__eval__(facts), None)
 
-    def _check(self, name, facts):
-        _cmp = self.conds[name]
+    def _check_pattern(self, name, facts):
+        _cmp = self.patterns[name]
         if _cmp is FactState.DEFINED:
             return name in facts
         elif _cmp is FactState.NOT_DEFINED:
@@ -36,3 +42,6 @@ class Rule(metaclass=ABCMeta):
                 return _cmp(facts[name])
             else:
                 return facts[name] == _cmp
+
+    def _check_args(self, facts):
+        return (a(facts) for a in self.args)

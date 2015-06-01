@@ -11,10 +11,23 @@ def DRule():
 
 @pytest.fixture
 def SRule():
-    """Simple Rule subclass to test Rule class functionality."""
+    """
+    Simple Rule subclass to test Rule._check_pattern method functionality.
+
+    """
     from pyknow.rule import Rule
     class SRule(Rule):
         def __eval__(self, facts=None):
-            for k in self.conds:
-                return self._check(k, facts)
+            for k in self.patterns:
+                return self._check_pattern(k, facts)
     return SRule
+
+@pytest.fixture
+def RRule():
+    """Simple Rule subclass to test Rule *args."""
+    from pyknow.rule import Rule
+    class RRule(Rule):
+        def __eval__(self, facts=None):
+            return list(self._check_args(facts))
+
+    return RRule
