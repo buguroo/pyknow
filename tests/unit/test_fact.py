@@ -124,3 +124,16 @@ def test_fact_if_defined__returns_False():
     is_asserted, _ = res
 
     assert not is_asserted
+
+
+def test_fact_if_defined__without_facts_returns_False():
+    import pyknow
+
+    @pyknow.fact(if_defined='otherfact')
+    def my_fact():
+        pass
+
+    res = my_fact()
+    is_asserted, _ = res
+
+    assert not is_asserted
