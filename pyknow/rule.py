@@ -1,6 +1,7 @@
-from functools import wraps, partial
+from functools import wraps, partial, reduce
 from enum import Enum
 from abc import ABCMeta, abstractmethod
+import operator
 
 
 class FactState(Enum):
@@ -45,3 +46,41 @@ class Rule(metaclass=ABCMeta):
 
     def _check_args(self, facts):
         return (a(facts) for a in self.args)
+
+
+class AND(Rule):
+    def __eval__(self, facts=None):
+        return (all(self._check_args(facts)) and
+                all(self._check_pattern(name, facts)
+                    for name in self.patterns))
+
+
+class OR(Rule):
+    def __eval__(self, facts=None):
+        return (any(self._check_args(facts)) or
+                any(self._check_pattern(name, facts)
+                    for name in self.patterns))
+
+
+class XOR(Rule):
+    def __eval__(self, facts=None):
+        def _xor(items):
+            return reduce(operator.xor, items, False)
+
+        return (_xor(self._check_args(facts)) ^ 
+                _xor(self._check_pattern(name, facts)
+                     for name in self.patterns))
+
+
+class NOT(Rule):
+    def __eval__(self, facts=None):
+        if len(self.args) + len(self.patterns) > 1:
+            raise ValueError("Can't use multiple values with unary operator.")
+
+        if self.args:
+            return not list(self._check_args(facts))[0]
+        elif self.patterns:
+            return not [self._check_pattern(name, facts)
+                        for name in self.patterns][0]
+        else:
+            return True
