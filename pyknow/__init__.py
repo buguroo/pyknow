@@ -1,5 +1,6 @@
 from functools import wraps, partial
 from collections import namedtuple
+from .rule import AND, OR, XOR, NOT
 
 DynamicFact = namedtuple('DynamicFact', ['is_asserted', 'callable'])
 
@@ -42,3 +43,5 @@ def fact(__fn=None, if_defined=None, **kwargs):
                 return DynamicFact(is_asserted, p)
             return wrapper
         return _fact 
+
+__all__ = ['fact', 'AND', 'OR', 'XOR', 'NOT']
