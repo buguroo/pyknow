@@ -147,3 +147,100 @@ def test_KnowledgeEngine_DynamicFact_if_defined__False():
 
     with pytest.raises(KeyError):
         assert ke['my_fact']
+
+
+@pytest.mark.wip
+def test_KnowledgeEngine_has_retract():
+    from pyknow.engine import KnowledgeEngine
+
+    assert hasattr(KnowledgeEngine, 'retract')
+
+@pytest.mark.wip
+def test_KnowledgeEngine_retract_assertion():
+    from pyknow.engine import KnowledgeEngine
+
+    ke = KnowledgeEngine()
+    ke.asrt('something', 'SOMETHING')
+    ke.retract('something')
+
+    assert 'something' not in ke
+
+@pytest.mark.wip
+def test_KnowledgeEngine_retract_empty():
+    from pyknow.engine import KnowledgeEngine
+
+    ke = KnowledgeEngine()
+
+    ke.retract('something')
+
+    assert 'something' not in ke
+
+@pytest.mark.wip
+def test_KnowledgeEngine_retract_DynamicFact():
+    from pyknow import fact
+    from pyknow.engine import KnowledgeEngine, InmutableFactError
+
+    class Test(KnowledgeEngine):
+        @fact
+        def my_fact(self):
+            return 'FACT'
+
+    ke = Test()
+
+    with pytest.raises(InmutableFactError):
+        ke.retract('my_fact')
+
+@pytest.mark.wip
+def test_KnowledgeEngine_has_agenda():
+    from pyknow.engine import KnowledgeEngine
+    ke = KnowledgeEngine()
+    assert hasattr(ke, 'agenda')
+
+@pytest.mark.wip
+def test_KnowledgeEngine_has_run():
+    from pyknow.engine import KnowledgeEngine
+    assert hasattr(KnowledgeEngine, 'run')
+
+@pytest.mark.wip
+def test_KnowledgeEngine_run_set_running():
+    from pyknow.engine import KnowledgeEngine
+
+    ke = KnowledgeEngine()
+    assert not ke.running
+
+    ke.run()
+    assert ke.running
+
+@pytest.mark.wip
+def test_KnowledgeEngine_has_reset():
+    from pyknow.engine import KnowledgeEngine
+    assert hasattr(KnowledgeEngine, 'reset')
+
+@pytest.mark.wip
+def test_KnowledgeEngine_reset_resets_running():
+    from pyknow.engine import KnowledgeEngine
+    ke = KnowledgeEngine()
+
+    ke.run()
+    assert ke.running
+
+    ke.reset()
+    assert not ke.running
+
+@pytest.mark.wip
+def test_KnowledgeEngine_reset_resets_agenda():
+    from pyknow.engine import KnowledgeEngine
+    ke = KnowledgeEngine()
+    ke.agenda = None
+
+    ke.reset()
+    assert ke.agenda is not None
+
+@pytest.mark.wip
+def test_KnowledgeEngine_reset_resets_facts():
+    from pyknow.engine import KnowledgeEngine
+    ke = KnowledgeEngine()
+    ke._facts = None
+
+    ke.reset()
+    assert ke._facts is not None
