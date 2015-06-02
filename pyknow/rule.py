@@ -45,7 +45,12 @@ class Rule(metaclass=ABCMeta):
                 return facts[name] == _cmp
 
     def _check_args(self, facts):
-        return (a(facts) for a in self.args)
+        def _get_value(a):
+            if isinstance(a, Rule):
+                return a(facts)[0]
+            else:
+                return a(facts)
+        return (_get_value(a) for a in self.args)
 
 
 class AND(Rule):

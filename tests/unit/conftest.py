@@ -31,3 +31,13 @@ def RRule():
             return list(self._check_args(facts))
 
     return RRule
+
+@pytest.fixture
+def LRule():
+    """Simple Rule subclass to operator nesting."""
+    from pyknow.rule import Rule
+    class LRule(Rule):
+        def __eval__(self, facts=None):
+            return self.args[0]
+
+    return LRule

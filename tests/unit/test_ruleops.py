@@ -61,6 +61,13 @@ def test_AND_logic_args_and_patterns(args, patterns):
                                                None)
 
 
+@given(args=st.lists(st.booleans()))
+def test_AND_nesting(LRule, args):
+    from pyknow.rule import AND
+    _args = [LRule(x) for x in args]
+
+    assert AND(*_args)({}) == (all(args), None)
+
 #
 # OR
 #
@@ -120,10 +127,17 @@ def test_OR_logic_args_and_patterns(args, patterns):
                                                None)
 
 
+@given(args=st.lists(st.booleans()))
+def test_OR_nesting(LRule, args):
+    from pyknow.rule import OR
+    _args = [LRule(x) for x in args]
+
+    assert OR(*_args)({}) == (any(args), None)
+
+
 #
 # XOR
 #
-
 def test_XOR_exists():
     from pyknow import rule
     assert hasattr(rule, 'XOR')
@@ -191,10 +205,19 @@ def test_XOR_logic_args_and_patterns(args, patterns):
                                                None)
 
 
+@given(args=st.lists(st.booleans()))
+def test_XOR_nesting(LRule, args):
+    from operator import xor
+    from functools import reduce
+    from pyknow.rule import XOR
+    _args = [LRule(x) for x in args]
+
+    assert XOR(*_args)({}) == (reduce(xor, args, False), None)
+
+
 #
 # NOT
 #
-
 def test_NOT_exists():
     from pyknow import rule
     assert hasattr(rule, 'NOT')
@@ -265,3 +288,11 @@ def test_NOT_logic_None():
     from pyknow.rule import NOT
         
     assert NOT()() == (not None, None)
+
+
+@given(value=st.booleans())
+def test_NOT_nesting(LRule, value):
+    from pyknow.rule import NOT
+    _args = [LRule(value)]
+
+    assert NOT(*_args)({}) == (not value, None)
