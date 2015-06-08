@@ -1,5 +1,7 @@
-from pyknow import DynamicFact
 from collections import OrderedDict
+import inspect
+
+from pyknow.strategies import Depth
 
 
 class DuplicatedFactError(ValueError):
@@ -11,8 +13,11 @@ class InmutableFactError(ValueError):
 
 
 class KnowledgeEngine:
+
+    strategy = Depth()
+
     def __init__(self):
-        self._facts = dict()
+        self._facts = OrderedDict()
         self.agenda = OrderedDict()
         self.running = False
 
@@ -40,6 +45,10 @@ class KnowledgeEngine:
         else:
             raise KeyError()
 
+    def __setitem__(self, name, value):
+        self.retract(name)
+        self.asrt(name, value)
+
     def __contains__(self, name):
         try:
             self[name]
@@ -48,10 +57,34 @@ class KnowledgeEngine:
         else:
             return True
 
-    def run(self):
+    def run(self, steps=None):
         self.running = True
+        self.agenda = self.strategy.build_agenda(self)
+        while self.agenda:
+            _, fn = self.agenda.popitem()
+
+            fn()
+
+            self.agenda = self.strategy.build_agenda(self)
+
+            if steps is not None:
+                steps -= 1
+                if steps == 0:
+                    break
+
 
     def reset(self):
         self.running = False
         self.agenda = OrderedDict()
         self._facts = dict()
+
+    def get_matching_rules(self):
+        def _rules():
+            for name, method in inspect.getmembers(self,
+                                                   predicate=inspect.ismethod):
+                if hasattr(method, 'is_rule') and method.is_rule:
+                    match, fn = method(self)
+                    if match:
+                        yield (name, fn)
+
+        return dict(_rules())

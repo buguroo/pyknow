@@ -25,6 +25,7 @@ class Rule(metaclass=ABCMeta):
             def wrapper(facts=None, *args, **kwargs):
                 p = partial(fn, *args, **kwargs)
                 return (self.__eval__(facts), p)
+            wrapper.is_rule = True
             return wrapper
         else:
             facts = fn_or_facts
@@ -40,7 +41,7 @@ class Rule(metaclass=ABCMeta):
             if not name in facts:
                 return False
             elif callable(_cmp):
-                return _cmp(facts[name])
+                return _cmp(facts)
             else:
                 return facts[name] == _cmp
 
@@ -55,16 +56,22 @@ class Rule(metaclass=ABCMeta):
 
 class AND(Rule):
     def __eval__(self, facts=None):
-        return (all(self._check_args(facts)) and
-                all(self._check_pattern(name, facts)
-                    for name in self.patterns))
+        try:
+            return (all(self._check_args(facts)) and
+                    all(self._check_pattern(name, facts)
+                        for name in self.patterns))
+        except:
+            return False
 
 
 class OR(Rule):
     def __eval__(self, facts=None):
-        return (any(self._check_args(facts)) or
-                any(self._check_pattern(name, facts)
-                    for name in self.patterns))
+        try:
+            return (any(self._check_args(facts)) or
+                    any(self._check_pattern(name, facts)
+                        for name in self.patterns))
+        except:
+            return False
 
 
 class XOR(Rule):
@@ -72,9 +79,12 @@ class XOR(Rule):
         def _xor(items):
             return reduce(operator.xor, items, False)
 
-        return (_xor(self._check_args(facts)) ^ 
-                _xor(self._check_pattern(name, facts)
-                     for name in self.patterns))
+        try:
+            return (_xor(self._check_args(facts)) ^ 
+                    _xor(self._check_pattern(name, facts)
+                         for name in self.patterns))
+        except:
+            return False
 
 
 class NOT(Rule):
@@ -82,10 +92,15 @@ class NOT(Rule):
         if len(self.args) + len(self.patterns) > 1:
             raise ValueError("Can't use multiple values with unary operator.")
 
-        if self.args:
-            return not list(self._check_args(facts))[0]
-        elif self.patterns:
-            return not [self._check_pattern(name, facts)
-                        for name in self.patterns][0]
-        else:
-            return True
+        try:
+            if self.args:
+                return not list(self._check_args(facts))[0]
+            elif self.patterns:
+                return not [self._check_pattern(name, facts)
+                            for name in self.patterns][0]
+            else:
+                return True
+        except:
+            return False
+
+IS = IF = AND

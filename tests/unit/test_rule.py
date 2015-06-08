@@ -155,7 +155,7 @@ def test_Rule__check_pattern_for_state_NOT_DEFINED_False(SRule):
 
 
 def test_Rule__check_pattern_with_callable_True(SRule):
-    @SRule(something=lambda x: x is True)
+    @SRule(something=lambda f: f['something'] is True)
     def my_rule():
         pass
 
@@ -164,7 +164,7 @@ def test_Rule__check_pattern_with_callable_True(SRule):
 
 
 def test_Rule__check_pattern_with_callable_False(SRule):
-    @SRule(something=lambda x: x is True)
+    @SRule(something=lambda f: f['something'] is True)
     def my_rule():
         pass
 
@@ -173,7 +173,7 @@ def test_Rule__check_pattern_with_callable_False(SRule):
 
 
 def test_Rule__check_pattern_with_callable_UNDEFINED(SRule):
-    @SRule(something=lambda x: x is True)
+    @SRule(something=lambda x: x['something'] is True)
     def my_rule():
         pass
 
