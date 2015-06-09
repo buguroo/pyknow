@@ -72,7 +72,6 @@ class KnowledgeEngine:
                 if steps == 0:
                     break
 
-
     def reset(self):
         self.running = False
         self.agenda = OrderedDict()
