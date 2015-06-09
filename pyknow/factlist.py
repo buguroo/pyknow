@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from pyknow.fact import Fact
 
+
 class FactList:
     def __init__(self):
         self._facts = OrderedDict()
@@ -30,6 +31,12 @@ class FactList:
             return None
 
     def retract(self, idx):
+        """
+        Retract a previous asserted fact.
+
+        :params idx: The index of the fact to retract.
+
+        """
         if not idx in self._facts:
             raise IndexError('Fact not found.')
         else:
