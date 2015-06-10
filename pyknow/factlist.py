@@ -41,3 +41,14 @@ class FactList:
             raise IndexError('Fact not found.')
         else:
             del self._facts[idx]
+
+    def matches(self, fact):
+        """
+        Return the indexes of the matching facts.
+
+        """
+        def _matches():
+            for idx, value in self._facts.items():
+                if value in fact:
+                    yield idx
+        return list(_matches())

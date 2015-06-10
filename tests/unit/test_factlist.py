@@ -116,3 +116,24 @@ def test_FactList_cant_retract_twice():
     fl.retract(idx)
     with pytest.raises(IndexError):
         fl.retract(idx)
+
+
+def test_FactList_has_matches_method():
+    from pyknow.factlist import FactList
+
+    assert hasattr(FactList, 'matches')
+
+
+def test_FactList_matches():
+    from pyknow.factlist import FactList
+    from pyknow.fact import Fact
+
+    f = Fact()
+    f0 = Fact(something=True)
+    f1 = Fact(something=False)
+
+    fl = FactList()
+    fl.declare(f0)
+    fl.declare(f1)
+
+    assert fl.matches(f) == [0, 1]
