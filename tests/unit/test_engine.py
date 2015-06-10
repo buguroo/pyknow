@@ -1,5 +1,6 @@
 import pytest
 
+
 def test_engine_import():
     try:
         from pyknow import engine
@@ -25,63 +26,30 @@ def test_KnowledgeEngine_has__facts():
     assert hasattr(ke, '_facts')
 
 
-def test_KnowledgeEngine_has_asrt():
+def test_KnowledgeEngine__facts_is_FactList():
+    from pyknow.engine import KnowledgeEngine
+    from pyknow.factlist import FactList
+
+    ke = KnowledgeEngine()
+    assert isinstance(ke._facts, FactList)
+
+
+def test_KnowledgeEngine_has_declare():
     from pyknow.engine import KnowledgeEngine
     ke = KnowledgeEngine()
-    assert hasattr(ke, 'asrt')
+    assert hasattr(ke, 'declare')
 
 
-def test_KnowledgeEngine_asrt_define_fact():
+def test_KnowledgeEngine_declare_define_fact():
     from pyknow.engine import KnowledgeEngine
-    ke = KnowledgeEngine()
-    ke.asrt('test', True)
-    assert ke._facts['test'] is True
-
-
-def test_KnowledgeEngine_asrt_cant_define_twice():
-    from pyknow.engine import KnowledgeEngine, DuplicatedFactError
+    from pyknow.fact import Fact
+    from unittest.mock import patch
 
     ke = KnowledgeEngine()
-    ke.asrt('test', True)
-
-    with pytest.raises(DuplicatedFactError):
-        ke.asrt('test', True)
-
-
-def test_KnowledgeEngine_getitem_asserted():
-    from pyknow.engine import KnowledgeEngine
-
-    ke = KnowledgeEngine()
-
-    ke.asrt('NAME', 'VALUE')
-
-    assert ke['NAME'] == 'VALUE'
-
-
-def test_KnowledgeEngine_getitem_not_asserted():
-    from pyknow.engine import KnowledgeEngine
-
-    ke = KnowledgeEngine()
-
-    with pytest.raises(KeyError):
-        ke['NAME']
-
-
-def test_KnowledgeEngine__contains__True():
-    from pyknow.engine import KnowledgeEngine
-
-    ke = KnowledgeEngine()
-    ke.asrt('name', 'value')
-
-    assert 'name' in ke
-
-
-def test_KnowledgeEngine__contains__False():
-    from pyknow.engine import KnowledgeEngine
-
-    ke = KnowledgeEngine()
-
-    assert 'name' not in ke
+    with patch('pyknow.factlist.FactList') as mock:
+        ke._facts = mock
+        ke.declare(Fact())
+        assert mock.declare.called
 
 
 def test_KnowledgeEngine_has_retract():
@@ -90,80 +58,72 @@ def test_KnowledgeEngine_has_retract():
     assert hasattr(KnowledgeEngine, 'retract')
 
 
-def test_KnowledgeEngine_retract_assertion():
+def test_KnowledgeEngine_retract_retracts_fact():
     from pyknow.engine import KnowledgeEngine
+    from unittest.mock import patch
 
     ke = KnowledgeEngine()
-    ke.asrt('something', 'SOMETHING')
-    ke.retract('something')
-
-    assert 'something' not in ke
-
-
-def test_KnowledgeEngine_retract_empty():
-    from pyknow.engine import KnowledgeEngine
-
-    ke = KnowledgeEngine()
-
-    ke.retract('something')
-
-    assert 'something' not in ke
+    with patch('pyknow.factlist.FactList') as mock:
+        ke._facts = mock
+        ke.retract(0)
+        assert mock.retract.called
 
 
-def test_KnowledgeEngine_has_agenda():
-    from pyknow.engine import KnowledgeEngine
-    ke = KnowledgeEngine()
-    assert hasattr(ke, 'agenda')
+# @pytest.mark.wip
+# def test_KnowledgeEngine_has_agenda():
+#     from pyknow.engine import KnowledgeEngine
+#     ke = KnowledgeEngine()
+#     assert hasattr(ke, 'agenda')
 
 
-def test_KnowledgeEngine_has_run():
-    from pyknow.engine import KnowledgeEngine
-    assert hasattr(KnowledgeEngine, 'run')
-
-
-def test_KnowledgeEngine_run_set_running():
-    from pyknow.engine import KnowledgeEngine
-
-    ke = KnowledgeEngine()
-    assert not ke.running
-
-    ke.run()
-    assert ke.running
-
-
-def test_KnowledgeEngine_has_reset():
-    from pyknow.engine import KnowledgeEngine
-    assert hasattr(KnowledgeEngine, 'reset')
-
-
-def test_KnowledgeEngine_reset_resets_running():
-    from pyknow.engine import KnowledgeEngine
-    ke = KnowledgeEngine()
-
-    ke.run()
-    assert ke.running
-
-    ke.reset()
-    assert not ke.running
-
-
-def test_KnowledgeEngine_reset_resets_agenda():
-    from pyknow.engine import KnowledgeEngine
-    ke = KnowledgeEngine()
-    ke.agenda = None
-
-    ke.reset()
-    assert ke.agenda is not None
-
-
-def test_KnowledgeEngine_reset_resets_facts():
-    from pyknow.engine import KnowledgeEngine
-    ke = KnowledgeEngine()
-    ke._facts = None
-
-    ke.reset()
-    assert ke._facts is not None
-
+# def test_KnowledgeEngine_has_run():
+#     from pyknow.engine import KnowledgeEngine
+#     assert hasattr(KnowledgeEngine, 'run')
+# 
+# 
+# def test_KnowledgeEngine_run_set_running():
+#     from pyknow.engine import KnowledgeEngine
+# 
+#     ke = KnowledgeEngine()
+#     assert not ke.running
+# 
+#     ke.run()
+#     assert ke.running
+# 
+# 
+# def test_KnowledgeEngine_has_reset():
+#     from pyknow.engine import KnowledgeEngine
+#     assert hasattr(KnowledgeEngine, 'reset')
+# 
+# 
+# def test_KnowledgeEngine_reset_resets_running():
+#     from pyknow.engine import KnowledgeEngine
+#     ke = KnowledgeEngine()
+# 
+#     ke.run()
+#     assert ke.running
+# 
+#     ke.reset()
+#     assert not ke.running
+# 
+# 
+# def test_KnowledgeEngine_reset_resets_agenda():
+#     from pyknow.engine import KnowledgeEngine
+#     ke = KnowledgeEngine()
+#     ke.agenda = None
+# 
+#     ke.reset()
+#     assert ke.agenda is not None
+# 
+# 
+# def test_KnowledgeEngine_reset_resets_facts():
+#     from pyknow.engine import KnowledgeEngine
+#     ke = KnowledgeEngine()
+#     ke._facts = None
+# 
+#     ke.reset()
+#     assert ke._facts is not None
+#
 # @pytest.mark.wip
 # def test_KnowledgeEngine_get_matching_rules_exists():
 #     from pyknow.engine import KnowledgeEngine
@@ -250,7 +210,7 @@ def test_KnowledgeEngine_reset_resets_facts():
 #     class Test(KnowledgeEngine):
 #         @AND(fact1=fs.DEFINED)
 #         def rule1(self):
-#             self.asrt('fact2', True)
+#             self.declare('fact2', True)
 # 
 #         @AND(fact2=fs.DEFINED)
 #         def rule2(self):
@@ -258,7 +218,7 @@ def test_KnowledgeEngine_reset_resets_facts():
 # 
 #     ke = Test()
 #     current_agenda = ke.agenda
-#     ke.asrt('fact1', True)
+#     ke.declare('fact1', True)
 #     ke.run(1)
 # 
 #     assert current_agenda != ke.agenda
@@ -278,7 +238,7 @@ def test_KnowledgeEngine_reset_resets_facts():
 # 
 #     ke = Test()
 #     current_agenda = ke.agenda
-#     ke.asrt('fact1', True)
+#     ke.declare('fact1', True)
 #     ke.run()  # If this runs forever, then run is not consuming the agenda.
 # 
 #     assert executed
