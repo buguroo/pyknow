@@ -2,6 +2,8 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
+from conftest import random_types
+
 
 def test_factlist_exists():
     try:
@@ -31,15 +33,7 @@ def test_FactList_has_declare_method():
     assert hasattr(FactList, 'declare')
 
 
-@given(data=st.one_of(st.integers(),
-                      st.booleans(),
-                      st.floats(),
-                      st.complex_numbers(),
-                      st.tuples(st.text()),
-                      st.lists(st.text()),
-                      st.sets(st.text()),
-                      st.text(),
-                      st.dictionaries(keys=st.text(), values=st.text())))
+@given(data=random_types)
 def test_FactList_declare_reject_not_Fact_subclass(data):
     from pyknow.factlist import FactList
 

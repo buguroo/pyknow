@@ -1,4 +1,6 @@
+from string import ascii_letters
 import pytest
+
 from hypothesis import strategies as st
 
 random_types = st.one_of(st.integers(),
@@ -10,3 +12,6 @@ random_types = st.one_of(st.integers(),
                          st.sets(st.text()),
                          st.text(),
                          st.dictionaries(keys=st.text(), values=st.text()))
+random_kwargs = st.dictionaries(keys=st.text(alphabet=ascii_letters,
+                                             min_size=1),
+                                values=st.text())
