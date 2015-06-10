@@ -98,3 +98,13 @@ def test_Rule_decorated_function_is_instance_of_Rule():
         pass
 
     assert isinstance(myfunction, Rule)
+
+
+def test_Rule_decorator_store_salience():
+    from pyknow.rule import Rule
+
+    @Rule(salience=10)
+    def myfunction():
+        pass
+
+    assert myfunction.salience == 10

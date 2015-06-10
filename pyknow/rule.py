@@ -7,11 +7,14 @@ from pyknow.activation import Activation
 
 
 class Rule:
-    def __init__(self, *conds):
+    def __init__(self, *conds, salience=0):
         self.__fn = None
+
         if not conds:
             conds = (InitialFact(),)
-        self.conds = conds
+        self.__conds = conds
+
+        self.salience = salience
 
     def __call__(self, fst=None, *args, **kwargs):
         """
@@ -37,11 +40,19 @@ class Rule:
             args = (tuple() if fst is None else (fst,)) + args
             return self.__fn(*args, **kwargs)
 
-    def get_activations(self, facts):
-        if not isinstance(facts, FactList):
-            raise ValueError("facts must be an instance of FactList class.")
+    def get_activations(self, factlist):
+        """Return a tuple with the activations of this rule."""
+
+        if not isinstance(factlist, FactList):
+            raise ValueError("factlist must be an instance of FactList class.")
         else:
             def _activations():
-                for match in product(*[facts.matches(c) for c in self.conds]):
-                    yield Activation(rule=self, facts=tuple(set(match)))
+                matches = [factlist.matches(c) for c in self.__conds]
+                for match in product(*matches):
+
+                    # Sorted tuple of unique facts
+                    facts=tuple(sorted(set(match)))
+
+                    yield Activation(rule=self, facts=facts)
+
             return tuple(set(_activations()))
