@@ -3,3 +3,7 @@ class Fact:
         self.value = value 
         self.valueset = set(value.items())
         self.keyset = set(value.keys())
+
+
+class InitialFact(Fact):
+    pass
