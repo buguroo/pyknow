@@ -1,7 +1,9 @@
 from functools import update_wrapper
+from itertools import product
 
 from pyknow.factlist import FactList
 from pyknow.fact import InitialFact
+from pyknow.activation import Activation
 
 
 class Rule:
@@ -39,4 +41,7 @@ class Rule:
         if not isinstance(facts, FactList):
             raise ValueError("facts must be an instance of FactList class.")
         else:
-            return []
+            def _activations():
+                for match in product(*[facts.matches(c) for c in self.conds]):
+                    yield Activation(rule=self, facts=tuple(set(match)))
+            return tuple(set(_activations()))

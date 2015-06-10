@@ -20,11 +20,57 @@ def test_Rule_get_activations_needs_factlist(data):
         r.get_activations(data)
 
 
-def test_Rule_empty_dont_match_empty_factlist():
+def test_Rule_empty_doesnt_match_empty_factlist():
     from pyknow.rule import Rule
     from pyknow.factlist import FactList
 
     r = Rule()
     fl = FactList()
 
-    assert r.get_activations(fl) == []
+    assert r.get_activations(fl) == tuple()
+
+
+def test_Rule_empty_matches_with_initial_fact():
+    from pyknow.rule import Rule
+    from pyknow.factlist import FactList
+    from pyknow.fact import InitialFact
+    from pyknow.activation import Activation
+
+    r = Rule()
+    fl = FactList()
+    idx = fl.declare(InitialFact())
+
+    assert Activation(r, (0,)) in r.get_activations(fl)
+
+
+def test_Rule_with_empty_Fact_matches_all_Facts():
+    from pyknow.rule import Rule
+    from pyknow.factlist import FactList
+    from pyknow.fact import Fact
+    from pyknow.activation import Activation
+
+    r = Rule(Fact())
+    fl = FactList()
+    fl.declare(Fact(something=True))
+    fl.declare(Fact(something=False))
+    fl.declare(Fact(something=3))
+
+    activations = r.get_activations(fl)
+    for i in range(3):
+        assert Activation(r, (i, )) in activations
+
+
+def test_Rule_multiple_criteria_generates_activation_with_matching_facts():
+    from pyknow.rule import Rule
+    from pyknow.factlist import FactList
+    from pyknow.fact import Fact
+    from pyknow.activation import Activation
+
+    r = Rule(Fact(a=1), Fact(b=2))
+    fl = FactList()
+    fl.declare(Fact(a=1))
+    fl.declare(Fact(b=2))
+
+    activations = r.get_activations(fl)
+    assert len(activations) == 1
+    assert {0, 1} == set(activations[0].facts)
