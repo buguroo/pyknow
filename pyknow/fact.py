@@ -4,6 +4,15 @@ class Fact:
         self.valueset = set(value.items())
         self.keyset = set(value.keys())
 
+    def __contains__(self, other):
+        """Does this Fact contain ``other``?."""
+        if self.__class__ != other.__class__:
+            return False
+        elif not self.value:
+            return True
+        else:
+            return self.valueset.issuperset(other.valueset)
+
 
 class InitialFact(Fact):
     pass
