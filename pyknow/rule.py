@@ -56,3 +56,17 @@ class Rule:
                     yield Activation(rule=self, facts=facts)
 
             return tuple(set(_activations()))
+
+
+class NOT(Rule):
+    def get_activations(self, factlist):
+        """Returns the opposite of Rule.get_activations."""
+        activations = super().get_activations(factlist)
+        if activations:
+            return tuple()
+        else:
+            fact = factlist.matches(InitialFact())
+            if fact:
+                return Activation(rule=self, facts=(fact, ))
+            else:
+                return tuple()
