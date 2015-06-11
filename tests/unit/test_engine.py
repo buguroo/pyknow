@@ -172,32 +172,11 @@ def test_KnowledgeEngine_has_run():
     assert hasattr(KnowledgeEngine, 'run')
 
 
-# def test_KnowledgeEngine_run_set_running():
-#     from pyknow.engine import KnowledgeEngine
-# 
-#     ke = KnowledgeEngine()
-#     assert not ke.running
-# 
-#     ke.run()
-#     assert ke.running
-# 
-# 
 def test_KnowledgeEngine_has_reset():
     from pyknow.engine import KnowledgeEngine
     assert hasattr(KnowledgeEngine, 'reset')
 
-# 
-# def test_KnowledgeEngine_reset_resets_running():
-#     from pyknow.engine import KnowledgeEngine
-#     ke = KnowledgeEngine()
-# 
-#     ke.run()
-#     assert ke.running
-# 
-#     ke.reset()
-#     assert not ke.running
-# 
-# 
+
 def test_KnowledgeEngine_reset_resets_agenda():
     from pyknow.engine import KnowledgeEngine
     ke = KnowledgeEngine()
