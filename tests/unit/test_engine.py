@@ -90,12 +90,84 @@ def test_KnowledgeEngine_default_strategy_is_Depth():
 
     assert KnowledgeEngine.__strategy__ is Depth
 
+
 def test_KnowledgeEngine_default_strategy_is_Depth_instance():
     from pyknow.engine import KnowledgeEngine
     from pyknow.strategies import Depth
 
     assert isinstance(KnowledgeEngine().strategy, Depth)
 
+
+def test_KnowledgeEngine_has_get_rules_property():
+    from pyknow.engine import KnowledgeEngine
+
+    assert hasattr(KnowledgeEngine, 'get_rules')
+
+
+def test_KnowledgeEngine_get_rules_return_empty_list():
+    from pyknow.engine import KnowledgeEngine
+
+    ke = KnowledgeEngine()
+
+    assert ke.get_rules() == []
+
+
+def test_KnowledgeEngine_get_rules_returns_the_list_of_rules():
+    from pyknow.engine import KnowledgeEngine
+    from pyknow.rule import Rule
+
+    class Test(KnowledgeEngine):
+        @Rule()
+        def rule1(self):
+            pass
+
+        @Rule()
+        def rule2(self):
+            pass
+
+    ke = Test()
+
+    rules = ke.get_rules()
+
+    assert len(rules) == 2
+    assert all(isinstance(x, Rule) for x in rules)
+
+
+def test_KnowledgeEngine_get_activations_exists():
+    from pyknow.engine import KnowledgeEngine
+
+    assert hasattr(KnowledgeEngine, 'get_activations')
+
+
+def test_KnowledgeEngine_get_activations_returns_a_list():
+    from pyknow.engine import KnowledgeEngine
+
+    ke = KnowledgeEngine()
+    assert ke.get_activations() == []
+
+
+def test_KnowledgeEngine_get_activations_returns_activations():
+    from pyknow.engine import KnowledgeEngine
+    from pyknow.rule import Rule
+    from pyknow.fact import InitialFact
+
+    class Test(KnowledgeEngine):
+        @Rule()
+        def test(self):
+            pass
+
+    ke = Test()
+
+    activations = ke.get_activations()
+    assert len(activations) == 0
+
+    ke.declare(InitialFact())
+
+    activations = ke.get_activations()
+    assert len(activations) == 1
+
+
+# @pytest.mark.wip
 # def test_KnowledgeEngine_has_run():
 #     from pyknow.engine import KnowledgeEngine
 #     assert hasattr(KnowledgeEngine, 'run')
@@ -152,7 +224,7 @@ def test_KnowledgeEngine_default_strategy_is_Depth_instance():
 # 
 # 
 # @pytest.mark.wip
-# def test_KnowledgeEngine_get_matching_rules_returns_dict():
+# def test_KnowledgeEngine_get_matching_get_rules_returns_dict():
 #     from pyknow.engine import KnowledgeEngine
 # 
 #     ke = KnowledgeEngine()
@@ -161,7 +233,7 @@ def test_KnowledgeEngine_default_strategy_is_Depth_instance():
 # 
 # 
 # @pytest.mark.wip
-# def test_KnowledgeEngine_get_matching_rules__no_rules():
+# def test_KnowledgeEngine_get_matching_get_rules__no_rules():
 #     from pyknow.engine import KnowledgeEngine
 # 
 #     ke = KnowledgeEngine()
@@ -170,7 +242,7 @@ def test_KnowledgeEngine_default_strategy_is_Depth_instance():
 # 
 # 
 # @pytest.mark.wip
-# def test_KnowledgeEngine_get_matching_rules__matching_rule():
+# def test_KnowledgeEngine_get_matching_get_rules__matching_rule():
 #     from pyknow.engine import KnowledgeEngine
 #     from pyknow.rule import AND
 #     from pyknow.rule import FactState as fs
@@ -187,7 +259,7 @@ def test_KnowledgeEngine_default_strategy_is_Depth_instance():
 # 
 # 
 # @pytest.mark.wip
-# def test_KnowledgeEngine_get_matching_rules__multiple_match():
+# def test_KnowledgeEngine_get_matching_get_rules__multiple_match():
 #     from pyknow.engine import KnowledgeEngine
 #     from pyknow.rule import AND
 #     from pyknow.rule import FactState as fs

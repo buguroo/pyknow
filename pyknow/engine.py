@@ -1,5 +1,8 @@
-from pyknow.factlist import FactList
+from inspect import getmembers
+
 from pyknow.agenda import Agenda
+from pyknow.factlist import FactList
+from pyknow.rule import Rule
 from pyknow.strategies import Depth
 
 
@@ -19,3 +22,17 @@ class KnowledgeEngine:
 
     def retract(self, idx):
         self._facts.retract(idx)
+
+    def get_rules(self):
+        def _rules():
+            for name, obj in getmembers(self):
+                if isinstance(obj, Rule):
+                    yield obj
+        return list(_rules())
+
+    def get_activations(self):
+        def _activations():
+            for rule in self.get_rules():
+                for act in rule.get_activations(self._facts):
+                    yield act
+        return list(_activations())
