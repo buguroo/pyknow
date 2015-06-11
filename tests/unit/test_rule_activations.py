@@ -56,6 +56,7 @@ def test_Rule_with_empty_Fact_matches_all_Facts():
     fl.declare(Fact(something=3))
 
     activations = r.get_activations(fl)
+    assert len(activations) == 3
     for i in range(3):
         assert Activation(r, (i, )) in activations
 
