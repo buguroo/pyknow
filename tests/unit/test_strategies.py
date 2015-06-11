@@ -155,3 +155,44 @@ def test_Depth_update_agenda_different_salience():
     order = list(a.activations)
     assert (order.index(act4) < order.index(act3) <
             order.index(act2) < order.index(act1))
+
+
+@pytest.mark.parametrize("strategy", ['Depth'])
+def test_Strategy_update_agenda_doesnt_add_executed_activations(strategy):
+    from pyknow import strategies
+    from pyknow.activation import Activation
+    from pyknow.rule import Rule
+    from pyknow.agenda import Agenda
+
+    act1 = Activation(rule=Rule(), facts=(1, ))
+    act2 = Activation(rule=Rule(), facts=(2, ))
+
+    acts = [act1, act2]
+
+    st = getattr(strategies, strategy)()
+    a = Agenda()
+    a.executed.add(act1)
+
+    st.update_agenda(a, acts)
+
+    assert act1 not in a.activations
+    assert act2 in a.activations
+
+
+@pytest.mark.parametrize("strategy", ['Depth'])
+def test_Strategy_update_agenda_update_executed(strategy):
+    from pyknow import strategies
+    from pyknow.activation import Activation
+    from pyknow.rule import Rule
+    from pyknow.agenda import Agenda
+
+    act1 = Activation(rule=Rule(), facts=(1, ))
+    act2 = Activation(rule=Rule(), facts=(2, ))
+
+    st = getattr(strategies, strategy)()
+    a = Agenda()
+    a.executed.add(act1)
+
+    st.update_agenda(a, [act2])
+
+    assert act1 not in a.executed

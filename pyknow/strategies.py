@@ -8,12 +8,27 @@ listdict = lambda:defaultdict(list)
 
 class Strategy(metaclass=ABCMeta):
     @abstractmethod
-    def update_agenda(self, agenda, acts):
+    def _update_agenda(self, agenda, acts):
         pass
+
+    def update_agenda(self, agenda, acts):
+        acts_set = set(acts)
+
+        # Remove executed activations from the activation list
+        nonexecuted = acts_set - agenda.executed
+
+        # Resolve conflicts using the appropiate strategy.
+        res = self._update_agenda(agenda, nonexecuted)
+
+        # Update executed set removing activations not found in the
+        # current set.
+        agenda.executed = acts_set & agenda.executed
+
+        return res
 
 
 class Depth(Strategy):
-    def update_agenda(self, agenda, acts):
+    def _update_agenda(self, agenda, acts):
         old = listdict()
         for a in agenda.activations:
             old[a.rule.salience].append(a)
