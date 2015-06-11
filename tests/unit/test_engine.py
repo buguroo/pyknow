@@ -69,12 +69,32 @@ def test_KnowledgeEngine_retract_retracts_fact():
         assert mock.retract.called
 
 
-# @pytest.mark.wip
-# def test_KnowledgeEngine_has_agenda():
-#     from pyknow.engine import KnowledgeEngine
-#     ke = KnowledgeEngine()
-#     assert hasattr(ke, 'agenda')
+def test_KnowledgeEngine_has_agenda():
+    from pyknow.engine import KnowledgeEngine
+    ke = KnowledgeEngine()
+    assert hasattr(ke, 'agenda')
 
+
+def test_KnowledgeEngine_agenda_is_Agenda():
+    from pyknow.engine import KnowledgeEngine
+    from pyknow.agenda import Agenda
+
+    ke = KnowledgeEngine()
+
+    assert isinstance(ke.agenda, Agenda)
+
+
+def test_KnowledgeEngine_default_strategy_is_Depth():
+    from pyknow.engine import KnowledgeEngine
+    from pyknow.strategies import Depth
+
+    assert KnowledgeEngine.__strategy__ is Depth
+
+def test_KnowledgeEngine_default_strategy_is_Depth_instance():
+    from pyknow.engine import KnowledgeEngine
+    from pyknow.strategies import Depth
+
+    assert isinstance(KnowledgeEngine().strategy, Depth)
 
 # def test_KnowledgeEngine_has_run():
 #     from pyknow.engine import KnowledgeEngine
@@ -193,12 +213,6 @@ def test_KnowledgeEngine_retract_retracts_fact():
 #     assert 'myrule3' not in matching_rules
 # 
 # 
-# @pytest.mark.wip
-# def test_KnowledgeEngine_default_strategy_is_Depth():
-#     from pyknow.engine import KnowledgeEngine
-#     from pyknow.strategies import Depth
-# 
-#     assert isinstance(KnowledgeEngine.strategy, Depth)
 # 
 # 
 # @pytest.mark.wip
