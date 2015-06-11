@@ -61,3 +61,33 @@ def test_Agenda_get_next_returns_next_when_not_empty():
     a.activations.append(True)
 
     assert a.get_next() is True
+
+
+def test_Agenda_has_executed():
+    from pyknow.agenda import Agenda
+
+    assert hasattr(Agenda(), 'executed')
+
+
+def test_Agenda_get_next_adds_to_executed():
+    from pyknow.agenda import Agenda
+    from pyknow.rule import Rule
+    from pyknow.activation import Activation
+    from collections import deque
+
+    act1 = Activation(rule=Rule(), facts=(1, ))
+    act2 = Activation(rule=Rule(), facts=(2, ))
+    
+    a = Agenda()
+    a.activations = deque([act1, act2])
+
+    assert not act1 in a.executed
+    assert not act2 in a.executed
+
+    a.get_next()
+    assert act1 in a.executed
+    assert not act2 in a.executed
+
+    a.get_next()
+    assert act1 in a.executed
+    assert act2 in a.executed
