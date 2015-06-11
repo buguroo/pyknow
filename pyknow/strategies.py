@@ -1,28 +1,31 @@
 from abc import ABCMeta, abstractmethod
-from collections import OrderedDict
+from collections import deque
+from collections import defaultdict
+from itertools import chain
+
+listdict = lambda:defaultdict(list)
 
 
 class Strategy(metaclass=ABCMeta):
     @abstractmethod
-    def build_agenda(self, facts):
+    def update_agenda(self, agenda, acts):
         pass
 
 
 class Depth(Strategy):
-    def build_agenda(self, kengine, current_agenda=None):
-        agenda = OrderedDict()
+    def update_agenda(self, agenda, acts):
+        old = listdict()
+        for a in agenda.activations:
+            old[a.rule.salience].append(a)
 
-        matches = kengine.get_matching_rules()
-        if matches:
-            if current_agenda is None:
-                current_agenda = kengine.agenda
+        new = listdict()
+        for a in acts:
+            new[a.rule.salience].append(a)
 
-            for name in current_agenda:
-                if name in matches:
-                    agenda[name] = matches[name]
+        neworder = deque()
+        for salience in sorted(set(new.keys()) | set(old.keys()),
+                               reverse=True):
+            for a in chain(new[salience], old[salience]):
+                neworder.append(a)
 
-            for name, fn in matches.items():
-                if not name in agenda:
-                    agenda[name] = fn
-
-        return agenda
+        agenda.activations = neworder
