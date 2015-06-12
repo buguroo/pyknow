@@ -41,6 +41,7 @@ class Depth(Strategy):
         for salience in sorted(set(new.keys()) | set(old.keys()),
                                reverse=True):
             for a in chain(new[salience], old[salience]):
-                neworder.append(a)
+                if a not in neworder:
+                    neworder.append(a)
 
         agenda.activations = neworder

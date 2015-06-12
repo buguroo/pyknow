@@ -2,7 +2,7 @@ from functools import update_wrapper
 from itertools import product
 
 from pyknow.factlist import FactList
-from pyknow.fact import InitialFact
+from pyknow.fact import InitialFact, Fact
 from pyknow.activation import Activation
 
 
@@ -47,7 +47,17 @@ class Rule:
             raise ValueError("factlist must be an instance of FactList class.")
         else:
             def _activations():
-                matches = [factlist.matches(c) for c in self.__conds]
+                matches = [factlist.matches(c)
+                           for c in self.__conds
+                           if isinstance(c, Fact)]
+                for subrule in [r
+                                for r in self.__conds
+                                if issubclass(r.__class__, Rule)]:
+                    acts = subrule.get_activations(factlist)
+                    for act in acts:
+                        for fact in act.facts:
+                            matches.append([fact])
+
                 for match in product(*matches):
 
                     # Sorted tuple of unique facts
@@ -67,6 +77,6 @@ class NOT(Rule):
         else:
             fact = factlist.matches(InitialFact())
             if fact:
-                return Activation(rule=self, facts=(fact, ))
+                return tuple([Activation(rule=self, facts=(fact[0], ))])
             else:
                 return tuple()

@@ -13,6 +13,9 @@ class Fact:
         else:
             return self.valueset.issuperset(other.valueset)
 
+    def __eq__(self, other):
+        return self.value == other.value
+
 
 class InitialFact(Fact):
     pass

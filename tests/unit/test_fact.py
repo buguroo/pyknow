@@ -2,6 +2,8 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
+from conftest import random_kwargs
+
 
 def test_fact_exists():
     try:
@@ -52,3 +54,13 @@ def test_Fact_store_keyset():
     f = Fact(**value)
 
     assert set(value.keys()) == f.keyset
+
+
+@given(kwargs=random_kwargs)
+def test_Fact_equality(kwargs):
+    from pyknow.fact import Fact
+    
+    f0 = Fact(**kwargs)
+    f1 = Fact(**kwargs)
+
+    assert f0 == f1

@@ -65,7 +65,6 @@ def test_Rule_multiple_criteria_generates_activation_with_matching_facts():
     from pyknow.rule import Rule
     from pyknow.factlist import FactList
     from pyknow.fact import Fact
-    from pyknow.activation import Activation
 
     r = Rule(Fact(a=1), Fact(b=2))
     fl = FactList()
