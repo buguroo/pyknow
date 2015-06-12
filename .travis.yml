@@ -1,0 +1,13 @@
+language: python
+python: 3.4
+env:
+  - TOX_ENV=py34
+install:
+  - pip install -r requirements/tox.txt
+  - pip install coveralls
+script:
+  - tox -e $TOX_ENV
+after_success:
+  - coverage combine
+  - coverage report
+  - coveralls
