@@ -47,23 +47,27 @@ class Rule:
             raise ValueError("factlist must be an instance of FactList class.")
         else:
             def _activations():
-                matches = [factlist.matches(c)
-                           for c in self.__conds
-                           if isinstance(c, Fact)]
-                for subrule in [r
-                                for r in self.__conds
-                                if issubclass(r.__class__, Rule)]:
-                    acts = subrule.get_activations(factlist)
-                    for act in acts:
-                        for fact in act.facts:
-                            matches.append([fact])
+                matches = []
 
-                for match in product(*matches):
-
-                    # Sorted tuple of unique facts
-                    facts=tuple(sorted(set(match)))
-
-                    yield Activation(rule=self, facts=facts)
+                for cond in self.__conds:
+                    if issubclass(cond.__class__, Rule):
+                        acts = cond.get_activations(factlist)
+                        if not acts:
+                            break
+                        for act in acts:
+                            for fact in act.facts:
+                                matches.append([fact])
+                    elif isinstance(cond, Fact):
+                        match = factlist.matches(cond)
+                        if match:
+                            matches.append(match)
+                        else:
+                            break
+                else:
+                    for match in product(*matches):
+                        facts = tuple(sorted(set(match)))
+                        if facts:
+                            yield Activation(rule=self, facts=facts)
 
             return tuple(set(_activations()))
 
@@ -77,6 +81,7 @@ class NOT(Rule):
         else:
             fact = factlist.matches(InitialFact())
             if fact:
-                return tuple([Activation(rule=self, facts=(fact[0], ))])
+                factidx = fact[0]
+                return tuple([Activation(rule=self, facts=(factidx, ))])
             else:
                 return tuple()
