@@ -8,30 +8,6 @@ ____
 - Implement variable getting/setting
 
 
-ConditionalElements
-+++++++++++++++++++
-
-All conditional elements must be typed, that is:
-
-    - Literal
-    - Test
-    - Variable Management
-
-Clips' wildcard CE won't be available in pyknow
-
-Literal CE
-==========
-
-::
-
-    class RefrigeratorLogic(KnowledgeEngine):
-        @Rule(Fact(refrigerator_light=L("on")), 
-            NOT(Fact(refrigerator_door=L("closed")))) #LHS
-        def food_spoiled(self): #RHS
-            return True
-
-
-
 Test CE
 =======
 
@@ -41,42 +17,6 @@ Test CE
         @Rule(Fact(name=T(lambda x: x.startswith('foo')))) #LHS
         def food_spoiled(self): #RHS
             return True
-
-
-Deftemplates
-++++++++++++
-
-On the other hand, deftemplates are hardly improbable.
-That be said, Ruso stablished deftemplates as simply facts
-
-::
-
-
-    class Person(Fact): pass
-
-    class RefrigeratorLogic(KnowledgeEngine):
-        @Rule(name=L("David"))
-        def is_david(self):
-            return True
-
-        @Rule(foo=L(True),
-              bar=L(True))
-        def is_XayOn(self):
-            return True
-
-        @Rule(AND(name=L("David"), 
-                  surname=L("Moran")))
-        def is_moran(self):
-            return True
-
-    ke = RefrigeratorLogic()
-
-    ke.declare(Person(name=L("David"), surname=L("Francos"), bar=L(True), foo=L(True)))
-    ke.declare(Person(name=L("David"), surname=L("Moran"), foo=L(True), bar=L(False)))
-    ke.declare(Person(name=L("David"), surname=L("Reguera"), foo=L(False), bar=L(False)))
-
-    ke.get_activations() # Esto dará tres is_david, un is_XayOn y un is_moran
-
 
 
 Variables
