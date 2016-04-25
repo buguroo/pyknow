@@ -26,30 +26,30 @@ def test_Fact_is_class():
     assert isinstance(Fact, type)
 
 
-def test_Fact_store_value():
-    from pyknow.fact import Fact
+def test_Fact_store_literal_value():
+    from pyknow.fact import Fact, L
 
-    value = {'a': 1, 'b': 2}
+    value = {'a': L(1), 'b': L(2)}
 
     f = Fact(**value)
 
     assert f.value == value
 
 
-def test_Fact_store_valueset():
-    from pyknow.fact import Fact
+def test_Fact_store_literal_valueset():
+    from pyknow.fact import Fact, L
 
-    value = {'a': 1, 'b': 2}
+    value = {'a': L(1), 'b': L(2)}
 
     f = Fact(**value)
 
     assert set(value.items()) == f.valueset
 
 
-def test_Fact_store_keyset():
-    from pyknow.fact import Fact
+def test_Fact_store_literal_keyset():
+    from pyknow.fact import Fact, L
 
-    value = {'a': 1, 'b': 2}
+    value = {'a': L(1), 'b': L(2)}
 
     f = Fact(**value)
 
@@ -57,10 +57,30 @@ def test_Fact_store_keyset():
 
 
 @given(kwargs=random_kwargs)
-def test_Fact_equality(kwargs):
-    from pyknow.fact import Fact
-    
+def test_Fact_equality_literal(kwargs):
+    from pyknow.fact import Fact, L
+    kwargs = {a: L(b) for a, b in kwargs.items()}
+
     f0 = Fact(**kwargs)
     f1 = Fact(**kwargs)
 
     assert f0 == f1
+
+
+def test_facts_cant_accept_not_FactType():
+    from pyknow.fact import Fact
+    with pytest.raises(TypeError):
+        Fact(a="foo")
+    with pytest.raises(TypeError):
+        Fact(a=False)
+    with pytest.raises(TypeError):
+        Fact(a=1)
+
+
+def test_facts_accept_FactType_L():
+    """
+        This test is actually redundant...
+        As soon as I add new types I'll rewrite these
+    """
+    from pyknow.fact import Fact, L
+    assert Fact(a=L('foo'))

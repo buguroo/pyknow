@@ -8,18 +8,18 @@ def test_rules_are_executed_once(to_declare_random):
     from random import shuffle
     from pyknow.engine import KnowledgeEngine
     from pyknow.rule import Rule
-    from pyknow.fact import Fact
+    from pyknow.fact import Fact, L
 
     executions = []
 
     class Test(KnowledgeEngine):
-        @Rule(Fact(something=1),
-              Fact(something=2))
+        @Rule(Fact(something=L(1)),
+              Fact(something=L(2)))
         def rule1(self):
             nonlocal executions
             executions.append('rule1')
 
-        @Rule(Fact(something=3))
+        @Rule(Fact(something=L(3)))
         def rule2(self):
             nonlocal executions
             executions.append('rule2')
@@ -27,16 +27,13 @@ def test_rules_are_executed_once(to_declare_random):
     ke = Test()
     ke.reset()
 
-    to_declare = to_declare_random + [1, 2, 3]
+    to_declare = list(set(to_declare_random + [1, 2, 3]))
     shuffle(to_declare)
+    print(to_declare)
 
     for i in to_declare:
-        ke.declare(Fact(something=i))
+        ke.declare(Fact(something=L(i)))
 
-    for activation in ke.agenda.activations:
-        print(activation.facts)
-
-    assert len(ke.agenda.activations) == 2
     ke.run()
 
     assert executions.count('rule1') == 1
@@ -50,20 +47,20 @@ def test_default_is_and():
     from collections import defaultdict
     from pyknow.engine import KnowledgeEngine
     from pyknow.rule import Rule
-    from pyknow.fact import Fact
+    from pyknow.fact import Fact, L
 
     executions = []
 
     class Test(KnowledgeEngine):
         """ Test KE """
-        @Rule(Fact(something=1),
-              Fact(something=2))
+        @Rule(Fact(something=L(1)),
+              Fact(something=L(2)))
         def rule1(self):
             """ First rule, something=1 and something=2"""
             nonlocal executions
             executions.append('rule1')
 
-        @Rule(Fact(something=3))
+        @Rule(Fact(something=L(3)))
         def rule2(self):
             """ Second rule, only something=3 """
             nonlocal executions
@@ -75,7 +72,7 @@ def test_default_is_and():
     to_declare = []
 
     for i in range(1, 10):
-        to_declare.append(i)
+        to_declare.append(L(i))
 
     to_declare = dict(enumerate(to_declare))
 
@@ -84,7 +81,7 @@ def test_default_is_and():
 
     results = defaultdict(list)
     for activation in ke_.agenda.activations:
-        results[''.join([str(to_declare[a - 1])
+        results[''.join([str(to_declare[a - 1].resolve())
                          for a in activation.facts])].append(1)
 
     assert dict(results) == {'3': [1], '12': [1]}

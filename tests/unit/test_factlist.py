@@ -67,10 +67,10 @@ def test_FactList_declare_allow_Fact_subclasses():
 
 def test_FactList_declare_returns_idx():
     from pyknow.factlist import FactList
-    from pyknow.fact import Fact
+    from pyknow.fact import Fact, L
 
-    f0 = Fact(data=1)
-    f1 = Fact(data=2)
+    f0 = Fact(data=L(1))
+    f1 = Fact(data=L(2))
 
     fl = FactList()
 
@@ -80,9 +80,9 @@ def test_FactList_declare_returns_idx():
 
 def test_FactList_declare_returns_None_if_fact_already_exists():
     from pyknow.factlist import FactList
-    from pyknow.fact import Fact
+    from pyknow.fact import Fact, L
 
-    f0 = f1 = Fact(data=1)
+    f0 = f1 = Fact(data=L(1))
     fl = FactList()
 
     assert fl.declare(f0) == 0
@@ -126,11 +126,11 @@ def test_FactList_has_matches_method():
 
 def test_FactList_matches():
     from pyknow.factlist import FactList
-    from pyknow.fact import Fact
+    from pyknow.fact import Fact, L
 
     f = Fact()
-    f0 = Fact(something=True)
-    f1 = Fact(something=False)
+    f0 = Fact(something=L(True))
+    f1 = Fact(something=L(False))
 
     fl = FactList()
     fl.declare(f0)

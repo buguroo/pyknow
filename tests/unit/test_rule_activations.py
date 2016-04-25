@@ -46,14 +46,15 @@ def test_Rule_empty_matches_with_initial_fact():
 def test_Rule_with_empty_Fact_matches_all_Facts():
     from pyknow.rule import Rule
     from pyknow.factlist import FactList
-    from pyknow.fact import Fact
+    from pyknow.fact import Fact, L
     from pyknow.activation import Activation
 
     r = Rule(Fact())
     fl = FactList()
-    fl.declare(Fact(something=True))
-    fl.declare(Fact(something=False))
-    fl.declare(Fact(something=3))
+
+    fl.declare(Fact(something=L(True)))
+    fl.declare(Fact(something=L(False)))
+    fl.declare(Fact(something=L(3)))
 
     activations = r.get_activations(fl)
     assert len(activations) == 3
@@ -64,12 +65,12 @@ def test_Rule_with_empty_Fact_matches_all_Facts():
 def test_Rule_multiple_criteria_generates_activation_with_matching_facts():
     from pyknow.rule import Rule
     from pyknow.factlist import FactList
-    from pyknow.fact import Fact
+    from pyknow.fact import Fact, L
 
-    r = Rule(Fact(a=1), Fact(b=2))
+    r = Rule(Fact(a=L(1)), Fact(b=L(2)))
     fl = FactList()
-    fl.declare(Fact(a=1))
-    fl.declare(Fact(b=2))
+    fl.declare(Fact(a=L(1)))
+    fl.declare(Fact(b=L(2)))
 
     activations = r.get_activations(fl)
     assert len(activations) == 1
