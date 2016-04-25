@@ -90,3 +90,53 @@ def test_default_is_and():
 
     assert executions.count('rule1') == 1
     assert executions.count('rule2') == 1
+
+
+def test_or_operator():
+    """
+        Test OR operator
+    """
+    from pyknow.engine import KnowledgeEngine
+    from pyknow.rule import Rule, OR
+    from pyknow.fact import Fact, L
+    import itertools
+
+    class Test(KnowledgeEngine):
+        """ Test KE """
+        @Rule(OR(Fact(something=L(1)),
+              Fact(something=L(2))))
+        def rule1(self):
+            """ First rule, something=1 and something=2"""
+            pass
+
+        @Rule(Fact(something=L(3)))
+        def rule2(self):
+            """ Second rule, only something=3 """
+            pass
+
+    static = ((1, 3), (1, 2), (1, 1, 2), (1, 3, 5))
+    for test in static:
+        ke_ = Test()
+        ke_.reset()
+        for val in test:
+            ke_.declare(Fact(something=L(val)))
+        assert len(ke_.agenda.activations) == 2
+
+    ke_ = Test()
+    ke_.reset()
+    ke_.declare(Fact(something=L(1)))
+    assert len(ke_.agenda.activations) == 1
+
+    ke_ = Test()
+    ke_.reset()
+    ke_.declare(Fact(something=L(2)))
+    assert len(ke_.agenda.activations) == 1
+
+    dinamic = (1, 2, 3)
+    for comb_len in range(1, 3):
+        for combination in itertools.combinations(dinamic, comb_len):
+            ke_ = Test()
+            ke_.reset()
+            for val in combination:
+                ke_.declare(Fact(something=L(val)))
+            assert len(ke_.agenda.activations) == comb_len

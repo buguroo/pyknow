@@ -73,6 +73,9 @@ class Rule:
 
 
 class NOT(Rule):
+    def __init__(self, *conds, salience=0):
+        super().__init__(*conds, salience=salience)
+
     def get_activations(self, factlist):
         """Returns the opposite of Rule.get_activations."""
         activations = super().get_activations(factlist)
@@ -85,3 +88,30 @@ class NOT(Rule):
                 return tuple([Activation(rule=self, facts=(factidx, ))])
             else:
                 return tuple()
+
+
+class OR(Rule):
+    def __init__(self, *conds, salience=0):
+        super().__init__(*conds, salience=salience)
+
+    def get_activations(self, factlist):
+        """Return a tuple with the activations of this rule."""
+        for cond in self._Rule__conds:
+            matches = []
+
+            for cond in self._Rule__conds:
+                if issubclass(cond.__class__, Rule):
+                    acts = cond.get_activations(factlist)
+                    if not acts:
+                        break
+                    for act in acts:
+                        for fact in act.facts:
+                            matches.append([fact])
+                elif isinstance(cond, Fact):
+                    match = factlist.matches(cond)
+                    if match:
+                        matches.append(match)
+
+        if matches:
+            return tuple([Activation(rule=self,
+                                     facts=[fact[0] for fact in matches])])
