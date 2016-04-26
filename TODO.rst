@@ -1,26 +1,8 @@
 TODO
 ____
 
-- Implement initial facts (deffacts in clips), that is,
-  Facts that are still present after reset
 - Implement Test CE
 - Implement variable getting/setting
-
-
-Initial Facts
-=============
-
-Defined facts that, once the KE has been reset, remain there.
-
-::
-
-    ke.declare_initial(Fact(foo=L('r')))
-
-or maybe
-
-::
-
-    ke.declare(Fact(foo=L('r')), persistent=True)
 
 
 Test CE
