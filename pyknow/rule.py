@@ -72,6 +72,28 @@ class Rule:
             return tuple(set(_activations()))
 
 
+class AND(Rule):
+    """
+        AND operator.
+        It's the default Rule behavior, except that a Rule cannot
+        be nested for clarity reasons.
+        This way, we've got::
+
+            # Valid
+            Rule(AND(Fact(foo=L('1'), bar=L('2')),
+                     Fact(baz=L('2'))))
+
+            # Valid
+            Rule(Fact(foo=L('1'), bar=L('2')),
+                 Fact(baz=L('2')))
+
+            # Not valid
+            Rule(Rule(Fact(foo=L('1'), bar=L('2')),
+                      Fact(baz=L('2'))))
+    """
+    pass
+
+
 class NOT(Rule):
     def __init__(self, *conds, salience=0):
         super().__init__(*conds, salience=salience)

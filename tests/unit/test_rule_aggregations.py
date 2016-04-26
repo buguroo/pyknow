@@ -1,7 +1,11 @@
 import pytest
 
 
-def test_Rule_nesting():
+def test_Rule_nesting_issubclass():
+    """
+        This actually tests that nesting a Rule is permitted.
+        Rule nesting can be useful for meta-stuff, and
+    """
     from pyknow.rule import Rule
     from pyknow.factlist import FactList
     from pyknow.fact import Fact, L
@@ -47,6 +51,22 @@ def test_Rule_and_NOT_nesting():
     activations = r.get_activations(fl)
     assert len(activations) == 1
 
+    assert {0, 1} == set(activations[0].facts)
+
+
+def test_Rule_and_AND_nesting():
+    from pyknow.rule import Rule, AND
+    from pyknow.factlist import FactList
+    from pyknow.fact import Fact, L
+
+    r = Rule(AND(Fact(a=L(2)), Fact(b=L(1))))
+
+    fl = FactList()
+    fl.declare(Fact(a=L(2)))
+    fl.declare(Fact(b=L(1)))
+
+    activations = r.get_activations(fl)
+    assert len(activations) == 1
     assert {0, 1} == set(activations[0].facts)
 
 
