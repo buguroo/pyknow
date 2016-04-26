@@ -7,8 +7,26 @@ ____
 - Implement variable getting/setting
 
 
+Initial Facts
+=============
+
+Defined facts that, once the KE has been reset, remain there.
+
+::
+
+    ke.declare_initial(Fact(foo=L('r')))
+
+or maybe
+
+::
+
+    ke.declare(Fact(foo=L('r')), persistent=True)
+
+
 Test CE
 =======
+
+Test CE, executes a callable
 
 ::
 
@@ -31,36 +49,3 @@ in later rules.
               Fact(name=V('name', surname=NOT(V('surname'))))
         def common_names(self): #RHSd
             return True
-
-
-Connective Constraints
-++++++++++++++++++++++
-
-Pyknow approach to a KE makes it mandatory for all the arguments to be
-named, that is, no positional arguments here.
-
-Connective constraints are AND, OR and NOT. Of those, only NOT
-is currently implemented.
-
-Usage should be the same for them as actually is for NOT
-
-::
-
-
-    class RefrigeratorLogic(KnowledgeEngine):
-        @Rule(AND(foo=L("bar"), bar=L("baz"))) #LHS
-        def food_spoiled(self): #RHS
-            return True
-
-    ke = RefrigeratorLogic()
-    ke.reset()
-    ke.declare(Fact(
-        foo=L("on"), 
-        bar=L("off")))
-
-
-EXISTS CE
-+++++++++
-
-Clips' exista conditional element is implemented as a literal
-CE in pyknow comparing against DEFINED and UNDEFINED constants.

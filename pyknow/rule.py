@@ -1,3 +1,31 @@
+#!/usr/bin/env python
+"""
+Connective Constraints
+++++++++++++++++++++++
+
+Pyknow approach to a KE makes it mandatory for all the arguments to be
+named, that is, no positional arguments here.
+
+Connective constraints are AND, OR and NOT. Of those, only NOT
+is currently implemented.
+
+Usage should be the same for them as actually is for NOT
+
+::
+
+
+    class RefrigeratorLogic(KnowledgeEngine):
+        @Rule(AND(foo=L("bar"), bar=L("baz"))) #LHS
+        def food_spoiled(self): #RHS
+            return True
+
+    ke = RefrigeratorLogic()
+    ke.reset()
+    ke.declare(Fact(
+        foo=L("on"),
+        bar=L("off")))
+"""
+
 from functools import update_wrapper
 from itertools import product
 
@@ -7,6 +35,12 @@ from pyknow.activation import Activation
 
 
 class Rule:
+    """
+        Base connective constraint.
+        All connective constraints are to derive from this class,
+
+        A Rule's behavior defaults to be the same as AND cc.
+    """
     def __init__(self, *conds, salience=0):
         self.__fn = None
 
@@ -95,6 +129,11 @@ class AND(Rule):
 
 
 class NOT(Rule):
+    """
+        NOT connective constraint.
+        Effectively the opposite of AND constraint, ensures
+        that a condition is NOT met.
+    """
     def __init__(self, *conds, salience=0):
         super().__init__(*conds, salience=salience)
 
@@ -113,6 +152,10 @@ class NOT(Rule):
 
 
 class OR(Rule):
+    """
+        Or connective constraint, ensures that ANY condition in
+        the rule matches.
+    """
     def __init__(self, *conds, salience=0):
         super().__init__(*conds, salience=salience)
 
