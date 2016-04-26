@@ -252,3 +252,8 @@ def test_KnowledgeEngine_run_fires_all_activation():
 
     ke.run()
     assert executed == 3
+
+
+def test_KnowledgeEngine_has_initialfacts():
+    from pyknow.engine import KnowledgeEngine
+    assert KnowledgeEngine()._fixed_facts == []

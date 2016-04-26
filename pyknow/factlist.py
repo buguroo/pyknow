@@ -25,7 +25,7 @@ class FactList:
             idx = self._fidx
             self._facts[idx] = fact
             self._fidx += 1
-    
+
             return idx
         else:
             return None
