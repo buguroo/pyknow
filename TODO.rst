@@ -1,10 +1,9 @@
 TODO
 ____
 
-- Implement AND and OR connective constraints
 - Implement initial facts (deffacts in clips), that is,
   Facts that are still present after reset
-- Implement more CEs
+- Implement Test CE
 - Implement variable getting/setting
 
 
