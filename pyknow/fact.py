@@ -82,8 +82,7 @@ class ValueSet:
     """
     cond = "is_literal"
 
-    def __init__(self, fact):
-        self.fact = fact
+    def __init__(self):
         self.value = set()
         self._resolved_values = None
         self.current = 0
@@ -93,6 +92,7 @@ class ValueSet:
         """ Resolve """
         if self._resolved_values is None:
             self._resolved_values = {(a, b.resolve()) for a, b in self.value}
+            self._cached_values = self._resolved_values.copy()
         return self._resolved_values
 
     def condition(self, value):
@@ -103,6 +103,10 @@ class ValueSet:
         """ Add an item if it meets condition """
         if self.condition(value):
             self.value.add((key, value))
+
+    def reset(self):
+        """ Restarts resolved """
+        self._resolved_values = self._cached_values.copy()
 
     def __iter__(self):
         return self
@@ -115,21 +119,19 @@ class ValueSet:
     def __len__(self):
         return len(self.resolved)
 
-    def __contains__(self, other):
-        for key, value in self.resolved:
-            if self.fact.skip_key(key):
-                continue
-            else:
-                if not (key, value) in other.resolved:
-                    return False
-        return True
+    def matches(self, other):
+        """
+            Checks if our valueset is a superset of the other valueset
+        """
+        return self.resolved.issuperset(other.valueset.resolved)
 
 
 class CValueSet(ValueSet):
     """ Valueset evaluable for Callable facttypes"""
     cond = "is_callable"
 
-    def __contains__(self, other):
+    def matches(self, other):
+        return True
         if not self.value:
             return True
         for key, value in self.value:
@@ -148,21 +150,18 @@ class WValueSet(ValueSet):
     """ Wildcard value set """
     cond = "is_wildcard"
 
-    def __contains__(self, fact):
+    def matches(self, other):
         """
             - If ANY value is DEFINED and is not in keyset, fail
             - If ANY value is UNDEFINED and is in keyset, fail
             - Otherwise, true
         """
-        def _contains():
-            for key, value in self:
-                if value is FactState.DEFINED and key not in fact.keyset:
-                    return False
-                elif value is FactState.UNDEFINED and key in fact.keyset:
-                    return False
-                fact.add_key_to_skip(key)
-            return True
-        return not _contains()
+        for key, value in self:
+            if value is FactState.DEFINED and key not in other.keyset:
+                return False
+            elif value is FactState.UNDEFINED and key in other.keyset:
+                return False
+        return True
 
 
 class Fact:
@@ -176,52 +175,36 @@ class Fact:
             if not isinstance(val, FactType):
                 raise TypeError("Fact values inherit from FactType")
 
-        self._keys_to_skip = set()
         self.keyset = set(value.keys())
 
-        self.valueset = ValueSet(self)
-        self.wcvalueset = WValueSet(self)
-        self.callablevalueset = CValueSet(self)
+        self.valueset = ValueSet()
+        self.wcvalueset = WValueSet()
+        self.callablevalueset = CValueSet()
 
         for key, value in self.value.items():
             self.valueset.add(key, value)
             self.wcvalueset.add(key, value)
             self.callablevalueset.add(key, value)
 
-    def add_key_to_skip(self, key):
-        """ Add a key to the ignore list """
-        self._keys_to_skip.add(key)
-
-    def skip_key(self, key):
-        """ Checks if a key is to be skipped """
-        return key in self._keys_to_skip
-
-    def _contain_wcvalueset(self, other):
+    def _contains(self, other):
         """
             If we contain a wildcard, apply the needed logic
             for __contains__
         """
         # We have some wildcards.
-        if other not in self.callablevalueset:
+
+        if not self.wcvalueset.matches(other):
             return False
 
-        elif other not in self.wcvalueset:
-            return True
-
-        elif other not in self.valueset:
+        elif not self.valueset.matches(other):
+            # If wildcards match or we don't have wildcards
+            self.wcvalueset.reset()
+            if self.wcvalueset.resolved:
+                # Maybe the other has wildcards
+                return other.valueset.matches(self)
             return False
 
         return True
-
-    def _contains_valueset(self, other):
-        """
-            If we contain a valueset, apply the needed logic
-            for __contains__
-        """
-        if other not in self.callablevalueset:
-            return False
-
-        return self.valueset.resolved.issuperset(other.valueset.resolved)
 
     def __contains__(self, other):
         """Does this Fact contain ``other``?."""
@@ -229,11 +212,7 @@ class Fact:
             return False
         elif not self.value:
             return True
-        elif self.wcvalueset:
-            return self._contain_wcvalueset(other)
-        else:
-            return self._contains_valueset(other)
-        return True
+        return self._contains(other)
 
     def __eq__(self, other):
         return self.value == other.value
