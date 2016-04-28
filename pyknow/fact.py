@@ -85,6 +85,7 @@ class ValueSet:
     def __init__(self):
         self.value = set()
         self._resolved_values = None
+        self._cached_values = False
         self.current = 0
 
     @property
@@ -123,6 +124,8 @@ class ValueSet:
         """
             Checks if our valueset is a superset of the other valueset
         """
+        if not self.resolved:
+            return True
         return self.resolved.issuperset(other.valueset.resolved)
 
 
@@ -131,15 +134,14 @@ class CValueSet(ValueSet):
     cond = "is_callable"
 
     def matches(self, other):
-        return True
         if not self.value:
             return True
         for key, value in self.value:
             if key not in other.keyset:
                 return False
             try:
-                othervalue = dict(other.resolved)[key]
-                result = value.callable(othervalue)
+                othervalue = other.value[key]
+                result = value.callable(othervalue.resolve())
                 assert result
                 return True
             except Exception:
@@ -195,7 +197,8 @@ class Fact:
 
         if not self.wcvalueset.matches(other):
             return False
-
+        elif not self.callablevalueset.matches(other):
+            return False
         elif not self.valueset.matches(other):
             # If wildcards match or we don't have wildcards
             self.wcvalueset.reset()
