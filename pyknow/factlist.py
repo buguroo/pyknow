@@ -3,6 +3,9 @@ from pyknow.fact import Fact
 
 
 class FactList:
+    """
+        FactList. Contains a list of facts
+    """
     def __init__(self):
         self._facts = OrderedDict()
         self._fidx = 0
@@ -37,7 +40,7 @@ class FactList:
         :params idx: The index of the fact to retract.
 
         """
-        if not idx in self._facts:
+        if idx not in self._facts:
             raise IndexError('Fact not found.')
         else:
             del self._facts[idx]
@@ -47,8 +50,10 @@ class FactList:
         Return the indexes of the matching facts.
 
         """
+
         def _matches():
             for idx, value in self._facts.items():
                 if value in fact:
                     yield idx
-        return list(_matches())
+        result = list(_matches())
+        return result

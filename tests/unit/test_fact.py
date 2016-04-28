@@ -42,8 +42,8 @@ def test_Fact_store_literal_valueset():
     value = {'a': L(1), 'b': L(2)}
 
     f = Fact(**value)
-
-    assert set(value.items()) == f.valueset
+    expected = set({val[0]: val[1].resolve() for val in value.items()}.items())
+    assert expected == f.valueset.resolved
 
 
 def test_Fact_store_literal_keyset():
