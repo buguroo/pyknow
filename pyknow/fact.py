@@ -57,7 +57,7 @@ class Fact:
                 if k in keys_to_skip:
                     continue
                 else:
-                    if not (k, v) in self.resolved_valueset:
+                    if not (k, v) in other.resolved_valueset:
                         return False
             return True
         else:
