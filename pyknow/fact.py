@@ -35,7 +35,7 @@ class FactType:
     @property
     def is_wildcard(self):
         """ Check if we are a wildcard """
-        return not self.is_callable and self.value in FactState
+        return (not self.is_callable) and (self.value in FactState)
 
     @property
     def is_literal(self):
@@ -205,11 +205,12 @@ class Fact:
         if other not in self.callablevalueset:
             return False
 
-        elif other in self.wcvalueset:
-            return False
+        elif other not in self.wcvalueset:
+            return True
 
         elif other not in self.valueset:
             return False
+
         return True
 
     def _contains_valueset(self, other):

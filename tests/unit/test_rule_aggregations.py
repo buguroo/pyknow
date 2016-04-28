@@ -94,6 +94,7 @@ def test_Rule_with_only_one_NOT_match_InitialFact_if_fact_is_not_present():
     assert r.get_activations(fl)
 
 
+@pytest.mark.wip
 def test_Rule_with_NOT_DEFINED():
     from pyknow.rule import Rule, NOT
     from pyknow.factlist import FactList
@@ -104,7 +105,6 @@ def test_Rule_with_NOT_DEFINED():
              NOT(Fact(b=L(fs.DEFINED))))
 
     fl = FactList()
-    fl.declare(InitialFact())
     fl.declare(Fact(a=L(1)))
 
     activations = r.get_activations(fl)
