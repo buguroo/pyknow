@@ -21,31 +21,68 @@ class FactState(enum.Enum):
     UNDEFINED = 'UNDEFINED'
 
 
+class FactTypeContext:
+    """
+        Context that will be used in facttypes
+    """
+    def __init__(self):
+        self.facts_set = set()
+        self.others_set = set()
+        self.fact = False
+        self.other = False
+
+    def set_fact(self, fact):
+        """ Set fact """
+        self.facts_set.add(fact)
+        self.fact = fact
+
+    def set_other(self, other):
+        """ Set other """
+        self.other = other
+        self.others_set.add(other)
+
+
 class FactType:
     """
         Base FactType, defaults to a simple literal
     """
     def __init__(self, value):
         self.value = value
+        self.context = False
 
-    def resolve(self, extra=False):
+    def resolve(self, _=False):
         """ Basic resolution of the value. """
         return self.value
 
     @property
     def is_wildcard(self):
         """ Check if we are a wildcard """
-        return (not self.is_callable) and (self.value in FactState)
+        if not isinstance(self, L):
+            return False
+        return self.value in FactState
 
     @property
     def is_literal(self):
         """ Check if we are a literal type """
-        return not self.is_callable and not self.is_wildcard
+        if not isinstance(self, L):
+            return False
+        return not self.is_wildcard
 
     @property
     def is_callable(self):
         """ Check if we are a callable type """
-        return hasattr(self, 'callable')
+        return isinstance(self, T)
+
+    @property
+    def is_capturedvalue(self):
+        """ Check if we are a captured value type"""
+        return isinstance(self, V)
+
+    @property
+    def is_capture(self):
+        """ Check if we are a capture-order value type"""
+        print("--------------")
+        return isinstance(self, C)
 
 
 class L(FactType):
@@ -76,6 +113,20 @@ class T(FactType):
         self.callable(to_what.resolve())
 
 
+class C(FactType):
+    """
+        Capture a value
+    """
+    pass
+
+
+class V(FactType):
+    """
+        Use a captured value
+    """
+    pass
+
+
 class ValueSet:
     """
         Represents a valueset as an iterator able to resolve itself
@@ -87,6 +138,7 @@ class ValueSet:
         self._resolved_values = None
         self._cached_values = False
         self.current = 0
+        self.context = FactTypeContext()
 
     @property
     def resolved(self):
@@ -103,6 +155,7 @@ class ValueSet:
     def add(self, key, value):
         """ Add an item if it meets condition """
         if self.condition(value):
+            value.context = self.context
             self.value.add((key, value))
 
     def reset(self):
@@ -134,6 +187,7 @@ class CValueSet(ValueSet):
     cond = "is_callable"
 
     def matches(self, other):
+        # self.context.other = other
         if not self.value:
             return True
         for key, value in self.value:
@@ -166,6 +220,22 @@ class WValueSet(ValueSet):
         return True
 
 
+class CapValueSet(ValueSet):
+    """ Capture value value set """
+    cond = "is_capture"
+
+    def matches(self, other):
+        pass
+
+
+class ValValueSet(ValueSet):
+    """ Captured values value set"""
+    cond = "is_capturedvalue"
+
+    def matches(self, other):
+        pass
+
+
 class Fact:
     """
         Base Fact class
@@ -174,6 +244,7 @@ class Fact:
         self.value = value
 
         for val in value.values():
+            val.context.set_fact(self)
             if not isinstance(val, FactType):
                 raise TypeError("Fact values inherit from FactType")
 
