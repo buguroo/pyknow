@@ -130,3 +130,10 @@ def test_match_with_FactState_UNDEFINED_False(value):
     f1 = Fact(something=L(fs.UNDEFINED))
 
     assert f0 not in f1
+
+
+def test_match_with_testce():
+    from pyknow.fact import Fact, T
+    assert Fact(name=L('David')) in Fact(name=T(lambda x: x.startswith('D')))
+    assert Fact(name=L('Penelope')) not in Fact(
+        name=T(lambda x: x.startswith('D')))

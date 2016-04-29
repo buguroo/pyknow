@@ -113,3 +113,31 @@ def test_Rule_with_NOT_DEFINED():
     fl.declare(Fact(b=L('SOMETHING')))
     activations = r.get_activations(fl)
     assert len(activations) == 0
+
+
+def test_rule_with_NOT_testce():
+    from pyknow.rule import Rule, NOT
+    from pyknow.factlist import FactList
+    from pyknow.fact import FactState as fs
+    from pyknow.fact import Fact, InitialFact, L, T
+
+    r = Rule(Fact(a=L(1)),
+             NOT(Fact(b=T(lambda x: x.startswith('D')))))
+
+    fl = FactList()
+    fl.declare(InitialFact())
+    fl.declare(Fact(a=L(1)))
+
+    activations = r.get_activations(fl)
+    assert len(activations) == 1
+
+    fl.declare(Fact(b=L('David')))
+    activations = r.get_activations(fl)
+    assert len(activations) == 0
+
+    fl = FactList()
+    fl.declare(InitialFact())
+    fl.declare(Fact(a=L(1)))
+    fl.declare(Fact(b=L('Penelope')))
+    activations = r.get_activations(fl)
+    assert len(activations) == 1

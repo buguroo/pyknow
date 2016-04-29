@@ -75,3 +75,21 @@ def test_Rule_multiple_criteria_generates_activation_with_matching_facts():
     activations = r.get_activations(fl)
     assert len(activations) == 1
     assert {0, 1} == set(activations[0].facts)
+
+
+def test_Rule_simple_testce():
+    from pyknow.rule import Rule
+    from pyknow.fact import Fact, T, L
+    from pyknow.factlist import FactList
+
+    r = Rule(Fact(a=T(lambda x: x.startswith('D'))))
+
+    fl = FactList()
+    fl.declare(Fact(a=L("David")))
+    fl.declare(Fact(a=L("Penelope")))
+
+    activations = r.get_activations(fl)
+
+    assert len(activations) == 1
+
+    assert {0} == set(activations[0].facts)
