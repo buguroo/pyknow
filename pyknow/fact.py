@@ -126,7 +126,7 @@ class ValueSet:
         """
         if not self.resolved:
             return True
-        return self.resolved.issuperset(other.valueset.resolved)
+        return other.valueset.resolved.issuperset(self.resolved)
 
 
 class CValueSet(ValueSet):
