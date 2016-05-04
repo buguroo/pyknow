@@ -1,7 +1,13 @@
+"""
+    Knowledge Engine
+    ----------------
+
+    TODO: Document the knowledge engine and examples
+"""
 from inspect import getmembers
 
 from pyknow.agenda import Agenda
-from pyknow.fact import InitialFact
+from pyknow.fact import InitialFact, Context
 from pyknow.factlist import FactList
 from pyknow.rule import Rule
 from pyknow.strategies import Depth
@@ -18,6 +24,7 @@ class KnowledgeEngine:
         self._fixed_facts = []
         self._facts = FactList()
         self.agenda = Agenda()
+        self.context = Context()
         self.strategy = self.__strategy__()
 
     def declare(self, *facts, persistent=False):

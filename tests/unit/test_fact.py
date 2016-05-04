@@ -67,14 +67,10 @@ def test_Fact_equality_literal(kwargs):
     assert f0 == f1
 
 
-def test_facts_cant_accept_not_FactType():
-    from pyknow.fact import Fact
-    with pytest.raises(TypeError):
-        Fact(a="foo")
-    with pytest.raises(TypeError):
-        Fact(a=False)
-    with pytest.raises(TypeError):
-        Fact(a=1)
+def test_facts_default_to_literal():
+    from pyknow.fact import Fact, L
+    a = Fact(a="foo")
+    a.value = {'a': L("foo")}
 
 
 def test_facts_accept_FactType_L():
