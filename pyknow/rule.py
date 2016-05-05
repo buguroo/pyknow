@@ -30,7 +30,7 @@ from functools import update_wrapper
 from itertools import product
 
 from pyknow.factlist import FactList
-from pyknow.fact import InitialFact, Fact
+from pyknow.fact import InitialFact, Fact, Context
 from pyknow.activation import Activation
 
 
@@ -43,12 +43,20 @@ class Rule:
     """
     def __init__(self, *conds, salience=0):
         self.__fn = None
+        self.ke = False
 
         if not conds:
             conds = (InitialFact(),)
         self.__conds = conds
 
         self.salience = salience
+
+    @property
+    def context(self):
+        if self.ke:
+            return self.ke.context
+        else:
+            return None
 
     def __call__(self, fst=None, *args, **kwargs):
         """
@@ -57,11 +65,18 @@ class Rule:
         This function is going to be called twice.
 
         - The first call is when the decorator is been created. At this
-          point we assign the función decorated to ``self.__fn`` and
+          point we assign the function decorated to ``self.__fn`` and
           return ``self`` to be called the second time.
 
         - The second call is to execute the decorated function, se we
           pass all the arguments along.
+          We also assign the KnowledgeEngine's context to the rule, if
+          available and if we're being called from a KE.
+          Otherwise, each rule will make their own Context() object, empty
+          and not shared between rules, when they're being evaluated.
+
+          That allows us to assign rules to variables and apply them directly
+          as well as using KEs
 
         """
         if self.__fn is None:
@@ -71,6 +86,9 @@ class Rule:
             else:
                 raise AttributeError("Mandatory function not provided.")
         else:
+            if hasattr(fst, 'context') and isinstance(fst.context, Context):
+                self.ke = fst
+
             args = (tuple() if fst is None else (fst,)) + args
             return self.__fn(*args, **kwargs)
 
@@ -78,13 +96,15 @@ class Rule:
         """Return a tuple with the activations of this rule."""
 
         if not isinstance(factlist, FactList):
-            raise ValueError("factlist must be an instance of FactList class.")
+            raise ValueError("factlist must be an instance of FactList")
         else:
             def _activations():
                 matches = []
 
                 for cond in self.__conds:
+                    factlist.rule = self
                     if issubclass(cond.__class__, Rule):
+                        cond.ke = self.ke
                         acts = cond.get_activations(factlist)
                         if not acts:
                             break
@@ -92,6 +112,7 @@ class Rule:
                             for fact in act.facts:
                                 matches.append([fact])
                     elif isinstance(cond, Fact):
+                        cond.rule = self
                         match = factlist.matches(cond)
                         if match:
                             matches.append(match)
@@ -104,6 +125,10 @@ class Rule:
                             yield Activation(rule=self, facts=facts)
 
             return tuple(set(_activations()))
+
+    def conds(self):
+        """ Not-so-nice way to access __conds """
+        return self.__conds
 
 
 class AND(Rule):

@@ -21,31 +21,66 @@ class FactState(enum.Enum):
     UNDEFINED = 'UNDEFINED'
 
 
+class Context(dict):
+    """
+        Context that will be used in facttypes
+    """
+    def __init__(self):
+        self._facts = []
+        self._others = []
+
+    def set_fact(self, fact):
+        """ Set fact """
+        self._facts.append(fact)
+
+    def set_other(self, other):
+        """ Set other """
+        self._others.append(other)
+
+    def capture(self, key, value):
+        self[key] = value
+
+
 class FactType:
     """
         Base FactType, defaults to a simple literal
     """
     def __init__(self, value):
         self.value = value
+        self.key = False
 
-    def resolve(self, extra=False):
+    def resolve(self, _=False):
         """ Basic resolution of the value. """
         return self.value
 
     @property
     def is_wildcard(self):
         """ Check if we are a wildcard """
-        return (not self.is_callable) and (self.value in FactState)
+        if not isinstance(self, L):
+            return False
+        return self.value in FactState
 
     @property
     def is_literal(self):
         """ Check if we are a literal type """
-        return not self.is_callable and not self.is_wildcard
+        if not isinstance(self, L):
+            return False
+        return not self.is_wildcard
 
     @property
     def is_callable(self):
         """ Check if we are a callable type """
-        return hasattr(self, 'callable')
+        return isinstance(self, T)
+
+    @property
+    def is_capturedvalue(self):
+        """ Check if we are a captured value type"""
+        return isinstance(self, V)
+
+    @property
+    def is_capture(self):
+        """ Check if we are a capture-order value type"""
+        return isinstance(self, C)
 
 
 class L(FactType):
@@ -73,7 +108,26 @@ class T(FactType):
 
             Defaults to L(False)
         """
-        self.callable(to_what.resolve())
+        othervalue = to_what.resolve()
+        return self.callable(othervalue)
+
+
+class C(FactType):
+    """
+        Capture a value
+    """
+    pass
+
+
+class V(FactType):
+    """
+        Use a captured value
+    """
+    def resolve(self, to_what):
+        """ Get a value from the context """
+        if not self.context:
+            raise ValueError("Cant use C/V types without asigning a context")
+        return self.context[to_what]
 
 
 class ValueSet:
@@ -82,11 +136,17 @@ class ValueSet:
     """
     cond = "is_literal"
 
-    def __init__(self):
+    def __init__(self, parent):
         self.value = set()
         self._resolved_values = None
-        self._cached_values = False
+        self._cached_values = set()
         self.current = 0
+        self.parent = parent
+
+    @property
+    def context(self):
+        """ Use fact context """
+        return self.parent.context
 
     @property
     def resolved(self):
@@ -103,16 +163,20 @@ class ValueSet:
     def add(self, key, value):
         """ Add an item if it meets condition """
         if self.condition(value):
+            value.context = self.context
+            value.key = key
             self.value.add((key, value))
 
     def reset(self):
         """ Restarts resolved """
+        self.resolved
         self._resolved_values = self._cached_values.copy()
 
     def __iter__(self):
         return self
 
     def __next__(self):
+        self.parent.populate()
         with suppress(KeyError):
             return self.resolved.pop()
         raise StopIteration()
@@ -124,8 +188,21 @@ class ValueSet:
         """
             Checks if our valueset is a superset of the other valueset
         """
+        self.resolved
+        self.context.set_fact(self)
+        self.context.set_other(other)
+
+
+class LValueSet(ValueSet):
+    """ Literal value set """
+    def matches(self, other):
+        """
+            Foo
+        """
+        super().matches(other)
         if not self.resolved:
             return True
+        other.populate()
         return other.valueset.resolved.issuperset(self.resolved)
 
 
@@ -134,18 +211,28 @@ class CValueSet(ValueSet):
     cond = "is_callable"
 
     def matches(self, other):
+        super().matches(other)
+
         if not self.value:
             return True
         for key, value in self.value:
             if key not in other.keyset:
                 return False
             try:
-                othervalue = other.value[key]
-                result = value.callable(othervalue.resolve())
+                result = value.resolve(other.value[key])
                 assert result
                 return True
             except Exception:
                 return False
+
+    @property
+    def resolved(self):
+        """ Resolve """
+        if self._resolved_values is None:
+            self._resolved_values = {(a, b) for a, b in self.value}
+            self._cached_values = self._resolved_values.copy()
+        return self._resolved_values
+
 
 
 class WValueSet(ValueSet):
@@ -158,6 +245,7 @@ class WValueSet(ValueSet):
             - If ANY value is UNDEFINED and is in keyset, fail
             - Otherwise, true
         """
+        super().matches(other)
         for key, value in self:
             if value is FactState.DEFINED and key not in other.keyset:
                 return False
@@ -166,35 +254,129 @@ class WValueSet(ValueSet):
         return True
 
 
+class CapValueSet(ValueSet):
+    """ Capture value value set """
+    cond = "is_capture"
+
+    def matches(self, other):
+        super().matches(other)
+        atleastone = False
+
+        for key, value in self.value:
+            if key not in other.keyset:
+                continue
+            atleastone = True
+            self.context.capture(key, value.resolve(other.value[key]))
+
+        if atleastone:
+            return True
+
+        return False
+
+
+class ValValueSet(ValueSet):
+    """ Captured values value set"""
+    cond = "is_capturedvalue"
+
+    @property
+    def resolved(self):
+        """ Resolve """
+        if self._resolved_values is None:
+            self._resolved_values = {(a, b.resolve(a)) for a, b in self.value}
+            self._cached_values = self._resolved_values.copy()
+        return self._resolved_values
+
+
 class Fact:
     """
         Base Fact class
     """
     def __init__(self, **value):
-        self.value = value
-
-        for val in value.values():
+        for key, val in value.items():
             if not isinstance(val, FactType):
-                raise TypeError("Fact values inherit from FactType")
+                value[key] = L(val)
 
+        self.value = value
         self.keyset = set(value.keys())
+        self.populated = False
+        self._context = False
+        self._valueset = False
+        self._capvalueset = False
+        self._wcvalueset = False
+        self._callablevalueset = False
+        self.rule = False
 
-        self.valueset = ValueSet()
-        self.wcvalueset = WValueSet()
-        self.callablevalueset = CValueSet()
+    def __repr__(self):
+        return "<pyknow.fact.Fact object with value [{}] >".format(self.value)
 
-        for key, value in self.value.items():
-            self.valueset.add(key, value)
-            self.wcvalueset.add(key, value)
-            self.callablevalueset.add(key, value)
+    @property
+    def context(self):
+        if self.rule:
+            if self.rule.context is not None:
+                return self.rule.context
+            else:
+                return Context()
+        return self._context
+
+    @property
+    def valueset(self):
+        if not self._valueset:
+            self.populate()
+        return self._valueset
+
+    @property
+    def callablevalueset(self):
+        if not self._callablevalueset:
+            self.populate()
+        return self._callablevalueset
+
+    @property
+    def wcvalueset(self):
+        if not self._wcvalueset:
+            self.populate()
+        return self._wcvalueset
+
+    @property
+    def capvalueset(self):
+        if not self._capvalueset:
+            self.populate()
+        return self._capvalueset
+
+    def populate(self, context=False):
+        """
+            Load data, if not already done.
+            This has been forced outside init because we need to
+            lazy-load it so it can have the context object available,
+            wich is done after Rule() initialization
+        """
+        if not self.context:
+            if context:
+                self._context = context
+            else:
+                self._context = Context()
+
+        if not self.populated:
+            self._valueset = LValueSet(self)
+            self._wcvalueset = WValueSet(self)
+            self._callablevalueset = CValueSet(self)
+            self._capvalueset = CapValueSet(self)
+
+            for key, value in self.value.items():
+                self._valueset.add(key, value)
+                self._wcvalueset.add(key, value)
+                self._callablevalueset.add(key, value)
+                self._capvalueset.add(key, value)
 
     def _contains(self, other):
         """
             If we contain a wildcard, apply the needed logic
             for __contains__
         """
-        # We have some wildcards.
+        self.populate()
+        # Get cap values
+        self.capvalueset.matches(self)
 
+        # We have some wildcards.
         if not self.wcvalueset.matches(other):
             return False
         elif not self.callablevalueset.matches(other):

@@ -1,5 +1,3 @@
-import pytest
-
 def test_basic_ce():
     from pyknow.rule import Rule
     from pyknow.factlist import FactList

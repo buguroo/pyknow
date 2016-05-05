@@ -140,3 +140,65 @@ def test_or_operator():
             for val in combination:
                 ke_.declare(Fact(something=L(val)))
             assert len(ke_.agenda.activations) == comb_len
+
+
+def test_ke_inheritance():
+    from pyknow.rule import Rule
+    from pyknow.fact import Fact, L
+    from pyknow.engine import KnowledgeEngine
+
+
+    executed = False
+
+
+    class Person(Fact):
+        pass
+
+
+    class Base(KnowledgeEngine):
+        @Rule(Person(name='pepe'))
+        def is_pepe(self):
+            self.declare(Person(drinks="coffee"))
+
+
+    class Test(Base):
+        @Rule(Person(drinks="coffee"))
+        def drinks_coffee(self):
+            nonlocal executed
+            executed = True
+
+
+    ke_ = Test()
+    ke_.declare(Person(name='pepe'))
+    ke_.run()
+
+    assert executed
+
+
+def test_nested_declarations():
+    from pyknow.rule import Rule
+    from pyknow.fact import Fact, L
+    from pyknow.engine import KnowledgeEngine
+
+
+    class Person(Fact):
+        pass
+
+
+    executed = False
+
+
+    class Person_KE(KnowledgeEngine):
+        @Rule(Person(name="David"))
+        def david(self):
+            self.declare(Person(name="Pepe"))
+
+        @Rule(Person(name="Pepe"))
+        def pepe(self):
+            nonlocal executed
+            executed=True
+
+    ke_ = Person_KE()
+    ke_.declare(Person(name="David"))
+    ke_.run()
+    assert executed

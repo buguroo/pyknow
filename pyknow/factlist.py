@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from pyknow.fact import Fact
+from pyknow.fact import Fact, Context
 
 
 class FactList:
