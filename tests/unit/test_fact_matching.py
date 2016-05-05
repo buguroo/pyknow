@@ -45,8 +45,8 @@ def test_match_if_all_defined_is_present(kwargs):
     f0 = Fact(**{a: L(b) for a, b in kwargs.items()})
     f1 = Fact(**{a: L(b) for a, b in kwsuperset.items()})
 
-    assert f0 in f1
-    assert f1 not in f0
+    assert f0 not in f1
+    assert f1 in f0
 
 
 def test_FactState_exists():
