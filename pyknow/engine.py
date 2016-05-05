@@ -21,10 +21,10 @@ class KnowledgeEngine:
     __strategy__ = Depth
 
     def __init__(self):
+        self.context = Context()
         self._fixed_facts = []
         self._facts = FactList()
         self.agenda = Agenda()
-        self.context = Context()
         self.strategy = self.__strategy__()
 
     def declare(self, *facts, persistent=False):
@@ -65,6 +65,7 @@ class KnowledgeEngine:
         def _rules():
             for name, obj in getmembers(self):
                 if isinstance(obj, Rule):
+                    obj.ke = self
                     yield obj
         return list(_rules())
 
@@ -74,6 +75,7 @@ class KnowledgeEngine:
         """
         def _activations():
             for rule in self.get_rules():
+                rule.ke = self
                 for act in rule.get_activations(self._facts):
                     yield act
         return list(_activations())

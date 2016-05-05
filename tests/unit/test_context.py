@@ -3,102 +3,51 @@
 """
 
 
-def test_capture_to_valueset():
+def test_context_not_defined_on_simple_rules():
     """
-        Test that captured values are added to capvalueset
-    """
-    from pyknow.fact import Fact, C
-    fact = Fact(name=C('name'), name2=C('name2'))
-    fact in fact  # Trigger matching
-    assert len(fact.capvalueset) == 2
-
-
-def test_capture_to_extcontext():
-    """
-        Test that a captured value is added to context, wich can
+        test that a captured value is added to context, wich can
         be externally added so we'll be able to have a general context
         for all the facts in a rule
     """
-    from pyknow.fact import Fact, C, L, Context
+    from pyknow.fact import Fact, C
     from pyknow.rule import Rule
+
+    rule = Rule(Fact(name=C('stuff')))
+    assert rule.context is None
+
+
+def rules_can_be_defined_outside_ke():
+    """
+        Test that if we define a rule outside the knowledge engine
+
+    """
+    from pyknow.fact import Fact, C, L
+    from pyknow.rule import Rule
+    from pyknow.engine import KnowledgeEngine
     from pyknow.factlist import FactList
 
-    fact = Fact(name=C('stuff'))
-    fact.context = Context()
-    rule = Rule(fact)
+    rule = Rule(Fact(name=C('stuff')))
+    executed = False
 
-    fl_ = FactList()
-    fl_.declare(Fact(name=L('foo')))
-    rule.get_activations(fl_)
-    assert fact.context['main'].captured == {'name': 'stuff'}
+    class TestKE(KnowledgeEngine):
+        @rule
+        def is_stuff(self):
+            nonlocal executed
+            executed = True
 
+    ke_ = TestKE()
+    ke_.declare(Fact(name=L("foo")))
+    ke_.run()
 
-def test_factlist_shouldnot_inherit_context():
-    """
-        Factlist we're comparing against should not get context.
-        Only rules' facts should
-    """
-    from pyknow.fact import Fact, C, L, Context
-    from pyknow.rule import Rule
-    from pyknow.factlist import FactList
-
-    fact = Fact(name=C('stuff'))
-    context = Context()
-    fact.context = context
-    rule = Rule(fact)
-
-    fl_ = FactList()
-    fl_.declare(Fact(name=L('foo')))
-
-    for activation in rule.get_activations(fl_):
-        for fact in activation.facts:
-            assert fl_._facts[fact].context['main'] is not context
-
-
-def test_rulefacts_inherit_context():
-    """
-        After getting activations, thus comparing against all valuesets
-        we should get a context having the captured values
-    """
-    from pyknow.fact import Fact, C, L, Context
-    from pyknow.rule import Rule
-    from pyknow.factlist import FactList
-
-    fact = Fact(name=C('stuff'))
-    fact.context = Context()
-    rule = Rule(fact)
+    assert ke_.context
+    assert rule.context
+    assert executed
 
     fl_ = FactList()
     fl_.declare(Fact(name=L('foo')))
 
     rule.get_activations(fl_)
-    assert rule.conds()
-
-    for fact in rule.conds():
-        assert fact.context['main'].captured == {'name': 'stuff'}
-
-
-def test_rule_inherit_context():
-    """
-        After getting activations, thus comparing against all valuesets
-        we should get a context having the captured values
-    """
-    from pyknow.fact import Fact, C, L, Context
-    from pyknow.rule import Rule
-    from pyknow.factlist import FactList
-
-    fact = Fact(name=C('stuff'))
-    rule = Rule(fact)
-    rule.context = Context()
-
-    fl_ = FactList()
-    fl_.declare(Fact(name=L('foo')))
-
-    rule.get_activations(fl_)
-    assert rule.conds()
-
-    for fact in rule.conds():
-        assert fact.context['main'].captured == {'name': 'stuff'}
+    assert rule.context == {'name': 'stuff'}
 
 
 def test_rule_inherit_ke_context():
@@ -107,7 +56,7 @@ def test_rule_inherit_ke_context():
     """
     from pyknow.engine import KnowledgeEngine
     from pyknow.rule import Rule
-    from pyknow.fact import Fact, C, Context, V, L
+    from pyknow.fact import Fact, C, V, L
     from collections import defaultdict
     executions = []
 
@@ -157,7 +106,7 @@ def test_can_capture_values():
     """
     from pyknow.engine import KnowledgeEngine
     from pyknow.rule import Rule
-    from pyknow.fact import Fact, C, Context, V, L
+    from pyknow.fact import Fact, C, V, L
     from collections import defaultdict
     executions = []
 
@@ -200,4 +149,5 @@ def test_can_capture_values():
     for act in acts:
         assert act.rule.context is ke_.context
 
-    print(ke_.context.captured)
+    print(ke_.context)
+    assert ke_.context

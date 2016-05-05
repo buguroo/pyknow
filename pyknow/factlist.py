@@ -8,7 +8,6 @@ class FactList:
     """
     def __init__(self):
         self._facts = OrderedDict()
-        self.context = Context()
         self._fidx = 0
 
     def declare(self, fact):
@@ -54,7 +53,6 @@ class FactList:
 
         def _matches():
             for idx, value in self._facts.items():
-                fact.context = self.context
                 if value in fact:
                     yield idx
         result = list(_matches())

@@ -43,13 +43,20 @@ class Rule:
     """
     def __init__(self, *conds, salience=0):
         self.__fn = None
-        self.context = Context()
+        self.ke = False
 
         if not conds:
             conds = (InitialFact(),)
         self.__conds = conds
 
         self.salience = salience
+
+    @property
+    def context(self):
+        if self.ke:
+            return self.ke.context
+        else:
+            return None
 
     def __call__(self, fst=None, *args, **kwargs):
         """
@@ -80,7 +87,7 @@ class Rule:
                 raise AttributeError("Mandatory function not provided.")
         else:
             if hasattr(fst, 'context') and isinstance(fst.context, Context):
-                self.context = fst.context
+                self.ke = fst
 
             args = (tuple() if fst is None else (fst,)) + args
             return self.__fn(*args, **kwargs)
@@ -95,7 +102,9 @@ class Rule:
                 matches = []
 
                 for cond in self.__conds:
+                    factlist.rule = self
                     if issubclass(cond.__class__, Rule):
+                        cond.ke = self.ke
                         acts = cond.get_activations(factlist)
                         if not acts:
                             break
@@ -103,6 +112,7 @@ class Rule:
                             for fact in act.facts:
                                 matches.append([fact])
                     elif isinstance(cond, Fact):
+                        cond.rule = self
                         match = factlist.matches(cond)
                         if match:
                             matches.append(match)
