@@ -202,3 +202,32 @@ def test_nested_declarations():
     ke_.declare(Person(name="David"))
     ke_.run()
     assert executed
+
+
+def test_matching_different_number_of_arguments():
+    from pyknow.rule import Rule
+    from pyknow.fact import Fact, L
+    from pyknow.engine import KnowledgeEngine
+
+
+    class Person(Fact):
+        pass
+
+
+    executed = False
+
+
+    class Person_KE(KnowledgeEngine):
+        @Rule(Person(name="David"))
+        def david(self):
+            self.declare(Person(name="Pepe", apellido="stuff"))
+
+        @Rule(Person(name="Pepe"))
+        def pepe(self):
+            nonlocal executed
+            executed=True
+
+    ke_ = Person_KE()
+    ke_.declare(Person(name="David"))
+    ke_.run()
+    assert executed
