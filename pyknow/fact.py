@@ -119,6 +119,7 @@ class C(FactType):
     pass
 
 
+
 class V(FactType):
     """
         Use a captured value
@@ -400,7 +401,14 @@ class Fact:
         return self._contains(other)
 
     def __eq__(self, other):
-        return self.value == other.value
+        if not other.value.keys() == self.value.keys():
+            return False
+        for key, value in self.value.items():
+            if not value.__class__ == value.__class__:
+                return False
+            if not other.value[key].value == self.value[key].value:
+                return False
+        return True
 
 
 class InitialFact(Fact):
