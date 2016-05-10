@@ -49,13 +49,24 @@ class KnowledgeEngine:
 
     def retract(self, idx):
         """
-            Retracts a specific fact
+            Retracts a specific fact, using index
 
             .. note::
 
                 This updates the agenda
         """
         self._facts.retract(idx)
+        self.strategy.update_agenda(self.agenda, self.get_activations())
+
+    def retract_matching(self, fact):
+        """
+            Retracts a specific fact, comparing against another fact
+
+            .. note::
+
+                This updates the agenda
+        """
+        self._facts.retract_matching(fact)
         self.strategy.update_agenda(self.agenda, self.get_activations())
 
     def get_rules(self):
