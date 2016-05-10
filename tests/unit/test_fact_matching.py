@@ -137,3 +137,16 @@ def test_match_with_testce():
     assert Fact(name=L('David')) in Fact(name=T(lambda x: x.startswith('D')))
     assert Fact(name=L('Penelope')) not in Fact(
         name=T(lambda x: x.startswith('D')))
+
+
+@pytest.mark.wip
+def test_facts_are_equal():
+    """ We may need to use EQUAL facts that are not the same object but has
+        the same values """
+
+    from pyknow.fact import Fact, C, V, L
+
+    assert Fact(a=L("foo")) == Fact(a=L("foo"))
+    assert Fact(a=L("foo"), b=C("bar")) == Fact(a=L("foo"), b=C("bar"))
+    assert Fact(a=L("foo"), b=C("bar"), c=V("stuff")
+                ) == Fact(a=L("foo"), b=C("bar"), c=V("stuff"))

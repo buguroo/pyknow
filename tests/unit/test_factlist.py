@@ -95,6 +95,12 @@ def test_FactList_retract_exists():
     assert hasattr(FactList, 'retract')
 
 
+def test_FactList_retract_matching_exists():
+    from pyknow.factlist import FactList
+
+    assert hasattr(FactList, 'retract_matching')
+
+
 @given(idx=st.integers())
 def test_FactList_retract_unknown_index_raise_IndexError(idx):
     from pyknow.factlist import FactList
@@ -103,6 +109,51 @@ def test_FactList_retract_unknown_index_raise_IndexError(idx):
 
     with pytest.raises(IndexError):
         fl.retract(idx)
+
+
+@given(idx=st.integers())
+def test_FactList_retract_matching_nomatchingfact_raise_ValueError(idx):
+    from pyknow.factlist import FactList
+    from pyknow.fact import Fact
+    fact = Fact(name=idx)
+
+    fl = FactList()
+
+    with pytest.raises(ValueError):
+        fl.retract_matching(fact)
+
+
+@given(idx=st.integers())
+def test_FactList_retract_matching(idx):
+    from pyknow.factlist import FactList
+    from pyknow.fact import Fact
+
+    fact = Fact(name=idx)
+
+    fl = FactList()
+    fl.declare(fact)
+
+    fl.retract_matching(Fact(name=idx))
+
+    assert not fl._facts
+
+
+@given(idx=st.integers())
+def test_FactList_retract_matching_only_exact(idx):
+    from pyknow.factlist import FactList
+    from pyknow.fact import Fact
+
+    fact = Fact(name=idx, value=idx)
+
+    fl = FactList()
+    fl.declare(fact)
+
+    with pytest.raises(ValueError):
+        fl.retract_matching(Fact(name=idx))
+
+    fl.retract_matching(Fact(name=idx, value=idx))
+
+    assert not fl._facts
 
 
 def test_FactList_cant_retract_twice():

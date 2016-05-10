@@ -14,18 +14,18 @@ def test_KnowledgeEngine_reset_resets_agenda():
 
     ke = KnowledgeEngine()
     ke.declare(Fact(foo=L(1)), persistent=True)
-    ke.declare(Fact(foo=L(1)), Fact(bar=L(2)), persistent=True)
+    ke.declare(Fact(foo=L(1), bar=L(2)), persistent=True)
     ke.reset()
 
-    assert len(ke._facts._facts) == 4
+    assert len(ke._facts._facts) == 3
 
     ke = KnowledgeEngine()
     ke.declare(Fact(foo=L(1)), persistent=True)
     ke.declare(Fact(foo=L(9)))
-    ke.declare(Fact(foo=L(1)), Fact(bar=L(2)), persistent=True)
+    ke.declare(Fact(foo=L(1), bar=L(2)), persistent=True)
     ke.reset()
 
-    assert len(ke._facts._facts) == 4
+    assert len(ke._facts._facts) == 3
 
     ke = KnowledgeEngine()
     ke.declare(Fact(foo=L(1)), persistent=True)

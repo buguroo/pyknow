@@ -45,6 +45,17 @@ class FactList:
         else:
             del self._facts[idx]
 
+    def retract_matching(self, fact):
+        """
+            Retract all (exact) matching facts
+        """
+
+        for idx, value in self._facts.items():
+            if fact == value:
+                return self.retract(idx)
+
+        raise ValueError("No matching fact")
+
     def matches(self, fact):
         """
         Return the indexes of the matching facts.
