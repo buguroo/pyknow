@@ -26,6 +26,33 @@ class KnowledgeEngine:
         self._facts = FactList()
         self.agenda = Agenda()
         self.strategy = self.__strategy__()
+        self._parent = False
+
+    @property
+    def parent(self):
+        """
+            Parent KE
+
+            Note: This feels like it SHOULD return an exception, but since
+            we're iterating over properties in Rules, I cannot
+            make an unset property return an exception upon accessing.
+            Also, that does not sound like a good idea
+
+            .. returns:: KnowledgeEngine
+        """
+        return self._parent
+
+    @parent.setter
+    def parent(self, parent):
+        """
+            Set a parent for later use.
+
+            You can use any class as a parent as long as it's compatible with
+            KnowledgeEngine class
+
+            We're not currently forcing this, it's a norm
+        """
+        self._parent = parent
 
     def declare(self, *facts, persistent=False):
         """

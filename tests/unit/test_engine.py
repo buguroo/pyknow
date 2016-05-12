@@ -274,3 +274,12 @@ def test_KnowledgeEngine_run_fires_all_activation():
 def test_KnowledgeEngine_has_initialfacts():
     from pyknow.engine import KnowledgeEngine
     assert KnowledgeEngine()._fixed_facts == []
+
+
+def test_KE_parent():
+    from pyknow.engine import KnowledgeEngine
+    engine = KnowledgeEngine()
+    assert not engine.parent
+    parent = KnowledgeEngine
+    engine.parent = parent
+    assert parent is engine.parent
