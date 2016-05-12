@@ -3,8 +3,11 @@
     -------------------
 
     Facts are used both as definitions on rules and as facts.
-    Facts MUST be of type ``Fact`` and its values must be of type
+    Facts MUST be of type ``Fact`` and its values should be of type
     ``FactType``.
+
+    When declaring a fact in a KnowledgeEngine, fact must only be
+    of type ``L``, or not inherit from ``FactType`` (wich defaults to L)
 
 """
 import enum
@@ -293,7 +296,10 @@ class Fact:
         Base Fact class
     """
     def __init__(self, **value):
+        self.is_matcher = False
         for key, val in value.items():
+            if isinstance(val, FactType) and not isinstance(val, L):
+                self.is_matcher = True
             if not isinstance(val, FactType):
                 value[key] = L(val)
 

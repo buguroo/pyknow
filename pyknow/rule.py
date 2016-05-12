@@ -30,7 +30,7 @@ from functools import update_wrapper
 from itertools import product
 
 from pyknow.factlist import FactList
-from pyknow.fact import InitialFact, Fact, Context
+from pyknow.fact import InitialFact, Fact, Context, FactType, L
 from pyknow.activation import Activation
 
 

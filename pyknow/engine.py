@@ -40,11 +40,14 @@ class KnowledgeEngine:
                 This updates the agenda.
 
         """
-        if persistent:
-            self._fixed_facts.extend(facts)
         for fact in facts:
+            if fact.is_matcher:
+                raise TypeError("Cant use types T, C, V declaring a fact")
             idx = self._facts.declare(fact)
             self.strategy.update_agenda(self.agenda, self.get_activations())
+
+        if persistent:
+            self._fixed_facts.extend(facts)
         return idx
 
     def retract(self, idx):
