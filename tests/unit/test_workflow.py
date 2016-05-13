@@ -92,6 +92,33 @@ def test_default_is_and():
     assert executions.count('rule2') == 1
 
 
+def test_or_notmatching_operator():
+    """
+        Test OR operator
+    """
+    from pyknow.engine import KnowledgeEngine
+    from pyknow.rule import Rule, OR
+    from pyknow.fact import Fact, L
+
+    class Test(KnowledgeEngine):
+        """ Test KE """
+        @Rule(OR(Fact(something=L(1)),
+              Fact(something=L(2))))
+        def rule1(self):
+            """ First rule, something=1 and something=2"""
+            pass
+
+    static = ((1, 3), (1, 2), (1, 1, 2), (1, 3, 5))
+    for test in static:
+        ke_ = Test()
+        ke_.reset()
+        for val in test:
+            ke_.declare(Fact(none=L(val)))
+        assert len(ke_.agenda.activations) == 0
+
+    ke_.run()
+
+
 def test_or_operator():
     """
         Test OR operator
