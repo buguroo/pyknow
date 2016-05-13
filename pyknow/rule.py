@@ -6,31 +6,37 @@ Connective Constraints
 Pyknow approach to a KE makes it mandatory for all the arguments to be
 named, that is, no positional arguments here.
 
-Connective constraints are AND, OR and NOT. Of those, only NOT
-is currently implemented.
+Connective constraints are AND, OR and NOT.
 
-Usage should be the same for them as actually is for NOT
+All Connective Constraints MUST be enclosed in Rule decorators,
+and only contain Fact objects.
 
-::
+>>> from pyknow.rule import AND, Rule
+>>> from pyknow.fact import Fact, L
+>>> from pyknow.engine import KnowledgeEngine
 
+>>> def foo():
+...    class RefrigeratorLogic(KnowledgeEngine):
+...        food_spoiled = False
+...        @Rule(AND(Fact(light=L("on")), Fact(door=L("open"))))
+...        def food_spoiled(self):
+...            self.food_spoiled = True
+...    ke = RefrigeratorLogic()
+...    ke.reset()
+...    ke.declare(Fact(light="on"))
+...    ke.declare(Fact(door="open"))
+...    ke.run()
+...    return ke.food_spoiled
 
-    class RefrigeratorLogic(KnowledgeEngine):
-        @Rule(AND(foo=L("bar"), bar=L("baz"))) #LHS
-        def food_spoiled(self): #RHS
-            return True
+>>> assert foo()
 
-    ke = RefrigeratorLogic()
-    ke.reset()
-    ke.declare(Fact(
-        foo=L("on"),
-        bar=L("off")))
 """
 
 from functools import update_wrapper
 from itertools import product
 
 from pyknow.factlist import FactList
-from pyknow.fact import InitialFact, Fact, Context, FactType, L
+from pyknow.fact import InitialFact, Fact, Context
 from pyknow.activation import Activation
 
 
@@ -186,8 +192,8 @@ class OR(Rule):
 
     def get_activations(self, factlist):
         """Return a tuple with the activations of this rule."""
+        matches = []
         for cond in self._Rule__conds:
-            matches = []
 
             for cond in self._Rule__conds:
                 if issubclass(cond.__class__, Rule):
@@ -205,3 +211,5 @@ class OR(Rule):
         if matches:
             return tuple([Activation(rule=self,
                                      facts=[fact[0] for fact in matches])])
+        else:
+            return tuple()
