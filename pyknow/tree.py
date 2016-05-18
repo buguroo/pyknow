@@ -20,8 +20,11 @@ class KETree:
         self.tree = tree
         self.finished = False
         self._tree = tree.copy()
-        assert isinstance(self.tree, dict)
-        assert self.is_valid_node(self.tree)
+        try:
+            assert isinstance(self.tree, dict)
+            assert self.is_valid_node(self.tree)
+        except AssertionError:
+            raise Exception("Not a valid KETree node specified")
 
     @classmethod
     def is_valid_node(cls, node):
@@ -42,13 +45,20 @@ class KETree:
             return True
 
     def pop_furthest_elements(self):
-        """ Pop the latest childrens """
+        """
+            Pop the latest childrens
+            If parent is not set, this automatically
+            sets it, that way it'll be available on
+            processing but it's easily overrideable
+        """
 
         def recurse(parent, results):
             """ Recursive magic """
             curr = []
             for num, child in enumerate(parent['children']):
-                if child['children']:
+                if not child['node'].parent:
+                    child['node'].parent = parent['node']
+                if 'children' in child and child['children']:
                     recurse(child, results)
                 else:
                     results.append(child['node'])
@@ -74,3 +84,13 @@ class KETree:
             self.finished = True
             return [self.tree['node']]
         return results
+
+    def run_sequential(self):
+        """
+            Sequential implementation.
+            This should work as an example to implement a
+            parallel tree
+        """
+        for elements in self:
+            for element in elements:
+                element.run()
