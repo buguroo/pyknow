@@ -85,6 +85,24 @@ class KETree:
             return [self.tree['node']]
         return results
 
+    @property
+    def nodes(self):
+        """ Get all nodes, plain """
+        result = []
+
+        def recurse(parent):
+            """ walk the tree """
+            for child in parent:
+                if 'children' in child and child['children']:
+                    recurse(child)
+                else:
+                    result.append(child['node'])
+
+        recurse(self.tree['children'])
+        result.append(self.tree['node'])
+
+        return result
+
     def run_sequential(self):
         """
             Sequential implementation.
