@@ -57,6 +57,9 @@ class Rule:
 
         self.salience = salience
 
+    def __repr__(self):
+        return "Rule(conds={})".format(self.__conds)
+
     @property
     def context(self):
         if self.ke:
