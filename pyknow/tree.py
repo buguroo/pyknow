@@ -92,11 +92,14 @@ class KETree:
 
         def recurse(parent):
             """ walk the tree """
-            for child in parent:
-                if 'children' in child and child['children']:
-                    recurse(child)
+            if isinstance(parent, dict):
+                if 'children' in parent:
+                    recurse(parent['children'])
                 else:
-                    result.append(child['node'])
+                    result.append(parent['node'])
+            else:
+                for element in parent:
+                    recurse(element)
 
         recurse(self.tree['children'])
         result.append(self.tree['node'])
