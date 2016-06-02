@@ -58,6 +58,12 @@ def test_KnowledgeEngine_has_retract():
     assert hasattr(KnowledgeEngine, 'retract')
 
 
+def test_KnowledgeEngine_has_retract_matching():
+    from pyknow.engine import KnowledgeEngine
+
+    assert hasattr(KnowledgeEngine, 'retract_matching')
+
+
 def test_KnowledgeEngine_retract_retracts_fact():
     from pyknow.engine import KnowledgeEngine
     from unittest.mock import patch
@@ -67,6 +73,17 @@ def test_KnowledgeEngine_retract_retracts_fact():
         ke._facts = mock
         ke.retract(0)
         assert mock.retract.called
+
+
+def test_KnowledgeEngine_retract_matching_retracts_fact():
+    from pyknow.engine import KnowledgeEngine
+    from unittest.mock import patch
+
+    ke = KnowledgeEngine()
+    with patch('pyknow.factlist.FactList') as mock:
+        ke._facts = mock
+        ke.retract_matching(False)
+        assert mock.retract_matching.called
 
 
 def test_KnowledgeEngine_has_agenda():
@@ -252,3 +269,17 @@ def test_KnowledgeEngine_run_fires_all_activation():
 
     ke.run()
     assert executed == 3
+
+
+def test_KnowledgeEngine_has_initialfacts():
+    from pyknow.engine import KnowledgeEngine
+    assert KnowledgeEngine()._fixed_facts == []
+
+
+def test_KE_parent():
+    from pyknow.engine import KnowledgeEngine
+    engine = KnowledgeEngine()
+    assert not engine.parent
+    parent = KnowledgeEngine
+    engine.parent = parent
+    assert parent is engine.parent
