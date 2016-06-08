@@ -55,7 +55,7 @@ class KETree:
         def recurse(parent, results):
             """ Recursive magic """
             curr = []
-            for num, child in enumerate(parent['children']):
+            for num, child in enumerate(parent.get('children', {})):
                 if not child['node'].parent:
                     child['node'].parent = parent['node']
                 if 'children' in child and child['children']:
@@ -92,18 +92,11 @@ class KETree:
 
         def recurse(parent):
             """ walk the tree """
-            if isinstance(parent, dict):
-                if 'children' in parent:
-                    recurse(parent['children'])
-                else:
-                    result.append(parent['node'])
-            else:
-                for element in parent:
-                    recurse(element)
+            result.append(parent.get('node'))
+            for element in parent.get('children', {}):
+                recurse(element)
 
-        recurse(self.tree['children'])
-        result.append(self.tree['node'])
-
+        recurse(self.tree)
         return result
 
     def run_sequential(self):
