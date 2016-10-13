@@ -64,7 +64,7 @@ class KETree:
                     results.append(child['node'])
                     curr.append(num)
 
-            for num in curr:
+            for num in reversed(curr):
                 parent['children'].pop(num - 1)
 
             return result

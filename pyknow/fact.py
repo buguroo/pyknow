@@ -122,7 +122,6 @@ class C(FactType):
     pass
 
 
-
 class V(FactType):
     """
         Use a captured value
