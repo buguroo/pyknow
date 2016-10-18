@@ -90,7 +90,8 @@ class L(FactType):
     """
         Literal FactType, just compare values
     """
-    pass
+    def __repr__(self):
+        return "<pyknow.fact.L({}>".format(self.resolve())
 
 
 class T(FactType):
