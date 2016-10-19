@@ -27,6 +27,14 @@ class KnowledgeEngine:
         self.agenda = Agenda()
         self.strategy = self.__strategy__()
         self._parent = False
+        self.shared_attributes = {}
+
+    def set_shared_attributes(**shared_attributes):
+        """
+            Stablises a dict with shared attributes to be used
+            by this KE's childs on a tree
+        """
+        self.shared_attributes = shared_attributes
 
     @property
     def parent(self):
