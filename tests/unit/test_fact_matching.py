@@ -139,7 +139,6 @@ def test_match_with_testce():
         name=T(lambda x: x.startswith('D')))
 
 
-@pytest.mark.wip
 def test_facts_are_equal():
     """ We may need to use EQUAL facts that are not the same object but has
         the same values """
