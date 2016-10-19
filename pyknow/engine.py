@@ -29,7 +29,11 @@ class KnowledgeEngine:
         self._parent = False
         self.shared_attributes = {}
 
-    def set_shared_attributes(**shared_attributes):
+
+    def __repr__(self):
+        return "{}({})".format(self.__class__.__name__, self.shared_attributes)
+
+    def set_shared_attributes(self, **shared_attributes):
         """
             Stablises a dict with shared attributes to be used
             by this KE's childs on a tree
