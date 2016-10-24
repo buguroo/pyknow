@@ -56,7 +56,7 @@ def test_Depth_update_agenda_no_facts_returns_empty_agenda():
     st.update_agenda(a, set())
 
     assert not a.activations
-    
+
 
 def test_Depth_update_agenda_activations_to_agenda():
     from pyknow.strategies import Depth
