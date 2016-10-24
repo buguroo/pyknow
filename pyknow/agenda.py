@@ -13,3 +13,14 @@ class Agenda:
             return act
         except IndexError:
             return None
+
+    def remove_from_fact(self, fact):
+        """
+        Remove a matching activation
+        """
+        activations_to_remove = []
+        for activation in self.activations:
+            if activation.facts == (fact,):
+                activations_to_remove.append(activation)
+        for activation in activations_to_remove:
+            self.activations.remove(activation)
