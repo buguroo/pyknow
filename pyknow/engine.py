@@ -38,7 +38,7 @@ class KnowledgeEngine:
             Stablises a dict with shared attributes to be used
             by this KE's childs on a tree
         """
-        self.shared_attributes = shared_attributes
+        self.shared_attributes.update(shared_attributes)
 
     @property
     def parent(self):

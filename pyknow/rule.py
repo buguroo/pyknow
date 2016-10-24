@@ -139,6 +139,10 @@ class Rule:
         """ Not-so-nice way to access __conds """
         return self.__conds
 
+    def fn(self):
+        """ Expose fn outside """
+        return self.__fn
+
 
 class AND(Rule):
     """
