@@ -97,7 +97,8 @@ class KnowledgeEngine:
 
                 This updates the agenda
         """
-        self._facts.retract(idx)
+        idx = self._facts.retract(idx)
+        self.agenda.remove_from_fact(idx)
         self.strategy.update_agenda(self.agenda, self.get_activations())
 
     def retract_matching(self, fact):
@@ -108,7 +109,8 @@ class KnowledgeEngine:
 
                 This updates the agenda
         """
-        self._facts.retract_matching(fact)
+        for idx in self._facts.retract_matching(fact):
+            self.agenda.remove_from_fact(idx)
         self.strategy.update_agenda(self.agenda, self.get_activations())
 
     def get_rules(self):
