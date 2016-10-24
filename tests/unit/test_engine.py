@@ -86,6 +86,19 @@ def test_KnowledgeEngine_retract_matching_retracts_fact():
         assert mock.retract_matching.called
 
 
+def test_KnowledgeEngine_modify_retracts_and_declares():
+    from pyknow.engine import KnowledgeEngine
+    from unittest.mock import patch
+
+    ke = KnowledgeEngine()
+    with patch('pyknow.factlist.FactList') as mock:
+        with patch('pyknow.engine.KnowledgeEngine.declare') as declare_mock:
+            ke._facts = mock
+            ke.modify(False, False)
+            assert mock.retract_matching.called
+            assert declare_mock.called
+
+
 def test_KnowledgeEngine_has_agenda():
     from pyknow.engine import KnowledgeEngine
     ke = KnowledgeEngine()

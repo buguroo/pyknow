@@ -113,6 +113,15 @@ class KnowledgeEngine:
             self.agenda.remove_from_fact(idx)
         self.strategy.update_agenda(self.agenda, self.get_activations())
 
+    def modify(self, fact, result_fact):
+        """
+            Modifies a fact. As documented on clips, modify
+            retracts a fact and then re-declares it
+
+        """
+        self.retract_matching(fact)
+        self.declare(result_fact)
+
     def get_rules(self):
         """
             Gets all rules assigned to this KE.
