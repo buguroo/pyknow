@@ -1,20 +1,55 @@
 #!/usr/bin/env python
 
 """
-    tree
-    ----
+Tree structures for ``pyknow.engine.KnowledgeEngine`` objects that
+allows interaction between multiple ``pyknow.engine.KnowledgeEngine``
+in an orderly manner
 
-    Helper classes to paralelize pyknow tasks
 """
 
 
 class KETree:
     """
-        Knowledge engine tree.
+    Given a prestablished *dictionary tree*, this acts
+    as an iterator that yields results from farthest to nearest
+    element, to execute them.
 
-        Given a prestablished dictionary tree, this acts
-        as an iterator that yields results from farthest to nearest
-        element.
+    The given dictionary tree should have a structure like this::
+
+        {
+            'node': KETree(),
+            'children': [
+                {
+                    'node': KETree()
+                },
+                {
+                    'node': KETree(),
+                    'children': [
+                        {'node': KETree()}
+                    ]
+                }
+            ]
+        }
+
+    That is, given::
+
+        Parent1
+        │
+        └──┬─ Children1
+           │  ├─ SubChildren1
+           │  │
+           │  └─ SubChildren2
+           │
+           └─ Children2
+
+    We get an execution order of::
+
+        SubChildren1 → SubChildren2 → Children2 → Children1 → Parent1
+
+    And all children have its parent defined.
+
+    :param tree: Dictionary tree, following the described form
+
     """
     def __init__(self, tree):
         self.tree = tree
@@ -29,8 +64,10 @@ class KETree:
     @classmethod
     def is_valid_node(cls, node):
         """
-            We walk over the entire tree ising
-            its structure
+        Check if a given node is a valid node, that is, a dictionary
+        structure containing a 'node', and optionally childrens (that
+        must follow this same conditions)
+
         """
         try:
             assert isinstance(node, dict)
@@ -46,16 +83,20 @@ class KETree:
 
     def pop_furthest_elements(self):
         """
-            Pop the latest childrens
+            Pop the furthest elements in the tree
+
             If parent is not set, this automatically
             sets it, that way it'll be available on
             processing but it's easily overrideable
+
         """
 
         def recurse(parent, results):
-            """ Recursive magic """
+            """
+            Recurse over tree
+            """
             curr = []
-            for num, child in enumerate(parent['children']):
+            for num, child in enumerate(parent.get('children', {})):
                 if not child['node'].parent:
                     child['node'].parent = parent['node']
                 if 'children' in child and child['children']:
@@ -64,7 +105,7 @@ class KETree:
                     results.append(child['node'])
                     curr.append(num)
 
-            for num in curr:
+            for num in reversed(curr):
                 parent['children'].pop(num - 1)
 
             return result
@@ -87,30 +128,29 @@ class KETree:
 
     @property
     def nodes(self):
-        """ Get all nodes, plain """
+        """
+        Get all the nodes, plain, as should be executed.
+
+        """
         result = []
 
         def recurse(parent):
             """ walk the tree """
-            if isinstance(parent, dict):
-                if 'children' in parent:
-                    recurse(parent['children'])
-                else:
-                    result.append(parent['node'])
-            else:
-                for element in parent:
-                    recurse(element)
+            result.append(parent.get('node'))
+            for element in parent.get('children', {}):
+                recurse(element)
 
-        recurse(self.tree['children'])
-        result.append(self.tree['node'])
-
+        recurse(self.tree)
         return result
 
     def run_sequential(self):
         """
-            Sequential implementation.
-            This should work as an example to implement a
-            parallel tree
+        Sequential implementation of the tree execution.
+
+        Just iterate over the tree (wich will be done as explained in
+        :obj:`pyknow.tree.KETree` and call
+        :func:`pyknow.engine.KnowledgeEngine.run`.
+
         """
         for elements in self:
             for element in elements:

@@ -1,41 +1,22 @@
-Pyknow
-------
+.. pyknow documentation master file, created by
+   sphinx-quickstart on Tue Oct 25 12:19:21 2016.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
 
-Pyknow is a clips-inspired knowledge engine tool for python3.4+
+Welcome to pyknow's documentation!
+==================================
 
+Contents:
 
-Rules and Facts, basic concepts
--------------------------------
-
-
-Engines
--------
-
-
-Data Types
-----------
-
-L
-++
-
-This is the basic data type, it means a literal.
-So, when compared, it'll be compared to it as a literal, that is:
-
-::
-
-    L('foo') -> 'foo'
-
-T
-++
-
-Test data type. In clips, this is called test CE.
-It accepts a callable as argument, and evaluates it against its counterpart in the other fact.
-So:
-
-::
-
-    Fact(something=T(lambda x: x == 'foo')) == Fact(something=L('foo'))
+.. toctree::
+   :maxdepth: 2
 
 
-C & V
-++++++
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+

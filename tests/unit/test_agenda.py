@@ -1,5 +1,6 @@
 import pytest
 
+
 from hypothesis import given
 from hypothesis import strategies as st
 
@@ -20,7 +21,7 @@ def test_Agenda_exists():
 
 
 def test_Agenda_is_class():
-    from pyknow.agenda import Agenda 
+    from pyknow.agenda import Agenda
 
     assert isinstance(Agenda, type)
 
@@ -77,7 +78,7 @@ def test_Agenda_get_next_adds_to_executed():
 
     act1 = Activation(rule=Rule(), facts=(1, ))
     act2 = Activation(rule=Rule(), facts=(2, ))
-    
+
     a = Agenda()
     a.activations = deque([act1, act2])
 
@@ -91,3 +92,34 @@ def test_Agenda_get_next_adds_to_executed():
     a.get_next()
     assert act1 in a.executed
     assert act2 in a.executed
+
+@pytest.mark.wipa
+def test_Agenda_retract_removes_activation():
+    """
+    Clips reacts to this scenario:
+
+    - We have a KE with a factlist
+    - We retract a fact from the factlist
+    - We update the agenda
+
+    By removing the matching activation to the removed
+    fact from the agenda. We should, too
+
+    """
+    from pyknow.engine import KnowledgeEngine
+    from pyknow.rule import Rule
+    from pyknow.fact import Fact
+
+    class KE(KnowledgeEngine):
+        @Rule(Fact(ran=True))
+        def ran(self):
+            self.activated = True
+
+    ke_ = KE()
+    ke_.reset()
+
+    ke_.declare(Fact(ran=True))
+    assert len(ke_._facts._facts) == 2
+    ke_.retract_matching(Fact(ran=True))
+    assert len(ke_._facts._facts) == 1
+    assert not ke_.agenda.activations

@@ -1,13 +1,11 @@
 """
-    Fact and FactTypes.
-    -------------------
 
-    Facts are used both as definitions on rules and as facts.
-    Facts MUST be of type ``Fact`` and its values should be of type
-    ``FactType``.
+Facts are used both as definitions on rules and as facts.
+Facts MUST be of type ``Fact`` and its values should be of type
+``FactType`` (wich defaults to L if not provided).
 
-    When declaring a fact in a KnowledgeEngine, fact must only be
-    of type ``L``, or not inherit from ``FactType`` (wich defaults to L)
+When declaring a fact in a KnowledgeEngine, fact must only be
+of literal type (``L``).
 
 """
 import enum
@@ -26,7 +24,9 @@ class FactState(enum.Enum):
 
 class Context(dict):
     """
-        Context that will be used in facttypes
+    Context that will be used in facttypes
+    This is used on the `C` and `V` implementation only
+
     """
     def __init__(self):
         self._facts = []
@@ -46,43 +46,69 @@ class Context(dict):
 
 class FactType:
     """
-        Base FactType, defaults to a simple literal
+    Base FactType, defaults to a simple literal and provide
+    fact type resolution methods to determine the type
+    of a given `Fact` child.
+
     """
     def __init__(self, value):
         self.value = value
         self.key = False
 
     def resolve(self, _=False):
-        """ Basic resolution of the value. """
+        """
+        Basic resolution of the value.
+
+        """
         return self.value
 
     @property
     def is_wildcard(self):
-        """ Check if we are a wildcard """
+        """
+        Check if we are a wildcard fact, defined in
+        :obj:`pyknow.Fact.FactState`
+
+        """
         if not isinstance(self, L):
             return False
         return self.value in FactState
 
     @property
     def is_literal(self):
-        """ Check if we are a literal type """
+        """
+        Check if we are a literal type that is not
+        a wildcard.
+
+        .. warning:: This has the downside of not being
+                     able to use values from :obj:`pyknow.Fact.FactState`
+                     as literals
+
+        """
         if not isinstance(self, L):
             return False
         return not self.is_wildcard
 
     @property
     def is_callable(self):
-        """ Check if we are a callable type """
+        """
+        Check if we are a callable (:obj:`pyknow.Fact.T`) type
+
+        """
         return isinstance(self, T)
 
     @property
     def is_capturedvalue(self):
-        """ Check if we are a captured value type"""
+        """
+        Check if we are a captured value (:obj:`pyknow.Fact.V`) type
+        """
         return isinstance(self, V)
 
     @property
     def is_capture(self):
-        """ Check if we are a capture-order value type"""
+        """
+        Check if we are a capture (:obj:`pyknow.Fact.C`) type
+
+        """
         return isinstance(self, C)
 
 
@@ -90,12 +116,14 @@ class L(FactType):
     """
         Literal FactType, just compare values
     """
-    pass
+    def __repr__(self):
+        return "<pyknow.fact.L({})>".format(self.resolve())
 
 
 class T(FactType):
     """
-        Test Facttype, evaulates a callable against "other".
+    Test Facttype, evaulates a callable against "other".
+
     """
     def __init__(self, value):
         super().__init__(value)
@@ -122,7 +150,6 @@ class C(FactType):
     pass
 
 
-
 class V(FactType):
     """
         Use a captured value
@@ -136,7 +163,8 @@ class V(FactType):
 
 class ValueSet:
     """
-        Represents a valueset as an iterator able to resolve itself
+    Represents a valueset as an iterator able to resolve itself
+
     """
     cond = "is_literal"
 
@@ -198,7 +226,10 @@ class ValueSet:
 
 
 class LValueSet(ValueSet):
-    """ Literal value set """
+    """
+    Literal value set
+
+    """
     def matches(self, other):
         """
             Foo

@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 from collections import deque
 from collections import defaultdict
 from itertools import chain
+from pyknow.watchers import AGENDA_WATCHER
 
 listdict = lambda:defaultdict(list)
 
@@ -24,6 +25,7 @@ class Strategy(metaclass=ABCMeta):
         # current set.
         agenda.executed = acts_set & agenda.executed
 
+        AGENDA_WATCHER.debug("Agenda updated: %s", agenda)
         return res
 
 
