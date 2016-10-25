@@ -245,8 +245,6 @@ class AND(Rule):
     """
         ``AND`` **operator.**
 
-        See:
-
         This is the default Rule behavior
 
         For convention, :obj:`pyknow.rule.Rule` objects should not be

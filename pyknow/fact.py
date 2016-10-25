@@ -1,6 +1,50 @@
 """
 
-Facts are used both as definitions on rules and as facts.
+Definitions of clips' ``Pattern Conditional Element``.
+
+``Pattern CE`` defines direct matching against patterns, wich is a special
+case implemented in :mod:`pyknow.fact`.
+
+
+The following constraints are defined in CLIPs:
+
+ #. Literal Constraints
+ #. Wildcards Single‑ and Multifield
+ #. Variables Single‑ and Multifield
+ #. Connective Constraints
+ #. Predicate Constraints
+ #. Return Value Constraints
+ #. Pattern‑Matching with Object Patterns
+ #. Pattern‑Addresses
+
+Of those, the following are currently implemented in ``pyknow``:
+
+ #. Literal constraints
+ #. Predicate Constraints
+ #. Return Value Constraints
+ #. Pattern‑Matching with Object Patterns
+
+
+.. note:: Predicate constraints, Pattern‑Matching with Object Patterns
+          and Return Value Constraints are both implemented as
+          :obj:`pyknow.fact.T`
+
+
+According to clips' documentation::
+
+    Pattern conditional elements consist of a collection of field constraints,
+    wildcards, and variables which are used to constrain the set of facts or
+    instances which match the pattern CE. A pattern CE is satisfied by each and
+    every pattern entity that satisfies its constraints. Field constraints are
+    a set of constraints that are used to test a single field or slot of a
+    pattern entity
+
+
+This is implemented by ``FactTypes`` wich represent different comparision
+methods, and ``ValueSets``, wich represents a set of facts or instances
+to test for pattern CE matching.
+
+
 Facts MUST be of type ``Fact`` and its values should be of type
 ``FactType`` (wich defaults to L if not provided).
 
@@ -14,9 +58,10 @@ from contextlib import suppress
 
 class FactState(enum.Enum):
     """
-        '''Magic''' FactState.
-        Defines two keys that, when used as literals, will
-        be handled as wildcards.
+    This is a special case defined only in ``pyknow``.
+    It handles two constants, that, when used as a literal constraint,
+    will be handled as DEFINED and UNDEFINED cases.
+
     """
     DEFINED = 'DEFINED'
     UNDEFINED = 'UNDEFINED'
@@ -25,7 +70,9 @@ class FactState(enum.Enum):
 class Context(dict):
     """
     Context that will be used in facttypes
-    This is used on the `C` and `V` implementation only
+
+    This is used on the :obj:`pyknow.facts.C` and
+    `:obj:pyknow.facts.V` implementation only.
 
     """
     def __init__(self):
@@ -33,22 +80,43 @@ class Context(dict):
         self._others = []
 
     def set_fact(self, fact):
-        """ Set fact """
+        """
+        Adds a fact to our side of facts to compare
+
+        """
         self._facts.append(fact)
 
     def set_other(self, other):
-        """ Set other """
+        """
+        Adds a fact to the other side of facts to compare
+
+        """
         self._others.append(other)
 
     def capture(self, key, value):
+        """
+        Append a value to ourselves.
+
+        .. note:: This **overwrites** the value, be careful
+                  to not reuse keys on your rules.
+
+        .. TODO:: It'll probably be a good idea to force
+                  not-overwriting keys.
+
+        """
         self[key] = value
 
 
 class FactType:
     """
+
     Base FactType, defaults to a simple literal and provide
     fact type resolution methods to determine the type
     of a given `Fact` child.
+
+    This is the base implementation of a ``Pattern CE``, able
+    to handle object resolution and identification to
+    match via valuesets
 
     """
     def __init__(self, value):
@@ -91,7 +159,8 @@ class FactType:
     @property
     def is_callable(self):
         """
-        Check if we are a callable (:obj:`pyknow.Fact.T`) type
+        Check if we are a callable (:obj:`pyknow.Fact.T`) type,
+        a ``Predicate Constraint`` in CLIPS
 
         """
         return isinstance(self, T)
@@ -100,6 +169,7 @@ class FactType:
     def is_capturedvalue(self):
         """
         Check if we are a captured value (:obj:`pyknow.Fact.V`) type
+
         """
         return isinstance(self, V)
 
@@ -114,7 +184,10 @@ class FactType:
 
 class L(FactType):
     """
-        Literal FactType, just compare values
+    ``Literal constraint``
+
+    This is a basic-types constraint (integers, strings, booleans)
+
     """
     def __repr__(self):
         return "<pyknow.fact.L({})>".format(self.resolve())
@@ -122,7 +195,10 @@ class L(FactType):
 
 class T(FactType):
     """
-    Test Facttype, evaulates a callable against "other".
+    ``Predicate constraint.``
+
+    This is the equivalent to using a variable binding, calling a predicate
+    function and return a boolean state from the evaluation of
 
     """
     def __init__(self, value):
@@ -131,13 +207,14 @@ class T(FactType):
 
     def resolve(self, to_what=L(False)):
         """
-            Allows:
+        Allows:
 
-            Rule(Fact(name=T(lambda x: x.startswith('foo')))
-            Fact(name=T(lambda x: L("foo")))
-            Fact(name=T(lambda x='foo': L(x)))
+        Rule(Fact(name=T(lambda x: x.startswith('foo')))
+        Fact(name=T(lambda x: L("foo")))
+        Fact(name=T(lambda x='foo': L(x)))
 
-            Defaults to L(False)
+        Defaults to L(False)
+
         """
         othervalue = to_what.resolve()
         return self.callable(othervalue)
@@ -146,6 +223,7 @@ class T(FactType):
 class C(FactType):
     """
         Capture a value
+
     """
     pass
 
@@ -218,7 +296,9 @@ class ValueSet:
 
     def matches(self, other):
         """
-            Checks if our valueset is a superset of the other valueset
+        Prepopulates caches and facts to easy the child classes'
+        matching methods.
+
         """
         self.resolved
         self.context.set_fact(self)
