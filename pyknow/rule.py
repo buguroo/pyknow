@@ -9,7 +9,10 @@ named, that is, no positional arguments here.
 Connective constraints are AND, OR and NOT.
 
 All Connective Constraints MUST be enclosed in Rule decorators,
-and only contain Fact objects.
+and only contain Fact objects or other Connective Constraints.
+Also, note that a Rule object behaves the same as an AND CC,
+and can be swapped if needed.
+
 
 >>> from pyknow.rule import AND, Rule
 >>> from pyknow.fact import Fact, L
@@ -38,6 +41,7 @@ from itertools import product
 from pyknow.factlist import FactList
 from pyknow.fact import InitialFact, Fact, Context
 from pyknow.activation import Activation
+from pyknow.watchers import RULE_WATCHER
 
 
 class Rule:
@@ -48,8 +52,9 @@ class Rule:
         A Rule's behavior defaults to be the same as AND cc.
     """
     def __init__(self, *conds, salience=0):
+        RULE_WATCHER.debug("Initialized rule with conds %s", conds)
         self.__fn = None
-        self.ke = False
+        self.ke = None
 
         if not conds:
             conds = (InitialFact(),)
@@ -62,6 +67,12 @@ class Rule:
 
     @property
     def context(self):
+        """
+        Shared context between rule's facts.
+
+        This is used to implement `C` and `V`
+
+        """
         if self.ke:
             return self.ke.context
         else:
@@ -131,7 +142,9 @@ class Rule:
                     for match in product(*matches):
                         facts = tuple(sorted(set(match)))
                         if facts:
-                            yield Activation(rule=self, facts=facts)
+                            act = Activation(rule=self, facts=facts)
+                            RULE_WATCHER.debug("Got activation: %s", act)
+                            yield act
 
             return tuple(set(_activations()))
 
@@ -184,7 +197,9 @@ class NOT(Rule):
             fact = factlist.matches(InitialFact())
             if fact:
                 factidx = fact[0]
-                return tuple([Activation(rule=self, facts=(factidx, ))])
+                act = tuple([Activation(rule=self, facts=(factidx, ))])
+                RULE_WATCHER.debug("Got activation: %s", act)
+                return act
             else:
                 return tuple()
 
@@ -201,7 +216,6 @@ class OR(Rule):
         """Return a tuple with the activations of this rule."""
         matches = []
         for cond in self._Rule__conds:
-
             for cond in self._Rule__conds:
                 if issubclass(cond.__class__, Rule):
                     acts = cond.get_activations(factlist)
@@ -216,7 +230,9 @@ class OR(Rule):
                         matches.append(match)
 
         if matches:
-            return tuple([Activation(rule=self,
-                                     facts=[fact[0] for fact in matches])])
+            act = tuple([Activation(rule=self,
+                                    facts=[fact[0] for fact in matches])])
+            RULE_WATCHER.debug("Got activation: %s", act)
+            return act
         else:
             return tuple()
