@@ -1,3 +1,8 @@
+"""
+``fact-list``
+
+"""
+
 from collections import OrderedDict
 from pyknow.fact import Fact
 from pyknow.watchers import FACT_WATCHER
@@ -5,10 +10,26 @@ from pyknow.watchers import FACT_WATCHER
 
 class FactList:
     """
-    Contains a list of facts.
+    Contains a list of facts (``asserted`` data).
 
-    Handles if a fact matches against the list of facts,
-    their declaration and retracting
+    See `Making a List <http://clipsrules.sourceforge.net/docume\
+        ntation/v624/ug.htm#_Toc412126071>`_  section on the user guide
+
+
+    Also see `retrieving the fact-list \
+      <http://clipsrules.sourceforge.net/d\
+              ocumentation/v624/bpg.htm#_Toc11859921>`_ on the clips\
+              programming manual
+
+    In clips, there is the concept of "modules"
+    (:obj:`pyknow.engine.KnowledgeEngine`), wich have their own
+    :obj:`pyknow.factlist.FactList` and :obj:`pyknow.agenda.Agenda`
+
+    A factlist as as both the module's factlist and a ``fact-set``
+    yet currently most methods from a ``fact-set`` are not yet
+    implemented
+
+    .. TODO:: Implement remaining ``fact-set`` methods
 
     """
     def __init__(self):
@@ -19,13 +40,14 @@ class FactList:
         """
         Assert (in clips terminology) a fact.
 
-        Insert the fact into `_facts` using `self._fidx` as the index.
-        `self.fidx` should be the last fact inserted's id.
+        This keeps insertion order.
 
-        Reject any object that not descend from the Fact class.
+        .. warning:: This will reject any object that not descend
+                     from the Fact class.
 
-        :params fact: The fact to declare.
-        :returns: (int) The index of the fact in the list.
+        :param fact: The fact to declare, **must** be derived from
+                     :obj:`pyknow.fact.Fact`.
+        :return: (int) The index of the fact in the list.
         :throws ValueError: If the fact providen is not a Fact object
 
         """
@@ -44,9 +66,15 @@ class FactList:
 
     def retract(self, idx):
         """
-        Retract a previous asserted fact.
+        Retract a previously asserted fact.
 
-        :params idx: The index of the fact to retract in the factlist
+        See `"Retract that fact" in Clips User Guide
+        <http://clipsrules.sourceforge.net/doc\
+                umentation/v624/ug.htm#_Toc412126077>`_.
+
+        :param idx: The index of the fact to retract in the factlist
+        :return: (int) The retracted fact's index
+        :throws IndexError: If the fact's index providen does not exist
 
         """
         if idx not in self._facts:
@@ -58,12 +86,14 @@ class FactList:
 
     def retract_matching(self, fact):
         """
-            Retract all (exact) matching facts
+        Retract all matching facts
 
-            Iterates through the factlist looking for matches
-            and calls `self.retract` for each one.
+        Iterates through the factlist looking for matches
+        against a given fact and calls
+        :func:`pyknow.factlist.FactList.retract` for each match.
 
-            :returns: list of idxs of the facts retracted
+        :return: list of indexes of the facts retracted
+        :throws ValueError: If no fact matches in the factlist
 
         """
         facts = []
@@ -79,7 +109,10 @@ class FactList:
 
     def matches(self, fact):
         """
-        Return the indexes of the matching facts.
+        Checks for matches of a fact inside this factlist
+
+        :param fact: :obj:`pyknow.fact.Fact` to match against
+        :return: list of indexes of matching facts
 
         """
 

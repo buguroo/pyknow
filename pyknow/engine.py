@@ -1,8 +1,7 @@
 """
-    Knowledge Engine
-    ----------------
 
-    TODO: Document the knowledge engine and examples
+``inference-engine`` and ``knowledge-base``
+
 """
 from inspect import getmembers
 
@@ -15,7 +14,14 @@ from pyknow.strategies import Depth
 
 class KnowledgeEngine:
     """
-        Base knowledge engine.
+        This represents a clips' ``module``, wich is an ``inference engine``
+        holding a set of ``rules`` (as :obj:`pyknow.rule.Rule` objects),
+        an ``agenda`` (as :obj:`pyknow.agenda.Agenda` object)
+        and a ``fact-list`` (as :obj:`pyknow.factlist.FactList` objects)
+
+        This could be considered, when inherited from, as the
+        ``knowlege-base``.
+
     """
 
     __strategy__ = Depth
@@ -29,54 +35,56 @@ class KnowledgeEngine:
         self._parent = False
         self.shared_attributes = {}
 
-
     def __repr__(self):
         return "{}({})".format(self.__class__.__name__, self.shared_attributes)
 
     def set_shared_attributes(self, **shared_attributes):
         """
-            Stablises a dict with shared attributes to be used
-            by this KE's childs on a tree
+        Stablises a dict with shared attributes to be used
+        by this KE's childs on a tree
+
         """
         self.shared_attributes.update(shared_attributes)
 
     @property
     def parent(self):
         """
-            Parent KE
+        Parent KE
 
-            Note: This feels like it SHOULD return an exception, but since
-            we're iterating over properties in Rules, I cannot
-            make an unset property return an exception upon accessing.
-            Also, that does not sound like a good idea
+        Note: This feels like it SHOULD return an exception, but since
+        we're iterating over properties in Rules, I cannot
+        make an unset property return an exception upon accessing.
+        Also, that does not sound like a good idea
 
-            .. returns:: KnowledgeEngine
+        :return: KnowledgeEngine
+
         """
         return self._parent
 
     @parent.setter
     def parent(self, parent):
         """
-            Set a parent for later use.
+        Set a parent for later use.
 
-            You can use any class as a parent as long as it's compatible with
-            KnowledgeEngine class
+        You can use any class as a parent as long as it's compatible with
+        KnowledgeEngine class
 
-            We're not currently forcing this, it's a norm
+        We're not currently forcing this, it's a norm
+
         """
         self._parent = parent
 
     def declare(self, *facts, persistent=False):
         """
-            Declare a Fact in the KE.
+        Declare a Fact in the KE.
 
-            If persistent is specified, the facts will be there
-            even after a reset() has been performed, as with
-            clips' initialfacts
+        If persistent is specified, the facts will be there
+        even after a reset() has been performed, as with
+        clips' initialfacts
 
-            .. note::
+        .. note::
 
-                This updates the agenda.
+            This updates the agenda.
 
         """
         for fact in facts:
@@ -91,11 +99,11 @@ class KnowledgeEngine:
 
     def retract(self, idx):
         """
-            Retracts a specific fact, using index
+        Retracts a specific fact, using index
 
-            .. note::
+        .. note::
+            This updates the agenda
 
-                This updates the agenda
         """
         idx = self._facts.retract(idx)
         self.agenda.remove_from_fact(idx)
@@ -103,11 +111,11 @@ class KnowledgeEngine:
 
     def retract_matching(self, fact):
         """
-            Retracts a specific fact, comparing against another fact
+        Retracts a specific fact, comparing against another fact
 
-            .. note::
+        .. note::
+            This updates the agenda
 
-                This updates the agenda
         """
         for idx in self._facts.retract_matching(fact):
             self.agenda.remove_from_fact(idx)
@@ -115,8 +123,9 @@ class KnowledgeEngine:
 
     def modify(self, fact, result_fact):
         """
-            Modifies a fact. As documented on clips, modify
-            retracts a fact and then re-declares it
+        Modifies a fact.
+        Facts are inmutable in Clips, thus, as documented in clips reference
+        manual, this retracts a fact and then re-declares it
 
         """
         self.retract_matching(fact)
@@ -124,10 +133,12 @@ class KnowledgeEngine:
 
     def get_rules(self):
         """
-            Gets all rules assigned to this KE.
+        When instanced as a knowledge-base, this will return
+        each of the rules that are assigned to it (the rule-base).
+
         """
         def _rules():
-            for name, obj in getmembers(self):
+            for _, obj in getmembers(self):
                 if isinstance(obj, Rule):
                     obj.ke = self
                     yield obj
@@ -135,7 +146,9 @@ class KnowledgeEngine:
 
     def get_activations(self):
         """
-            Return a list of activations for every rule / fact.
+        Matches the rule-base (see :func:`pyknow.engine.get_rules`)
+        with the fact-list and returns each match
+
         """
         def _activations():
             for rule in self.get_rules():
@@ -146,7 +159,8 @@ class KnowledgeEngine:
 
     def run(self, steps=None):
         """
-            Execute agenda activations
+        Execute agenda activations
+
         """
         while steps is None or steps > 0:
             activation = self.agenda.get_next()
@@ -157,20 +171,24 @@ class KnowledgeEngine:
                     steps -= 1
                 activation.rule(self)
 
-    def reload_initial_facts(self):
+    def load_initial_facts(self):
         """
-            Loads InitialFact and all the persistent declared facts
+        Declares all fixed_facts
+
         """
-        self.declare(InitialFact())
         if self._fixed_facts:
             self.declare(*self._fixed_facts)
 
     def reset(self):
         """
-            Perform a reset, resets the agenda and factlist
-            If persistent facts have been added, they'll be
-            repopulated after.
+        Performs a reset as per CLIPS behaviour (resets the
+        agenda and factlist and declares InitialFact())
+
+        .. note:: If persistent facts have been added, they'll be
+                  re-declared.
+
         """
         self.agenda = Agenda()
         self._facts = FactList()
-        self.reload_initial_facts()
+        self.declare(InitialFact())
+        self.load_initial_facts()
