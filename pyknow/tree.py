@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
 """
-Tree structures for ``pyknow.engine.KnowledgeEngine`` objects that
-allows interaction between multiple ``pyknow.engine.KnowledgeEngine``
-in an orderly manner
+Pyknow Trees. See :ref:`trees` for more info.
 
 """
 
@@ -31,22 +29,6 @@ class KETree:
             ]
         }
 
-    That is, given::
-
-        Parent1
-        │
-        └──┬─ Children1
-           │  ├─ SubChildren1
-           │  │
-           │  └─ SubChildren2
-           │
-           └─ Children2
-
-    We get an execution order of::
-
-        SubChildren1 → SubChildren2 → Children2 → Children1 → Parent1
-
-    And all children have its parent defined.
 
     :param tree: Dictionary tree, following the described form
 
