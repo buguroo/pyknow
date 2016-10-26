@@ -2,58 +2,7 @@
 
 Definitions of clips' ``Pattern Conditional Element``.
 
-``Pattern CE`` defines direct matching against patterns, wich is a special
-case implemented in :mod:`pyknow.fact`.
-
-
-The following constraints are defined in CLIPs:
-
- #. Literal Constraints
- #. Wildcards Single‑ and Multifield
- #. Variables Single‑ and Multifield
- #. Connective Constraints
- #. Predicate Constraints
- #. Return Value Constraints
- #. Pattern‑Matching with Object Patterns
- #. Pattern‑Addresses
-
-Of those, the following are currently implemented in ``pyknow``:
-
- #. Literal constraints (:obj:`pyknow.fact.L`)
- #. Predicate Constraints (:obj:`pyknow.fact.T`)
- #. Return Value Constraints (:obj:`pyknow.fact.T`)
- #. Pattern‑Matching with Object Patterns (:obj:`pyknow.fact.T`),
-    (:obj:`pyknow.fact.C`) and (:obj:`pyknow.fact.V`)
-
-.. note:: Predicate constraints, Pattern‑Matching with Object Patterns
-          and Return Value Constraints are both implemented as
-          :obj:`pyknow.fact.T`
-
-.. note:: Pyknow also has the hability to capture and use values inside
-          an engine context, between different Fact objects using
-          :obj:`pyknow.fact.C` and :obj:`pyknow.fact.V`. This is probably
-          similar to Pattern-Matching with Object Patterns
-
-According to clips' documentation::
-
-    Pattern conditional elements consist of a collection of field constraints,
-    wildcards, and variables which are used to constrain the set of facts or
-    instances which match the pattern CE. A pattern CE is satisfied by each and
-    every pattern entity that satisfies its constraints. Field constraints are
-    a set of constraints that are used to test a single field or slot of a
-    pattern entity
-
-
-This is implemented by ``FactTypes`` wich represent different comparision
-methods, and ``ValueSets``, wich represents a set of facts or instances
-to test for pattern CE matching.
-
-
-Facts MUST be of type ``Fact`` and its values should be of type
-``FactType`` (wich defaults to L if not provided).
-
-When declaring a fact in a KnowledgeEngine, fact must only be
-of literal type (``L``).
+See :ref:conditional_elements
 
 """
 import enum
@@ -213,7 +162,7 @@ class T(FactType):
         """
         Allows:
 
-        Rule(Fact(name=T(lambda x: x.startswith('foo')))
+        Fact(name=T(lambda x: x.startswith('foo'))
         Fact(name=T(lambda x: L("foo")))
         Fact(name=T(lambda x='foo': L(x)))
 

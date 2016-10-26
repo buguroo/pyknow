@@ -23,7 +23,7 @@ class FactList:
     (:obj:`pyknow.engine.KnowledgeEngine`), wich have their own
     :obj:`pyknow.factlist.FactList` and :obj:`pyknow.agenda.Agenda`
 
-    A factlist as as both the module's factlist and a ``fact-set``
+    A factlist acts as both the module's factlist and a ``fact-set``
     yet currently most methods from a ``fact-set`` are not yet
     implemented
 
