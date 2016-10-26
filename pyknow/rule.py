@@ -142,71 +142,9 @@ class Rule:
 
 class AND(Rule):
     """
-        ``AND`` **operator.**
+        ``AND`` **conditional element.**
 
-        This is the default Rule behavior
-
-        For convention, :obj:`pyknow.rule.Rule` objects should not be
-        nested, but the CEs (:obj:`pyknow.rule.AND`, :obj:`pyknow.rule.OR`,
-        :obj:`pyknow.rule.NOT`) can.
-
-        Example:
-
-        .. code-block:: python
-
-            # Valid
-            @Rule(AND(Fact(foo=L('1'), bar=L('2')),
-                     Fact(baz=L('2'))))
-            def foo():
-                self.declare(stuff=1)
-
-        Clips equivalent:
-
-        .. code-block:: lisp
-
-            (defrule system-fault-3 (and((foo 1) (bar 2) (baz 2)))
-            => (assert stuff 1))
-
-
-        Example:
-
-        .. code-block:: python
-
-            # Valid
-            @Rule(Fact(foo=L('1'), bar=L('2')),
-                 Fact(baz=L('2')))
-            def foo():
-                self.declare(stuff=1)
-
-        Clips equivalent:
-
-        .. code-block:: lisp
-
-            (defrule system-fault-3 (and((foo 1) (bar 2) (baz 2)))
-            => (assert stuff 1))
-
-
-        As per convention, **this should not be done**:
-
-        .. code-block:: python
-
-            # Not valid
-            Rule(Rule(Fact(foo=L('1'), bar=L('2')),
-                      Fact(baz=L('2'))))
-            def foo():
-                self.declare(stuff=1)
-
-
-        From clips documentation::
-
-            CLIPS assumes that all rules have an implicit and conditional
-            element surrounding the conditional elements on the LHS. This means
-            that all conditional elements on the LHS must be satisfied before
-            the rule can be activated. An explicit and conditional element is
-            provided to allow the mixing of and CEs and or CEs. This allows
-            other types of conditional elements to be grouped together within
-            or and not CEs. The and CE is satisfied if all of the CEs inside of
-            the explicit and CE are satisfied.
+        See (:ref:`conditional_and`) narrative documentation.
 
     """
     pass
@@ -214,34 +152,12 @@ class AND(Rule):
 
 class NOT(Rule):
     """
-        ``NOT CE``
+    ``NOT CE``
 
-        The opposite of AND constraint, ensures that a condition is **not**
-        met.
+    See (:ref:`conditional_not`) narrative documentation
 
-        Extracted from CLIPs' manual::
+    .. TODO:: Raise exception when multiple patterns are given to NOT
 
-             Sometimes the lack of information is meaningful; i.e., one wishes
-             to fire a rule if a pattern entity or other CE does not exist. The
-             not conditional element provides this capability. The not CE is
-             satisfied only if the conditional element contained within it is
-             not satisfied. As with other conditional elements, any number of
-             additional CEs may be on the LHS of the rule and field constraints
-             may be used within the negated pattern.  Syntax <not-CE> ::= (not
-             <conditional-element>)
-
-             Only one CE may be negated at a time. Multiple patterns may be
-             negated by using multiple not CEs. Care must be taken when
-             combining not CEs with or and and CEs; the results are not always
-             obvi­ous!  The same holds true for variable bindings within a not
-             CE. Previously bound variables may be used freely inside of a not
-             CE. However, variables bound for the first time within a not CE
-             can be used only in that pattern.
-
-
-        That said, we actually **allow** multiple patterns to be negated.
-
-        .. TODO:: Raise exception when multiple patterns are given to NOT
     """
     def __init__(self, *conds, salience=0):
         super().__init__(*conds, salience=salience)
@@ -273,19 +189,9 @@ class NOT(Rule):
 
 class OR(Rule):
     """
-    Or CE, ensures that ANY condition in
-    the rule matches.
 
-    From clips documentation::
-
-        The or conditional element allows any one of several conditional
-        elements to activate a rule. If any of the conditional elements inside
-        of the or CE is satisfied, then the or CE is satisfied. If all other
-        LHS condi­tional elements are satisfied, the rule will be activated.
-        Note that a rule will be activated for each conditional element with an
-        or CE that is satisfied (assuming the other conditional elements of the
-        rule are also satisfied). Any number of conditional elements
-        may appear within an or CE.
+    ``Or CE``
+    See (:ref:`conditional_or`) narrative documentation
 
     """
     def __init__(self, *conds, salience=0):

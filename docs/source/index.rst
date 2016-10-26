@@ -104,6 +104,7 @@ Narrative documentation
 
 .. toctree::
    introduction
+   ce
    trees
    :maxdepth: 2
 

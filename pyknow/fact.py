@@ -175,7 +175,9 @@ class T(FactType):
 
 class C(FactType):
     """
-        Capture a value
+        Captures a value in the :obj:`pyknow.engine.KnowledgeEngine`'s
+        :obj:`pyknow.fact.Context` by its assigned name. This way we can
+        compare values from different `pyknow.fact.FactType`.
 
     """
     pass
@@ -183,10 +185,23 @@ class C(FactType):
 
 class V(FactType):
     """
-        Use a captured value
+        Extracts a value from the :obj:`pyknow.engine.KnowledgeEngine`'s
+        :obj:`pyknow.fact.Context` to its assigned name. This way we can
+        compare values from different `pyknow.fact.FactType`.
+
     """
     def resolve(self, to_what):
-        """ Get a value from the context """
+        """
+        Resolve a value from the KE's Context
+        This **needs** to be used from inside a KE
+
+        :param to_what: Name assigned in the context from a
+                        :obj:`pyknow.fact.C`
+        :return: Value extracted from the context
+        :throws ValueError: If context is not available (if we're
+                            not being used inside a KnowledgeEngine
+
+        """
         if not self.context:
             raise ValueError("Cant use C/V types without asigning a context")
         return self.context[to_what]
@@ -195,6 +210,10 @@ class V(FactType):
 class ValueSet:
     """
     Represents a valueset as an iterator able to resolve itself
+
+    Facts are grouped by its `pyknow.fact.FactType`, and in the
+    base valueset we only allow literal types
+    (see :func:`pyknow.fact.FactType.is_literal`)
 
     """
     cond = "is_literal"
@@ -208,30 +227,53 @@ class ValueSet:
 
     @property
     def context(self):
-        """ Use fact context """
+        """
+        Returns the asigned :obj:`pyknow.engine.KnowledgeEngine`'s
+        :obj:`pyknow.fact.Context`
+
+        """
         return self.parent.context
 
     @property
     def resolved(self):
-        """ Resolve """
+        """
+        Resolve value from the valuesets.
+
+        """
         if self._resolved_values is None:
             self._resolved_values = {(a, b.resolve()) for a, b in self.value}
             self._cached_values = self._resolved_values.copy()
         return self._resolved_values
 
     def condition(self, value):
-        """ How to decide if a value is for this set """
+        """
+        Helper method to decide, based on
+        conditions that must change from inherited classes and
+        be implemented here, if passed fact is to be sorted from
+        type inside a specific kind of valueset
+
+        :param value: Fact to check against
+
+        """
         return getattr(value, self.cond)
 
     def add(self, key, value):
-        """ Add an item if it meets condition """
+        """
+        This add method has in account the value condition
+        (:func:`pyknow.fact.ValueSet.condition`) and
+        adds the KE's context to the Fact.
+
+        """
         if self.condition(value):
             value.context = self.context
             value.key = key
             self.value.add((key, value))
 
     def reset(self):
-        """ Restarts resolved """
+        """
+        Resets resolved values.
+
+        """
         self.resolved
         self._resolved_values = self._cached_values.copy()
 
@@ -415,10 +457,12 @@ class Fact:
 
     def populate(self, context=False):
         """
-            Load data, if not already done.
-            This has been forced outside init because we need to
-            lazy-load it so it can have the context object available,
-            wich is done after Rule() initialization
+        Load data, if not already done.
+
+        This has been forced outside init because we need to
+        lazy-load it so it can have the context object available,
+        wich is done after Rule() initialization
+
         """
         if not self.context:
             if context:
@@ -440,8 +484,14 @@ class Fact:
 
     def _contains(self, other):
         """
-            If we contain a wildcard, apply the needed logic
-            for __contains__
+        If we contain a wildcard, apply the needed logic
+        for __contains__
+
+        This is called only if:
+
+            - Fact classes match
+            - Fact has a value
+
         """
         self.populate()
         # Get cap values
