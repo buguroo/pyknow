@@ -1,11 +1,8 @@
 """
 
-Facts are used both as definitions on rules and as facts.
-Facts MUST be of type ``Fact`` and its values should be of type
-``FactType`` (wich defaults to L if not provided).
+Definitions of clips' ``Pattern Conditional Element``.
 
-When declaring a fact in a KnowledgeEngine, fact must only be
-of literal type (``L``).
+See :ref:conditional_elements
 
 """
 import enum
@@ -14,9 +11,10 @@ from contextlib import suppress
 
 class FactState(enum.Enum):
     """
-        '''Magic''' FactState.
-        Defines two keys that, when used as literals, will
-        be handled as wildcards.
+    This is a special case defined only in ``pyknow``.
+    It handles two constants, that, when used as a literal constraint,
+    will be handled as DEFINED and UNDEFINED cases.
+
     """
     DEFINED = 'DEFINED'
     UNDEFINED = 'UNDEFINED'
@@ -25,7 +23,9 @@ class FactState(enum.Enum):
 class Context(dict):
     """
     Context that will be used in facttypes
-    This is used on the `C` and `V` implementation only
+
+    This is used on the :obj:`pyknow.facts.C` and
+    `:obj:pyknow.facts.V` implementation only.
 
     """
     def __init__(self):
@@ -33,22 +33,43 @@ class Context(dict):
         self._others = []
 
     def set_fact(self, fact):
-        """ Set fact """
+        """
+        Adds a fact to our side of facts to compare
+
+        """
         self._facts.append(fact)
 
     def set_other(self, other):
-        """ Set other """
+        """
+        Adds a fact to the other side of facts to compare
+
+        """
         self._others.append(other)
 
     def capture(self, key, value):
+        """
+        Append a value to ourselves.
+
+        .. note:: This **overwrites** the value, be careful
+                  to not reuse keys on your rules.
+
+        .. TODO:: It'll probably be a good idea to force
+                  not-overwriting keys.
+
+        """
         self[key] = value
 
 
 class FactType:
     """
+
     Base FactType, defaults to a simple literal and provide
     fact type resolution methods to determine the type
     of a given `Fact` child.
+
+    This is the base implementation of a ``Pattern CE``, able
+    to handle object resolution and identification to
+    match via valuesets
 
     """
     def __init__(self, value):
@@ -91,7 +112,8 @@ class FactType:
     @property
     def is_callable(self):
         """
-        Check if we are a callable (:obj:`pyknow.Fact.T`) type
+        Check if we are a callable (:obj:`pyknow.Fact.T`) type,
+        a ``Predicate Constraint`` in CLIPS
 
         """
         return isinstance(self, T)
@@ -100,6 +122,7 @@ class FactType:
     def is_capturedvalue(self):
         """
         Check if we are a captured value (:obj:`pyknow.Fact.V`) type
+
         """
         return isinstance(self, V)
 
@@ -114,7 +137,10 @@ class FactType:
 
 class L(FactType):
     """
-        Literal FactType, just compare values
+    ``Literal constraint``
+
+    This is a basic-types constraint (integers, strings, booleans)
+
     """
     def __repr__(self):
         return "<pyknow.fact.L({})>".format(self.resolve())
@@ -122,7 +148,10 @@ class L(FactType):
 
 class T(FactType):
     """
-    Test Facttype, evaulates a callable against "other".
+    ``Predicate constraint.``
+
+    This is the equivalent to using a variable binding, calling a predicate
+    function and return a boolean state
 
     """
     def __init__(self, value):
@@ -131,13 +160,14 @@ class T(FactType):
 
     def resolve(self, to_what=L(False)):
         """
-            Allows:
+        Allows:
 
-            Rule(Fact(name=T(lambda x: x.startswith('foo')))
-            Fact(name=T(lambda x: L("foo")))
-            Fact(name=T(lambda x='foo': L(x)))
+        Fact(name=T(lambda x: x.startswith('foo'))
+        Fact(name=T(lambda x: L("foo")))
+        Fact(name=T(lambda x='foo': L(x)))
 
-            Defaults to L(False)
+        Defaults to L(False)
+
         """
         othervalue = to_what.resolve()
         return self.callable(othervalue)
@@ -145,17 +175,33 @@ class T(FactType):
 
 class C(FactType):
     """
-        Capture a value
+        Captures a value in the :obj:`pyknow.engine.KnowledgeEngine`'s
+        :obj:`pyknow.fact.Context` by its assigned name. This way we can
+        compare values from different `pyknow.fact.FactType`.
+
     """
     pass
 
 
 class V(FactType):
     """
-        Use a captured value
+        Extracts a value from the :obj:`pyknow.engine.KnowledgeEngine`'s
+        :obj:`pyknow.fact.Context` to its assigned name. This way we can
+        compare values from different `pyknow.fact.FactType`.
+
     """
     def resolve(self, to_what):
-        """ Get a value from the context """
+        """
+        Resolve a value from the KE's Context
+        This **needs** to be used from inside a KE
+
+        :param to_what: Name assigned in the context from a
+                        :obj:`pyknow.fact.C`
+        :return: Value extracted from the context
+        :throws ValueError: If context is not available (if we're
+                            not being used inside a KnowledgeEngine
+
+        """
         if not self.context:
             raise ValueError("Cant use C/V types without asigning a context")
         return self.context[to_what]
@@ -164,6 +210,10 @@ class V(FactType):
 class ValueSet:
     """
     Represents a valueset as an iterator able to resolve itself
+
+    Facts are grouped by its `pyknow.fact.FactType`, and in the
+    base valueset we only allow literal types
+    (see :func:`pyknow.fact.FactType.is_literal`)
 
     """
     cond = "is_literal"
@@ -177,30 +227,53 @@ class ValueSet:
 
     @property
     def context(self):
-        """ Use fact context """
+        """
+        Returns the asigned :obj:`pyknow.engine.KnowledgeEngine`'s
+        :obj:`pyknow.fact.Context`
+
+        """
         return self.parent.context
 
     @property
     def resolved(self):
-        """ Resolve """
+        """
+        Resolve value from the valuesets.
+
+        """
         if self._resolved_values is None:
             self._resolved_values = {(a, b.resolve()) for a, b in self.value}
             self._cached_values = self._resolved_values.copy()
         return self._resolved_values
 
     def condition(self, value):
-        """ How to decide if a value is for this set """
+        """
+        Helper method to decide, based on
+        conditions that must change from inherited classes and
+        be implemented here, if passed fact is to be sorted from
+        type inside a specific kind of valueset
+
+        :param value: Fact to check against
+
+        """
         return getattr(value, self.cond)
 
     def add(self, key, value):
-        """ Add an item if it meets condition """
+        """
+        This add method has in account the value condition
+        (:func:`pyknow.fact.ValueSet.condition`) and
+        adds the KE's context to the Fact.
+
+        """
         if self.condition(value):
             value.context = self.context
             value.key = key
             self.value.add((key, value))
 
     def reset(self):
-        """ Restarts resolved """
+        """
+        Resets resolved values.
+
+        """
         self.resolved
         self._resolved_values = self._cached_values.copy()
 
@@ -218,7 +291,9 @@ class ValueSet:
 
     def matches(self, other):
         """
-            Checks if our valueset is a superset of the other valueset
+        Prepopulates caches and facts to easy the child classes'
+        matching methods.
+
         """
         self.resolved
         self.context.set_fact(self)
@@ -382,10 +457,12 @@ class Fact:
 
     def populate(self, context=False):
         """
-            Load data, if not already done.
-            This has been forced outside init because we need to
-            lazy-load it so it can have the context object available,
-            wich is done after Rule() initialization
+        Load data, if not already done.
+
+        This has been forced outside init because we need to
+        lazy-load it so it can have the context object available,
+        wich is done after Rule() initialization
+
         """
         if not self.context:
             if context:
@@ -407,8 +484,14 @@ class Fact:
 
     def _contains(self, other):
         """
-            If we contain a wildcard, apply the needed logic
-            for __contains__
+        If we contain a wildcard, apply the needed logic
+        for __contains__
+
+        This is called only if:
+
+            - Fact classes match
+            - Fact has a value
+
         """
         self.populate()
         # Get cap values

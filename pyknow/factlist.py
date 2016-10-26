@@ -1,5 +1,12 @@
 """
-``fact-list``
+``fact-list`` implementation from CLIPS.
+
+See `Making a List <http://clipsrules.sourceforge.net/docume\
+    ntation/v624/ug.htm#_Toc412126071>`_  section on the user guide. \
+Also see `retrieving the fact-list \
+  <http://clipsrules.sourceforge.net/d\
+          ocumentation/v624/bpg.htm#_Toc11859921>`_ on the clips\
+          programming manual
 
 """
 
@@ -12,20 +19,11 @@ class FactList:
     """
     Contains a list of facts (``asserted`` data).
 
-    See `Making a List <http://clipsrules.sourceforge.net/docume\
-        ntation/v624/ug.htm#_Toc412126071>`_  section on the user guide
-
-
-    Also see `retrieving the fact-list \
-      <http://clipsrules.sourceforge.net/d\
-              ocumentation/v624/bpg.htm#_Toc11859921>`_ on the clips\
-              programming manual
-
     In clips, there is the concept of "modules"
     (:obj:`pyknow.engine.KnowledgeEngine`), wich have their own
     :obj:`pyknow.factlist.FactList` and :obj:`pyknow.agenda.Agenda`
 
-    A factlist as as both the module's factlist and a ``fact-set``
+    A factlist acts as both the module's factlist and a ``fact-set``
     yet currently most methods from a ``fact-set`` are not yet
     implemented
 
