@@ -19,16 +19,20 @@ The following constraints are defined in CLIPs:
 
 Of those, the following are currently implemented in ``pyknow``:
 
- #. Literal constraints
- #. Predicate Constraints
- #. Return Value Constraints
- #. Pattern‑Matching with Object Patterns
-
+ #. Literal constraints (:obj:`pyknow.fact.L`)
+ #. Predicate Constraints (:obj:`pyknow.fact.T`)
+ #. Return Value Constraints (:obj:`pyknow.fact.T`)
+ #. Pattern‑Matching with Object Patterns (:obj:`pyknow.fact.T`),
+    (:obj:`pyknow.fact.C`) and (:obj:`pyknow.fact.V`)
 
 .. note:: Predicate constraints, Pattern‑Matching with Object Patterns
           and Return Value Constraints are both implemented as
           :obj:`pyknow.fact.T`
 
+.. note:: Pyknow also has the hability to capture and use values inside
+          an engine context, between different Fact objects using
+          :obj:`pyknow.fact.C` and :obj:`pyknow.fact.V`. This is probably
+          similar to Pattern-Matching with Object Patterns
 
 According to clips' documentation::
 
@@ -198,7 +202,7 @@ class T(FactType):
     ``Predicate constraint.``
 
     This is the equivalent to using a variable binding, calling a predicate
-    function and return a boolean state from the evaluation of
+    function and return a boolean state
 
     """
     def __init__(self, value):

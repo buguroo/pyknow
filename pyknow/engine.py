@@ -1,6 +1,5 @@
 """
-
-``inference-engine`` and ``knowledge-base``
+``pyknow engine`` represents ``CLIPS modules``
 
 """
 from inspect import getmembers
