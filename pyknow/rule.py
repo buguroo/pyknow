@@ -69,6 +69,9 @@ class Rule:
             return None
 
     def __call__(self, fst=None, *args, **kwargs):
+        if 'activation' in kwargs:
+            activation = kwargs.pop('activation')
+
         if self.__fn is None:
             if fst is not None:
                 self.__fn = fst
@@ -78,6 +81,36 @@ class Rule:
         else:
             if hasattr(fst, 'context') and isinstance(fst.context, Context):
                 self.ke = fst
+
+            def get_captured_facts():
+                """ We expose as kwargs all captured facts. """
+                if not self.context:
+                    return []
+                for facts in self.context.capture_facts:
+                    for name, value in facts.resolved:
+                        yield name, value
+
+            def resolve_matched_facts():
+                """
+                For each fact that we're capturing, we try
+                to extract its value from a fact.
+                It HAS to be there, as we're matching against it,
+                otherwise we would'nt be here
+
+                """
+                result = {}
+                for idx in activation.facts:
+                    fact = self.ke._facts.get_by_idx(idx)
+                    result.update({k: v.resolve() for
+                                   k, v in fact.value.items()})
+                return result
+
+            expected = dict(get_captured_facts())
+            if expected:
+                resolved = resolve_matched_facts()
+
+                kwargs.update({key: resolved[exp] for
+                               exp, key in expected.items()})
 
             args = (tuple() if fst is None else (fst,)) + args
             return self.__fn(*args, **kwargs)

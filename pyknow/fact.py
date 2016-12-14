@@ -59,6 +59,15 @@ class Context(dict):
         """
         self[key] = value
 
+    @property
+    def capture_facts(self):
+        """
+        Return all facts that are capvalueset instances
+
+        """
+        for fact in self._facts:
+            if isinstance(fact, CapValueSet):
+                yield fact
 
 class FactType:
     """

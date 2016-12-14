@@ -168,7 +168,7 @@ class KnowledgeEngine:
             else:
                 if steps is not None:
                     steps -= 1
-                activation.rule(self)
+                activation.rule(self, activation=activation)
 
     def load_initial_facts(self):
         """

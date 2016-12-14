@@ -2,6 +2,9 @@
     Basic tests for captured values
 """
 
+from hypothesis import given
+from conftest import random_kwargs
+
 
 def test_context_not_defined_on_simple_rules():
     """
@@ -63,13 +66,13 @@ def test_rule_inherit_ke_context():
     class Test(KnowledgeEngine):
         """ Test KE """
         @Rule(Fact(name=C("name_p")))
-        def rule1(self):
+        def rule1(self, name_p):
             """ First rule, something=1 and something=2"""
             nonlocal executions
             executions.append('rule1')
 
         @Rule(Fact(name=V("name_p")))
-        def rule2(self):
+        def rule2(self, name_p):
             """ Second rule, only something=3 """
             nonlocal executions
             executions.append('rule2')
@@ -113,13 +116,13 @@ def test_can_capture_values():
     class Test(KnowledgeEngine):
         """ Test KE """
         @Rule(Fact(name=C("name_p")))
-        def rule1(self):
+        def rule1(self, name_p):
             """ First rule, something=1 and something=2"""
             nonlocal executions
             executions.append('rule1')
 
         @Rule(Fact(name=V("name_p")))
-        def rule2(self):
+        def rule2(self, name_p):
             """ Second rule, only something=3 """
             nonlocal executions
             executions.append('rule2')
@@ -151,3 +154,24 @@ def test_can_capture_values():
 
     print(ke_.context)
     assert ke_.context
+
+
+@given(kwargs=random_kwargs)
+def test_cv_rhs_arguments(kwargs):
+    """
+    Tests Capture context being passed as kwargs
+
+    """
+
+    from pyknow.fact import Fact, C, L
+    from pyknow.rule import Rule
+    from pyknow.engine import KnowledgeEngine
+
+    class TestKE(KnowledgeEngine):
+        @Rule(Fact(name=C('stuff')))
+        def is_stuff(self, stuff):
+            assert stuff == "foo"
+
+    ke_ = TestKE()
+    ke_.declare(Fact(name=L("foo")))
+    ke_.run()
