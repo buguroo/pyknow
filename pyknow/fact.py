@@ -69,6 +69,7 @@ class Context(dict):
             if isinstance(fact, CapValueSet):
                 yield fact
 
+
 class FactType:
     """
 
@@ -351,7 +352,6 @@ class CValueSet(ValueSet):
             self._resolved_values = {(a, b) for a, b in self.value}
             self._cached_values = self._resolved_values.copy()
         return self._resolved_values
-
 
 
 class WValueSet(ValueSet):
