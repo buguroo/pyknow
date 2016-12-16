@@ -1,6 +1,4 @@
 from string import ascii_letters
-import pytest
-
 from hypothesis import strategies as st
 
 random_types = st.one_of(st.integers(),

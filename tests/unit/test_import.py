@@ -1,6 +1,6 @@
 def test_import():
     try:
-        import pyknow 
+        import pyknow
     except ImportError as exc:
         assert False, exc
     else:

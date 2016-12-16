@@ -122,7 +122,7 @@ def test_can_capture_values():
             executions.append('rule1')
 
         @Rule(Fact(name=V("name_p")))
-        def rule2(self, name_p):
+        def rule2(self):
             """ Second rule, only something=3 """
             nonlocal executions
             executions.append('rule2')

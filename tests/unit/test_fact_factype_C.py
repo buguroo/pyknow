@@ -6,6 +6,7 @@ from conftest import random_kwargs
     Tests for basic Capture / Value FactTypes
 """
 
+
 @given(kwargs=random_kwargs)
 def test_fact_cv_categorized(kwargs):
     """

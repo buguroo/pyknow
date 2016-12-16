@@ -20,6 +20,7 @@ def test_Rule_can_decorate_function_with_one_parameter():
     from pyknow.rule import Rule
 
     called = False
+
     @Rule()
     def myfunction(x):
         nonlocal called
@@ -28,7 +29,6 @@ def test_Rule_can_decorate_function_with_one_parameter():
 
     myfunction(True)
     assert called
-
 
 
 def test_Rule_can_decorate_function_with_multiple_positional_args():

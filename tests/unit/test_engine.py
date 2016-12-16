@@ -1,6 +1,3 @@
-import pytest
-
-
 def test_engine_import():
     try:
         from pyknow import engine
@@ -241,6 +238,7 @@ def test_KnowledgeEngine_run_1_fires_activation():
     from pyknow.rule import Rule
 
     executed = False
+
     class Test(KnowledgeEngine):
         @Rule()
         def rule1(self):
@@ -261,15 +259,18 @@ def test_KnowledgeEngine_run_fires_all_activation():
     from pyknow.rule import Rule
 
     executed = 0
+
     class Test(KnowledgeEngine):
         @Rule()
         def rule1(self):
             nonlocal executed
             executed += 1
+
         @Rule()
         def rule2(self):
             nonlocal executed
             executed += 1
+
         @Rule()
         def rule3(self):
             nonlocal executed

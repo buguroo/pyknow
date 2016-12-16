@@ -1,4 +1,3 @@
-import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
@@ -171,29 +170,24 @@ def test_or_operator():
 
 def test_ke_inheritance():
     from pyknow.rule import Rule
-    from pyknow.fact import Fact, L
+    from pyknow.fact import Fact
     from pyknow.engine import KnowledgeEngine
-
 
     executed = False
 
-
     class Person(Fact):
         pass
-
 
     class Base(KnowledgeEngine):
         @Rule(Person(name='pepe'))
         def is_pepe(self):
             self.declare(Person(drinks="coffee"))
 
-
     class Test(Base):
         @Rule(Person(drinks="coffee"))
         def drinks_coffee(self):
             nonlocal executed
             executed = True
-
 
     ke_ = Test()
     ke_.declare(Person(name='pepe'))
@@ -204,16 +198,13 @@ def test_ke_inheritance():
 
 def test_nested_declarations():
     from pyknow.rule import Rule
-    from pyknow.fact import Fact, L
+    from pyknow.fact import Fact
     from pyknow.engine import KnowledgeEngine
-
 
     class Person(Fact):
         pass
 
-
     executed = False
-
 
     class Person_KE(KnowledgeEngine):
         @Rule(Person(name="David"))
@@ -223,7 +214,7 @@ def test_nested_declarations():
         @Rule(Person(name="Pepe"))
         def pepe(self):
             nonlocal executed
-            executed=True
+            executed = True
 
     ke_ = Person_KE()
     ke_.declare(Person(name="David"))
@@ -233,16 +224,13 @@ def test_nested_declarations():
 
 def test_matching_different_number_of_arguments():
     from pyknow.rule import Rule
-    from pyknow.fact import Fact, L
+    from pyknow.fact import Fact
     from pyknow.engine import KnowledgeEngine
-
 
     class Person(Fact):
         pass
 
-
     executed = False
-
 
     class Person_KE(KnowledgeEngine):
         @Rule(Person(name="David"))
@@ -252,7 +240,7 @@ def test_matching_different_number_of_arguments():
         @Rule(Person(name="Pepe"))
         def pepe(self):
             nonlocal executed
-            executed=True
+            executed = True
 
     ke_ = Person_KE()
     ke_.declare(Person(name="David"))

@@ -1,8 +1,7 @@
-import pytest
+"""
+Agenda tests
 
-
-from hypothesis import given
-from hypothesis import strategies as st
+"""
 
 
 def test_agenda_exists():
@@ -82,18 +81,18 @@ def test_Agenda_get_next_adds_to_executed():
     a = Agenda()
     a.activations = deque([act1, act2])
 
-    assert not act1 in a.executed
-    assert not act2 in a.executed
+    assert act1 not in a.executed
+    assert act2 not in a.executed
 
     a.get_next()
     assert act1 in a.executed
-    assert not act2 in a.executed
+    assert act2 not in a.executed
 
     a.get_next()
     assert act1 in a.executed
     assert act2 in a.executed
 
-@pytest.mark.wipa
+
 def test_Agenda_retract_removes_activation():
     """
     Clips reacts to this scenario:
