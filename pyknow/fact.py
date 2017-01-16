@@ -5,8 +5,10 @@ Definitions of clips' ``Pattern Conditional Element``.
 See :ref:conditional_elements
 
 """
+
 import enum
 from contextlib import suppress
+from .config import PYKNOW_STRICT
 
 
 class FactState(enum.Enum):
@@ -342,7 +344,11 @@ class CValueSet(ValueSet):
                 result = value.resolve(other.value[key])
                 assert result
                 return True
+            except AssertionError:
+                return False
             except Exception:
+                if PYKNOW_STRICT:
+                    raise
                 return False
 
     @property
