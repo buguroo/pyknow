@@ -13,7 +13,7 @@ from functools import update_wrapper
 from itertools import product
 
 from pyknow.factlist import FactList
-from pyknow.fact import InitialFact, Fact, Context
+from pyknow.fact import InitialFact, Fact, Context, C
 from pyknow.activation import Activation
 from pyknow.watchers import RULE_WATCHER
 
@@ -88,7 +88,9 @@ class Rule:
                     return []
                 for facts in self.context.capture_facts:
                     for name, value in facts.resolved:
-                        yield name, value
+                        for fact in activation.rule.conds():
+                            if isinstance(fact.value.get(name, False), C):
+                                yield name, value
 
             def resolve_matched_facts():
                 """
@@ -99,6 +101,7 @@ class Rule:
 
                 """
                 result = {}
+
                 for idx in activation.facts:
                     fact = self.ke._facts.get_by_idx(idx)
                     result.update({k: v.resolve() for
