@@ -1,6 +1,3 @@
-import pytest
-
-
 def test_activation_exists():
     try:
         from pyknow import activation

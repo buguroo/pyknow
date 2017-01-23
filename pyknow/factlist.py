@@ -121,3 +121,10 @@ class FactList:
                     yield idx
         result = list(_matches())
         return result
+
+    def get_by_idx(self, idx):
+        """
+        Return a fact by its position in the fact list
+
+        """
+        return self._facts[idx]

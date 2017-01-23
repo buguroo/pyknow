@@ -151,7 +151,7 @@ def test_Depth_update_agenda_different_salience():
 
     for act in acts:
         st.update_agenda(a, [act])
-    
+
     order = list(a.activations)
     assert (order.index(act4) < order.index(act3) <
             order.index(act2) < order.index(act1))

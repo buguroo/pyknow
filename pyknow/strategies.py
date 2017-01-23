@@ -4,7 +4,10 @@ from collections import defaultdict
 from itertools import chain
 from pyknow.watchers import AGENDA_WATCHER
 
-listdict = lambda:defaultdict(list)
+
+def listdict():
+    """ Defaultdict of a list """
+    return defaultdict(list)
 
 
 class Strategy(metaclass=ABCMeta):

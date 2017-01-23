@@ -2,6 +2,10 @@
     Basic tests for captured values
 """
 
+from hypothesis import given
+from conftest import random_kwargs
+import pytest
+
 
 def test_context_not_defined_on_simple_rules():
     """
@@ -16,6 +20,7 @@ def test_context_not_defined_on_simple_rules():
     assert rule.context is None
 
 
+@pytest.mark.wip
 def rules_can_be_defined_outside_ke():
     """
         Test that if we define a rule outside the knowledge engine
@@ -31,7 +36,7 @@ def rules_can_be_defined_outside_ke():
 
     class TestKE(KnowledgeEngine):
         @rule
-        def is_stuff(self):
+        def is_stuff(self, stuff):
             nonlocal executed
             executed = True
 
@@ -50,6 +55,7 @@ def rules_can_be_defined_outside_ke():
     assert rule.context == {'name': 'stuff'}
 
 
+@pytest.mark.wip
 def test_rule_inherit_ke_context():
     """
         KnowledgeEngine has context and rules assigned to it inherit it
@@ -63,7 +69,7 @@ def test_rule_inherit_ke_context():
     class Test(KnowledgeEngine):
         """ Test KE """
         @Rule(Fact(name=C("name_p")))
-        def rule1(self):
+        def rule1(self, name_p):
             """ First rule, something=1 and something=2"""
             nonlocal executions
             executions.append('rule1')
@@ -71,6 +77,20 @@ def test_rule_inherit_ke_context():
         @Rule(Fact(name=V("name_p")))
         def rule2(self):
             """ Second rule, only something=3 """
+            nonlocal executions
+            executions.append('rule2')
+
+        @Rule(Fact(other=L('foo')))
+        def rule3(self):
+            """ third rule, check that name_p is not here """
+            pass
+
+        @Rule(Fact(name=L("name_p")))
+        def rule4(self):
+            """
+                Fourth rule, check that if we match against name_p
+                with a literal, it does NOT pass it as an argument
+            """
             nonlocal executions
             executions.append('rule2')
 
@@ -113,7 +133,7 @@ def test_can_capture_values():
     class Test(KnowledgeEngine):
         """ Test KE """
         @Rule(Fact(name=C("name_p")))
-        def rule1(self):
+        def rule1(self, name_p):
             """ First rule, something=1 and something=2"""
             nonlocal executions
             executions.append('rule1')
@@ -121,6 +141,20 @@ def test_can_capture_values():
         @Rule(Fact(name=V("name_p")))
         def rule2(self):
             """ Second rule, only something=3 """
+            nonlocal executions
+            executions.append('rule2')
+
+        @Rule(Fact(other=L('foo')))
+        def rule3(self):
+            """ third rule, check that name_p is not here """
+            pass
+
+        @Rule(Fact(name=L("name_p")))
+        def rule4(self):
+            """
+                Fourth rule, check that if we match against name_p
+                with a literal, it does NOT pass it as an argument
+            """
             nonlocal executions
             executions.append('rule2')
 
@@ -151,3 +185,48 @@ def test_can_capture_values():
 
     print(ke_.context)
     assert ke_.context
+
+
+@given(kwargs=random_kwargs)
+def test_cv_rhs_arguments(kwargs):
+    """
+    Tests Capture context being passed as kwargs
+
+    """
+    from pyknow.fact import Fact, C, L
+    from pyknow.rule import Rule
+    from pyknow.engine import KnowledgeEngine
+
+    class TestKE(KnowledgeEngine):
+        @Rule(Fact(name=C('stuff')))
+        def is_stuff(self, stuff):
+            assert stuff == "foo"
+
+    ke_ = TestKE()
+    ke_.declare(Fact(name=L("foo")))
+    ke_.run()
+
+
+@given(kwargs=random_kwargs)
+def test_cv_rhs_arguments_not_on_others(kwargs):
+    """
+    Tests that fact does pass kwargs to another
+    activations
+
+    """
+    from pyknow.fact import Fact, C, T, L
+    from pyknow.rule import Rule
+    from pyknow.engine import KnowledgeEngine
+
+    class TestKE(KnowledgeEngine):
+        @Rule(Fact(name=C('stuff')))
+        def is_stuff(self, stuff):
+            assert stuff == "foo"
+
+        @Rule(Fact(name=T(lambda x: x)))
+        def is_foo(self):
+            assert True
+
+    ke_ = TestKE()
+    ke_.declare(Fact(name=L("foo")))
+    ke_.run()
