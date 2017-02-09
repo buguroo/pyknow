@@ -82,7 +82,7 @@ def test_Rule_simple_testce():
     from pyknow.fact import Fact, T, L
     from pyknow.factlist import FactList
 
-    r = Rule(Fact(a=T(lambda x: x.startswith('D'))))
+    r = Rule(Fact(a=T(lambda c, x: x.startswith('D'))))
 
     fl = FactList()
     fl.declare(Fact(a=L("David")))

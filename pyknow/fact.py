@@ -174,15 +174,40 @@ class T(FactType):
         """
         Allows:
 
-        Fact(name=T(lambda x: x.startswith('foo'))
-        Fact(name=T(lambda x: L("foo")))
-        Fact(name=T(lambda x='foo': L(x)))
+        Fact(name=T(lambda c, x: x.startswith('foo'))
+        Fact(name=T(lambda c, x: L("foo")))
+        Fact(name=T(lambda c, x='foo': L(x)))
 
         Defaults to L(False)
 
         """
         othervalue = to_what.resolve()
-        return self.callable(othervalue)
+        return self.callable(self.context, othervalue)
+
+
+def operator(operator_name, dest):
+    """
+    Special fact type implementing a callable that
+    operates the value with a given operator against a
+    ``dest`` contained in the context
+    """
+
+    def operate(context, value):
+        """
+        Use previously given operator with the value in the context
+        and the value providen
+        """
+        print("Operating")
+        return getattr(operator, operator_name)(context[dest], value)
+
+    return operate
+
+
+def N(dest):
+    """
+    Direct implementation of __ne__ over ``operator`` method.
+    """
+    return operator("__ne__", dest)
 
 
 class C(FactType):

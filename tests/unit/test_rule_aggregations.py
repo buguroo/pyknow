@@ -122,7 +122,7 @@ def test_rule_with_NOT_testce():
     from pyknow.fact import Fact, InitialFact, L, T
 
     r = Rule(Fact(a=L(1)),
-             NOT(Fact(b=T(lambda x: x.startswith('D')))))
+             NOT(Fact(b=T(lambda c, x: x.startswith('D')))))
 
     fl = FactList()
     fl.declare(InitialFact())

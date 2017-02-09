@@ -134,9 +134,10 @@ def test_match_with_FactState_UNDEFINED_False(value):
 
 def test_match_with_testce():
     from pyknow.fact import Fact, T
-    assert Fact(name=L('David')) in Fact(name=T(lambda x: x.startswith('D')))
+    assert Fact(name=L('David')) in Fact(
+        name=T(lambda c, x: x.startswith('D')))
     assert Fact(name=L('Penelope')) not in Fact(
-        name=T(lambda x: x.startswith('D')))
+        name=T(lambda c, x: x.startswith('D')))
 
 
 def test_facts_are_equal():
