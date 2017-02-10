@@ -148,5 +148,3 @@ def test_facts_are_equal():
 
     assert Fact(a=L("foo")) == Fact(a=L("foo"))
     assert Fact(a=L("foo"), b=C("bar")) == Fact(a=L("foo"), b=C("bar"))
-    assert Fact(a=L("foo"), b=C("bar"), c=V("stuff")
-                ) == Fact(a=L("foo"), b=C("bar"), c=V("stuff"))
