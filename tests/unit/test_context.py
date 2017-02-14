@@ -285,6 +285,7 @@ def test_can_produce_values():
     print(executions)
 
 
+@pytest.mark.wip
 def test_V_with_context():
     """
     Basic test V operator
