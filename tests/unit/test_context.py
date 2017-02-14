@@ -283,3 +283,52 @@ def test_can_produce_values():
 
     assert executions.count('rule2') == 1
     print(executions)
+
+
+def test_V_with_context():
+    """
+    Basic test V operator
+    """
+    from pyknow.rule import Rule
+    from pyknow.fact import Fact, C, L, V
+    from pyknow.engine import KnowledgeEngine
+
+    executions = []
+
+    class PeopleEngine(KnowledgeEngine):
+        @Rule(Fact(name=C('name_t'), surname=V('name_t')))
+        def name_is_same_as_surname(self, name_t):
+            nonlocal executions
+            executions.append(name_t)
+            print("Name {} has the same surname".format(name_t))
+
+    engine = PeopleEngine()
+    engine.reset()
+    engine.declare(Fact(name=L("David"), surname=L("Francos")))
+    engine.declare(Fact(name=L("Rodriguez"), surname=L("Rodriguez")))
+    engine.run()
+    assert executions == ["Rodriguez"]
+
+
+def test_C_with_context_alone():
+    """
+    Basic test C operator alone
+    """
+    from pyknow.rule import Rule
+    from pyknow.fact import Fact, C, L, V
+    from pyknow.engine import KnowledgeEngine
+
+    executions = []
+
+    class PeopleEngine(KnowledgeEngine):
+        @Rule(Fact(name=C('name_t')))
+        def name_is_same_as_surname(self, name_t):
+            nonlocal executions
+            executions.append(name_t)
+
+    engine = PeopleEngine()
+    engine.reset()
+    engine.declare(Fact(name=L("David"), surname=L("Francos")))
+    engine.declare(Fact(name=L("Rodriguez"), surname=L("Rodriguez")))
+    engine.run()
+    assert len(executions) == 2
