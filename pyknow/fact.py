@@ -138,6 +138,9 @@ class FactType:
         """
         return isinstance(self, C)
 
+    def __repr__(self):
+        return "{}(\"{}\")".format(self.__class__.__name__, self.resolve())
+
 
 class L(FactType):
     """
@@ -146,8 +149,8 @@ class L(FactType):
     This is a basic-types constraint (integers, strings, booleans)
 
     """
-    def __repr__(self):
-        return "<pyknow.fact.L({})>".format(self.resolve())
+
+    pass
 
 
 class T(FactType):
@@ -410,7 +413,8 @@ class Fact:
         self.rule = False
 
     def __repr__(self):
-        return "<pyknow.fact.Fact object with value [{}] >".format(self.value)
+        value = ', '.join("{}={}".format(a, b) for a, b in self.value.items())
+        return "Fact({})".format(value)
 
     @property
     def context(self):

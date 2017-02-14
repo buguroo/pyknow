@@ -52,7 +52,7 @@ class Rule:
         self.salience = salience
 
     def __repr__(self):
-        return "Rule(conds={})".format(self.__conds)
+        return "{}({})".format(self.__class__.__name__, self.__conds)
 
     @property
     def context(self):
