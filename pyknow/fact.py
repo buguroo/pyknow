@@ -131,20 +131,15 @@ class FactType:
         return isinstance(self, T)
 
     @property
-    def is_capturedvalue(self):
-        """
-        Check if we are a captured value (:obj:`pyknow.Fact.V`) type
-
-        """
-        return isinstance(self, V)
-
-    @property
     def is_capture(self):
         """
         Check if we are a capture (:obj:`pyknow.Fact.C`) type
 
         """
         return isinstance(self, C)
+
+    def __repr__(self):
+        return "{}(\"{}\")".format(self.__class__.__name__, self.resolve())
 
 
 class L(FactType):
@@ -154,8 +149,8 @@ class L(FactType):
     This is a basic-types constraint (integers, strings, booleans)
 
     """
-    def __repr__(self):
-        return "<pyknow.fact.L({})>".format(self.resolve())
+
+    pass
 
 
 class T(FactType):
@@ -174,15 +169,34 @@ class T(FactType):
         """
         Allows:
 
-        Fact(name=T(lambda x: x.startswith('foo'))
-        Fact(name=T(lambda x: L("foo")))
-        Fact(name=T(lambda x='foo': L(x)))
+        Fact(name=T(lambda c, x: x.startswith('foo'))
+        Fact(name=T(lambda c, x: L("foo")))
+        Fact(name=T(lambda c, x='foo': L(x)))
 
         Defaults to L(False)
 
         """
         othervalue = to_what.resolve()
-        return self.callable(othervalue)
+        return self.callable(self.context, othervalue)
+
+
+def N(dest):
+    """
+    Direct implementation of __ne__ over ``operator`` method.
+    """
+    def _n(context, value):
+        return context[dest] != value
+    return T(_n)
+
+
+def V(dest):
+    """
+    Direct implementation of __eq__ over ``operator`` method.
+    """
+    def _v(context, value):
+        return context[dest] == value
+
+    return T(_v)
 
 
 class C(FactType):
@@ -193,30 +207,6 @@ class C(FactType):
 
     """
     pass
-
-
-class V(FactType):
-    """
-        Extracts a value from the :obj:`pyknow.engine.KnowledgeEngine`'s
-        :obj:`pyknow.fact.Context` to its assigned name. This way we can
-        compare values from different `pyknow.fact.FactType`.
-
-    """
-    def resolve(self, to_what):
-        """
-        Resolve a value from the KE's Context
-        This **needs** to be used from inside a KE
-
-        :param to_what: Name assigned in the context from a
-                        :obj:`pyknow.fact.C`
-        :return: Value extracted from the context
-        :throws ValueError: If context is not available (if we're
-                            not being used inside a KnowledgeEngine
-
-        """
-        if not self.context:
-            raise ValueError("Cant use C/V types without asigning a context")
-        return self.context[to_what]
 
 
 class ValueSet:
@@ -391,25 +381,13 @@ class CapValueSet(ValueSet):
             if key not in other.keyset:
                 continue
             atleastone = True
-            self.context.capture(key, value.resolve(other.value[key]))
+            self.context.capture(value.resolve(other.value[key]),
+                                 other.value[key].resolve())
 
         if atleastone:
             return True
 
         return False
-
-
-class ValValueSet(ValueSet):
-    """ Captured values value set"""
-    cond = "is_capturedvalue"
-
-    @property
-    def resolved(self):
-        """ Resolve """
-        if self._resolved_values is None:
-            self._resolved_values = {(a, b.resolve(a)) for a, b in self.value}
-            self._cached_values = self._resolved_values.copy()
-        return self._resolved_values
 
 
 class Fact:
@@ -435,15 +413,18 @@ class Fact:
         self.rule = False
 
     def __repr__(self):
-        return "<pyknow.fact.Fact object with value [{}] >".format(self.value)
+        value = ', '.join("{}={}".format(a, b) for a, b in self.value.items())
+        return "Fact({})".format(value)
 
     @property
     def context(self):
         if self.rule:
             if self.rule.context is not None:
-                return self.rule.context
+                self._context = self.rule.context
             else:
-                return Context()
+                self._context = Context()
+        else:
+            self._context = Context()
         return self._context
 
     @property
@@ -479,8 +460,8 @@ class Fact:
         wich is done after Rule() initialization
 
         """
-        if not self.context:
-            if context:
+        if self.context is None:
+            if context is not None:
                 self._context = context
             else:
                 self._context = Context()
@@ -497,6 +478,8 @@ class Fact:
                 self._callablevalueset.add(key, value)
                 self._capvalueset.add(key, value)
 
+            self.populated = True
+
     def _contains(self, other):
         """
         If we contain a wildcard, apply the needed logic
@@ -510,7 +493,7 @@ class Fact:
         """
         self.populate()
         # Get cap values
-        self.capvalueset.matches(self)
+        self.capvalueset.matches(other)
 
         # We have some wildcards.
         if not self.wcvalueset.matches(other):

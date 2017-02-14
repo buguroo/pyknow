@@ -10,6 +10,7 @@ and all of them.
 """
 import logging
 
+logging.basicConfig()
 RULE_WATCHER = logging.getLogger('rule')
 FACT_WATCHER = logging.getLogger('fact')
 AGENDA_WATCHER = logging.getLogger('agenda')

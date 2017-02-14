@@ -52,7 +52,7 @@ class Rule:
         self.salience = salience
 
     def __repr__(self):
-        return "Rule(conds={})".format(self.__conds)
+        return "{}({})".format(self.__class__.__name__, self.__conds)
 
     @property
     def context(self):
@@ -82,15 +82,26 @@ class Rule:
             if hasattr(fst, 'context') and isinstance(fst.context, Context):
                 self.ke = fst
 
+            def is_capturing_in_children(cond, name):
+                """
+                Check if we capture this value in any child.
+                """
+                for cond in cond.conds():
+                    if isinstance(cond, Rule):
+                        if is_capturing_in_children(cond, name):
+                            return True
+                    elif isinstance(cond.value.get(name, False), C):
+                        return True
+                return False
+
             def get_captured_facts():
                 """ We expose as kwargs all captured facts. """
                 if not self.context:
                     return []
                 for facts in self.context.capture_facts:
                     for name, value in facts.resolved:
-                        for fact in activation.rule.conds():
-                            if isinstance(fact.value.get(name, False), C):
-                                yield name, value
+                        if is_capturing_in_children(activation.rule, name):
+                            yield name, value
 
             def resolve_matched_facts():
                 """
@@ -127,6 +138,7 @@ class Rule:
         :return: Tuple of unique :obj:`pyknow.activation.Activation` matches.
 
         """
+        RULE_WATCHER.debug("Getting activations for {} on {}".format(self, factlist))
 
         if not isinstance(factlist, FactList):
             raise ValueError("factlist must be an instance of FactList")
