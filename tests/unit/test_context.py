@@ -20,10 +20,9 @@ def test_context_not_defined_on_simple_rules():
     assert rule.context is None
 
 
-@pytest.mark.wip
 def rules_can_be_defined_outside_ke():
     """
-        Test that if we define a rule outside the knowledge engine
+    Test that if we define a rule outside the knowledge engine
 
     """
     from pyknow.fact import Fact, C, L
@@ -55,7 +54,6 @@ def rules_can_be_defined_outside_ke():
     assert rule.context == {'name': 'stuff'}
 
 
-@pytest.mark.wip
 def test_rule_inherit_ke_context():
     """
         KnowledgeEngine has context and rules assigned to it inherit it
@@ -285,7 +283,6 @@ def test_can_produce_values():
     print(executions)
 
 
-@pytest.mark.wip
 def test_V_with_context():
     """
     Basic test V operator

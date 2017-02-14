@@ -119,9 +119,7 @@ def N(dest):
     Matcher using ``pyknow.fact.T`` returning
     True if the given context's value is NOT the same as our own.
     """
-    def _n(context, value):
-        return context[dest] != value
-    return T(_n)
+    return T(lambda context, value: context[dest] != value)
 
 
 def V(dest):
@@ -129,10 +127,7 @@ def V(dest):
     Matcher using ``pyknow.fact.T`` returning
     True if the given context's value is the same as our own.
     """
-    def _v(context, value):
-        return context[dest] == value
-
-    return T(_v)
+    return T(lambda context, value: context[dest] == value)
 
 
 class C(FactType):

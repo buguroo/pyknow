@@ -7,6 +7,7 @@ See :ref:conditional_elements
 """
 # pylint: disable=no-member, too-few-public-methods
 # pylint: disable=unused-import
+from collections import OrderedDict
 from pyknow.facttypes import ValueSet
 from pyknow.facttypes import L, V, N, C, T, W, FACT_TYPES  # NOQA
 from pyknow.watchers import FACT_WATCHER
@@ -28,7 +29,9 @@ class Fact:
         self.rule = False
         self.value = value
         self.keyset = set(value.keys())
-        self.valuesets = {i: ValueSet(self, i) for i in FACT_TYPES}
+        self.valuesets = OrderedDict()
+        for fact_type in FACT_TYPES:
+            self.valuesets[fact_type] = ValueSet(self, fact_type)
         self.populated = False
 
     @property
