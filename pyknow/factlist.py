@@ -128,3 +128,6 @@ class FactList:
 
         """
         return self._facts[idx]
+
+    def __repr__(self):
+        return str(self._facts.values())
