@@ -19,7 +19,7 @@ def test_V_with_context():
     Basic test V operator
     """
     from pyknow.rule import Rule
-    from pyknow.fact import Fact, C, V
+    from pyknow.fact import Fact, C, L, V
     from pyknow.engine import KnowledgeEngine
 
     executions = []
@@ -33,8 +33,8 @@ def test_V_with_context():
 
     engine = PeopleEngine()
     engine.reset()
-    engine.declare(Fact(name="David", surname="Francos"))
-    engine.declare(Fact(name="Rodriguez", surname="Rodriguez"))
+    engine.declare(Fact(name=L("David"), surname=L("Francos")))
+    engine.declare(Fact(name=L("Rodriguez"), surname=L("Rodriguez")))
     engine.run()
     assert executions == ["Rodriguez"]
 
@@ -44,7 +44,7 @@ def test_C_with_context_alone():
     Basic test C operator alone
     """
     from pyknow.rule import Rule
-    from pyknow.fact import Fact, C, V
+    from pyknow.fact import Fact, C, L, V
     from pyknow.engine import KnowledgeEngine
 
     executions = []
@@ -57,9 +57,7 @@ def test_C_with_context_alone():
 
     engine = PeopleEngine()
     engine.reset()
-    engine.declare(Fact(name="David", surname="Francos"))
-    engine.declare(Fact(name="Rodriguez", surname="Rodriguez"))
+    engine.declare(Fact(name=L("David"), surname=L("Francos")))
+    engine.declare(Fact(name=L("Rodriguez"), surname=L("Rodriguez")))
     engine.run()
     assert len(executions) == 2
-
-

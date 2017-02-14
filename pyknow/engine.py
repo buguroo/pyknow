@@ -5,7 +5,7 @@
 from inspect import getmembers
 
 from pyknow.agenda import Agenda
-from pyknow.fact import InitialFact, Context
+from pyknow.fact import InitialFact, Context, L
 from pyknow.factlist import FactList
 from pyknow.rule import Rule
 from pyknow.strategies import Depth
@@ -87,8 +87,9 @@ class KnowledgeEngine:
 
         """
         for fact in facts:
-            if fact.is_matcher:
-                raise TypeError("Cant use types T, C, V declaring a fact")
+            for value in fact.value.values():
+                if not isinstance(value, L):
+                    raise TypeError("Cant use types T, C, V declaring a fact")
             idx = self._facts.declare(fact)
             self.strategy.update_agenda(self.agenda, self.get_activations())
 

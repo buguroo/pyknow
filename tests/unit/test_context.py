@@ -160,7 +160,7 @@ def test_can_capture_values():
             nonlocal executions
             executions.append('rule4')
 
-        @Rule(Fact(n=1, name=V("name_p")))
+        @Rule(Fact(n=L(1), name=V("name_p")))
         def rule5(self):
             """
             Fifth rule, we should only match against the captured
@@ -180,7 +180,7 @@ def test_can_capture_values():
     to_declare = dict(enumerate(to_declare))
 
     for k, n in to_declare.items():
-        ke_.declare(Fact(n=k, name=n))
+        ke_.declare(Fact(n=L(k), name=n))
 
     results = defaultdict(list)
     acts = []
@@ -254,7 +254,7 @@ def test_can_produce_values():
     """
     from pyknow.engine import KnowledgeEngine
     from pyknow.rule import Rule, NOT
-    from pyknow.fact import Fact, C, V
+    from pyknow.fact import Fact, C, L, V
 
     executions = []
 
@@ -276,8 +276,8 @@ def test_can_produce_values():
     ke_ = Test()
     ke_.reset()
 
-    ke_.declare(Fact(name="Foo", other="asdf"))
-    ke_.declare(Fact(name="Foo", other="Foo"))
+    ke_.declare(Fact(name=L("Foo"), other=L("asdf")))
+    ke_.declare(Fact(name=L("Foo"), other=L("Foo")))
 
     ke_.run()
 

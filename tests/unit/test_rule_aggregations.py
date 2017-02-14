@@ -97,11 +97,10 @@ def test_Rule_with_only_one_NOT_match_InitialFact_if_fact_is_not_present():
 def test_Rule_with_NOT_DEFINED():
     from pyknow.rule import Rule, NOT
     from pyknow.factlist import FactList
-    from pyknow.fact import FactState as fs
-    from pyknow.fact import Fact, InitialFact, L
+    from pyknow.fact import Fact, InitialFact, L, W
 
     r = Rule(Fact(a=L(1)),
-             NOT(Fact(b=L(fs.DEFINED))))
+             NOT(Fact(b=W(True))))
 
     fl = FactList()
     fl.declare(InitialFact())
@@ -118,7 +117,6 @@ def test_Rule_with_NOT_DEFINED():
 def test_rule_with_NOT_testce():
     from pyknow.rule import Rule, NOT
     from pyknow.factlist import FactList
-    from pyknow.fact import FactState as fs
     from pyknow.fact import Fact, InitialFact, L, T
 
     r = Rule(Fact(a=L(1)),

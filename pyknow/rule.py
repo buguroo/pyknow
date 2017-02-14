@@ -96,36 +96,14 @@ class Rule:
 
             def get_captured_facts():
                 """ We expose as kwargs all captured facts. """
-                if not self.context:
+                if self.context is None:
                     return []
-                for facts in self.context.capture_facts:
-                    for name, value in facts.resolved:
-                        if is_capturing_in_children(activation.rule, name):
-                            yield name, value
 
-            def resolve_matched_facts():
-                """
-                For each fact that we're capturing, we try
-                to extract its value from a fact.
-                It HAS to be there, as we're matching against it,
-                otherwise we would'nt be here
+                for name, value in self.context.items():
+                    if is_capturing_in_children(activation.rule, name):
+                        yield name, value
 
-                """
-                result = {}
-
-                for idx in activation.facts:
-                    fact = self.ke._facts.get_by_idx(idx)
-                    result.update({k: v.resolve() for
-                                   k, v in fact.value.items()})
-                return result
-
-            expected = dict(get_captured_facts())
-            if expected:
-                resolved = resolve_matched_facts()
-
-                kwargs.update({key: resolved[exp] for
-                               exp, key in expected.items()})
-
+            kwargs.update(dict(get_captured_facts()))
             args = (tuple() if fst is None else (fst,)) + args
             return self.__fn(*args, **kwargs)
 
@@ -138,7 +116,7 @@ class Rule:
         :return: Tuple of unique :obj:`pyknow.activation.Activation` matches.
 
         """
-        RULE_WATCHER.debug("Getting activations for {} on {}".format(self, factlist))
+        RULE_WATCHER.debug("Getting activations for %s on %s", self, factlist)
 
         if not isinstance(factlist, FactList):
             raise ValueError("factlist must be an instance of FactList")

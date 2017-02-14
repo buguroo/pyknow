@@ -170,7 +170,7 @@ def test_or_operator():
 
 def test_ke_inheritance():
     from pyknow.rule import Rule
-    from pyknow.fact import Fact
+    from pyknow.fact import Fact, L
     from pyknow.engine import KnowledgeEngine
 
     executed = False
@@ -179,18 +179,18 @@ def test_ke_inheritance():
         pass
 
     class Base(KnowledgeEngine):
-        @Rule(Person(name='pepe'))
+        @Rule(Person(name=L('pepe')))
         def is_pepe(self):
-            self.declare(Person(drinks="coffee"))
+            self.declare(Person(drinks=L("coffee")))
 
     class Test(Base):
-        @Rule(Person(drinks="coffee"))
+        @Rule(Person(drinks=L("coffee")))
         def drinks_coffee(self):
             nonlocal executed
             executed = True
 
     ke_ = Test()
-    ke_.declare(Person(name='pepe'))
+    ke_.declare(Person(name=L('pepe')))
     ke_.run()
 
     assert executed
@@ -198,7 +198,7 @@ def test_ke_inheritance():
 
 def test_nested_declarations():
     from pyknow.rule import Rule
-    from pyknow.fact import Fact
+    from pyknow.fact import Fact, L
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):
@@ -207,24 +207,24 @@ def test_nested_declarations():
     executed = False
 
     class Person_KE(KnowledgeEngine):
-        @Rule(Person(name="David"))
+        @Rule(Person(name=L("David")))
         def david(self):
-            self.declare(Person(name="Pepe"))
+            self.declare(Person(name=L("Pepe")))
 
-        @Rule(Person(name="Pepe"))
+        @Rule(Person(name=L("Pepe")))
         def pepe(self):
             nonlocal executed
             executed = True
 
     ke_ = Person_KE()
-    ke_.declare(Person(name="David"))
+    ke_.declare(Person(name=L("David")))
     ke_.run()
     assert executed
 
 
 def test_matching_different_number_of_arguments():
     from pyknow.rule import Rule
-    from pyknow.fact import Fact
+    from pyknow.fact import Fact, L
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):
@@ -233,16 +233,16 @@ def test_matching_different_number_of_arguments():
     executed = False
 
     class Person_KE(KnowledgeEngine):
-        @Rule(Person(name="David"))
+        @Rule(Person(name=L("David")))
         def david(self):
-            self.declare(Person(name="Pepe", apellido="stuff"))
+            self.declare(Person(name=L("Pepe"), apellido=L("stuff")))
 
-        @Rule(Person(name="Pepe"))
+        @Rule(Person(name=L("Pepe")))
         def pepe(self):
             nonlocal executed
             executed = True
 
     ke_ = Person_KE()
-    ke_.declare(Person(name="David"))
+    ke_.declare(Person(name=L("David")))
     ke_.run()
     assert executed

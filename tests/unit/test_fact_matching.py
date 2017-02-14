@@ -49,43 +49,17 @@ def test_match_if_all_defined_is_present(kwargs):
     assert f1 in f0
 
 
-def test_FactState_exists():
-    from pyknow import fact
-
-    assert hasattr(fact, 'FactState')
-
-
-def test_FactState_is_Enum():
-    from pyknow.fact import FactState
-    import enum
-
-    assert issubclass(FactState, enum.Enum)
-
-
-def test_FactState_DEFINED():
-    from pyknow.fact import FactState
-
-    assert hasattr(FactState, 'DEFINED')
-
-
-def test_FactState_UNDEFINED():
-    from pyknow.fact import FactState
-
-    assert hasattr(FactState, 'UNDEFINED')
-
-
 @given(value=random_types)
-def test_match_with_FactState_DEFINED_True(value):
+def test_match_with_W_True(value):
     try:
         hash(value)
     except TypeError:
         assume(False)
 
-    from pyknow.fact import FactState as fs
-    from pyknow.fact import Fact
+    from pyknow.fact import Fact, W, L
 
     f0 = Fact(something=L(value))
-    f1 = Fact(something=L(fs.DEFINED))
+    f1 = Fact(something=W(True))
 
     assert f0 in f1
 
@@ -94,11 +68,10 @@ def test_match_with_FactState_DEFINED_True(value):
 def test_match_with_FactState_DEFINED_False(kwargs):
     assume('something' not in kwargs)
 
-    from pyknow.fact import FactState as fs
-    from pyknow.fact import Fact
+    from pyknow.fact import Fact, W
 
     f0 = Fact(**{a: L(b) for a, b in kwargs.items()})
-    f1 = Fact(something=L(fs.DEFINED))
+    f1 = Fact(something=W(True))
 
     assert f0 not in f1
 
@@ -107,11 +80,10 @@ def test_match_with_FactState_DEFINED_False(kwargs):
 def test_match_with_FactState_UNDEFINED_True(kwargs):
     assume('something' not in kwargs)
 
-    from pyknow.fact import FactState as fs
-    from pyknow.fact import Fact
+    from pyknow.fact import Fact, W
 
     f0 = Fact(**{a: L(b) for a, b in kwargs.items()})
-    f1 = Fact(something=L(fs.UNDEFINED))
+    f1 = Fact(something=W(False))
 
     assert f0 in f1
 
@@ -123,11 +95,10 @@ def test_match_with_FactState_UNDEFINED_False(value):
     except TypeError:
         assume(False)
 
-    from pyknow.fact import FactState as fs
-    from pyknow.fact import Fact
+    from pyknow.fact import Fact, W
 
     f0 = Fact(something=L(value))
-    f1 = Fact(something=L(fs.UNDEFINED))
+    f1 = Fact(something=W(False))
 
     assert f0 not in f1
 
@@ -144,7 +115,7 @@ def test_facts_are_equal():
     """ We may need to use EQUAL facts that are not the same object but has
         the same values """
 
-    from pyknow.fact import Fact, C, V, L
+    from pyknow.fact import Fact, C, L
 
     assert Fact(a=L("foo")) == Fact(a=L("foo"))
     assert Fact(a=L("foo"), b=C("bar")) == Fact(a=L("foo"), b=C("bar"))
