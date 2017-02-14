@@ -103,6 +103,7 @@ class Rule:
                     if is_capturing_in_children(activation.rule, name):
                         yield name, value
 
+            RULE_WATCHER.debug("Processing with context: %s", self.context)
             kwargs.update(dict(get_captured_facts()))
             args = (tuple() if fst is None else (fst,)) + args
             return self.__fn(*args, **kwargs)

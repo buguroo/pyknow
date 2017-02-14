@@ -184,9 +184,7 @@ class ValueSet:
         Returns, depending on the type we're matching,
         its matched value
         """
-        match = getattr(self, "matches_{}".format(
-            self.type_.__class__.__name__))
-        return match.matches(other)
+        return getattr(self, "matches_{}".format(self.type_))(other)
 
     @property
     def keyset(self):
@@ -252,8 +250,7 @@ class ValueSet:
 
         if not self.resolved:
             return True
-        other_resolved = other.valuesets[self.child_type.__name__].resolved
-        return other_resolved.issuperset(self.resolved)
+        return other.valuesets['L'].resolved.issuperset(self.resolved)
 
     def matches_T(self, other):
         """
@@ -310,4 +307,4 @@ class ValueSet:
 
         return True
 
-FACT_TYPES = [L, V, N, C, T, W]
+FACT_TYPES = ["L", "C", "T", "W"]

@@ -90,7 +90,7 @@ class Fact:
                 return False
 
             FACT_WATCHER.debug("Valueset %s (%s) proved positive.",
-                               valueset.__class__.__name__, valueset.values)
+                               valueset.__class__.__name__, valueset)
         return True
 
     def __eq__(self, other):
