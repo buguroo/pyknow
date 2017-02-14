@@ -20,10 +20,9 @@ def test_context_not_defined_on_simple_rules():
     assert rule.context is None
 
 
-@pytest.mark.wip
 def rules_can_be_defined_outside_ke():
     """
-        Test that if we define a rule outside the knowledge engine
+    Test that if we define a rule outside the knowledge engine
 
     """
     from pyknow.fact import Fact, C, L
@@ -55,7 +54,6 @@ def rules_can_be_defined_outside_ke():
     assert rule.context == {'name': 'stuff'}
 
 
-@pytest.mark.wip
 def test_rule_inherit_ke_context():
     """
         KnowledgeEngine has context and rules assigned to it inherit it
@@ -160,7 +158,7 @@ def test_can_capture_values():
             nonlocal executions
             executions.append('rule4')
 
-        @Rule(Fact(n=1, name=V("name_p")))
+        @Rule(Fact(n=L(1), name=V("name_p")))
         def rule5(self):
             """
             Fifth rule, we should only match against the captured
@@ -180,7 +178,7 @@ def test_can_capture_values():
     to_declare = dict(enumerate(to_declare))
 
     for k, n in to_declare.items():
-        ke_.declare(Fact(n=k, name=n))
+        ke_.declare(Fact(n=L(k), name=n))
 
     results = defaultdict(list)
     acts = []
@@ -254,7 +252,7 @@ def test_can_produce_values():
     """
     from pyknow.engine import KnowledgeEngine
     from pyknow.rule import Rule, NOT
-    from pyknow.fact import Fact, C, V
+    from pyknow.fact import Fact, C, L, V
 
     executions = []
 
@@ -276,10 +274,59 @@ def test_can_produce_values():
     ke_ = Test()
     ke_.reset()
 
-    ke_.declare(Fact(name="Foo", other="asdf"))
-    ke_.declare(Fact(name="Foo", other="Foo"))
+    ke_.declare(Fact(name=L("Foo"), other=L("asdf")))
+    ke_.declare(Fact(name=L("Foo"), other=L("Foo")))
 
     ke_.run()
 
     assert executions.count('rule2') == 1
     print(executions)
+
+
+def test_V_with_context():
+    """
+    Basic test V operator
+    """
+    from pyknow.rule import Rule
+    from pyknow.fact import Fact, C, L, V
+    from pyknow.engine import KnowledgeEngine
+
+    executions = []
+
+    class PeopleEngine(KnowledgeEngine):
+        @Rule(Fact(name=C('name_t'), surname=V('name_t')))
+        def name_is_same_as_surname(self, name_t):
+            nonlocal executions
+            executions.append(name_t)
+            print("Name {} has the same surname".format(name_t))
+
+    engine = PeopleEngine()
+    engine.reset()
+    engine.declare(Fact(name=L("David"), surname=L("Francos")))
+    engine.declare(Fact(name=L("Rodriguez"), surname=L("Rodriguez")))
+    engine.run()
+    assert executions == ["Rodriguez"]
+
+
+def test_C_with_context_alone():
+    """
+    Basic test C operator alone
+    """
+    from pyknow.rule import Rule
+    from pyknow.fact import Fact, C, L, V
+    from pyknow.engine import KnowledgeEngine
+
+    executions = []
+
+    class PeopleEngine(KnowledgeEngine):
+        @Rule(Fact(name=C('name_t')))
+        def name_is_same_as_surname(self, name_t):
+            nonlocal executions
+            executions.append(name_t)
+
+    engine = PeopleEngine()
+    engine.reset()
+    engine.declare(Fact(name=L("David"), surname=L("Francos")))
+    engine.declare(Fact(name=L("Rodriguez"), surname=L("Rodriguez")))
+    engine.run()
+    assert len(executions) == 2

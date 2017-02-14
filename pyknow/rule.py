@@ -18,6 +18,21 @@ from pyknow.activation import Activation
 from pyknow.watchers import RULE_WATCHER
 
 
+def get_captures(cond):
+    """
+    Get all level of captured items in the rule.
+    """
+
+    for cond in cond.conds():
+        if isinstance(cond, Rule):
+            for cond_ in get_captures(cond):
+                yield cond_
+        else:
+            for cond_ in cond.value.values():
+                if isinstance(cond_, C):
+                    yield cond_
+
+
 class Rule:
     """
         Base ``CE``, all ``CE`` are to derive from this class.
@@ -48,7 +63,6 @@ class Rule:
         if not conds:
             conds = (InitialFact(),)
         self.__conds = conds
-
         self.salience = salience
 
     def __repr__(self):
@@ -71,6 +85,9 @@ class Rule:
     def __call__(self, fst=None, *args, **kwargs):
         if 'activation' in kwargs:
             activation = kwargs.pop('activation')
+            for capture in get_captures(activation.rule):
+                context_key = capture.resolve()
+                kwargs.update({context_key: self.context[context_key]})
 
         if self.__fn is None:
             if fst is not None:
@@ -82,50 +99,7 @@ class Rule:
             if hasattr(fst, 'context') and isinstance(fst.context, Context):
                 self.ke = fst
 
-            def is_capturing_in_children(cond, name):
-                """
-                Check if we capture this value in any child.
-                """
-                for cond in cond.conds():
-                    if isinstance(cond, Rule):
-                        if is_capturing_in_children(cond, name):
-                            return True
-                    elif isinstance(cond.value.get(name, False), C):
-                        return True
-                return False
-
-            def get_captured_facts():
-                """ We expose as kwargs all captured facts. """
-                if not self.context:
-                    return []
-                for facts in self.context.capture_facts:
-                    for name, value in facts.resolved:
-                        if is_capturing_in_children(activation.rule, name):
-                            yield name, value
-
-            def resolve_matched_facts():
-                """
-                For each fact that we're capturing, we try
-                to extract its value from a fact.
-                It HAS to be there, as we're matching against it,
-                otherwise we would'nt be here
-
-                """
-                result = {}
-
-                for idx in activation.facts:
-                    fact = self.ke._facts.get_by_idx(idx)
-                    result.update({k: v.resolve() for
-                                   k, v in fact.value.items()})
-                return result
-
-            expected = dict(get_captured_facts())
-            if expected:
-                resolved = resolve_matched_facts()
-
-                kwargs.update({key: resolved[exp] for
-                               exp, key in expected.items()})
-
+            RULE_WATCHER.debug("Processing with context: %s", self.context)
             args = (tuple() if fst is None else (fst,)) + args
             return self.__fn(*args, **kwargs)
 
@@ -138,7 +112,7 @@ class Rule:
         :return: Tuple of unique :obj:`pyknow.activation.Activation` matches.
 
         """
-        RULE_WATCHER.debug("Getting activations for {} on {}".format(self, factlist))
+        RULE_WATCHER.debug("Getting activations for %s on %s", self, factlist)
 
         if not isinstance(factlist, FactList):
             raise ValueError("factlist must be an instance of FactList")

@@ -107,18 +107,18 @@ def test_Agenda_retract_removes_activation():
     """
     from pyknow.engine import KnowledgeEngine
     from pyknow.rule import Rule
-    from pyknow.fact import Fact
+    from pyknow.fact import Fact, L
 
     class KE(KnowledgeEngine):
-        @Rule(Fact(ran=True))
+        @Rule(Fact(ran=L(True)))
         def ran(self):
             self.activated = True
 
     ke_ = KE()
     ke_.reset()
 
-    ke_.declare(Fact(ran=True))
+    ke_.declare(Fact(ran=L(True)))
     assert len(ke_._facts._facts) == 2
-    ke_.retract_matching(Fact(ran=True))
+    ke_.retract_matching(Fact(ran=L(True)))
     assert len(ke_._facts._facts) == 1
     assert not ke_.agenda.activations
