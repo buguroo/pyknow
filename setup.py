@@ -10,7 +10,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(HERE, 'README.rst')).read()
 NEWS = open(os.path.join(HERE, 'TODO.rst')).read()
 
-VERSION = '0.0.13'
+VERSION = '0.1.0'
 
 setup(name='pyknow',
       version=VERSION,
