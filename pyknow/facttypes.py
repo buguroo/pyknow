@@ -172,11 +172,21 @@ class ValueSet:
 
     """
 
-    def __init__(self, parent):
+    def __init__(self, parent, type_):
         self.value = set()
         self._resolved = None
         self.current = 0
         self.parent = parent
+        self.type_ = type_
+
+    def matches(self, other):
+        """
+        Returns, depending on the type we're matching,
+        its matched value
+        """
+        match = getattr(self, "matches_{}".format(
+            self.type_.__class__.__name__))
+        return match.matches(other)
 
     @property
     def keyset(self):
@@ -226,14 +236,7 @@ class ValueSet:
     def __len__(self):
         return len(self.resolved)
 
-
-class LValueSet(ValueSet):
-    """
-    Valueset evaluable for Literal facttypes
-    """
-    child_type = L
-
-    def matches(self, other):
+    def matches_L(self, other):
         """
         Matches literal valueset.
 
@@ -252,15 +255,7 @@ class LValueSet(ValueSet):
         other_resolved = other.valuesets[self.child_type.__name__].resolved
         return other_resolved.issuperset(self.resolved)
 
-
-class CValueSet(ValueSet):
-    """
-    Valueset evaluable for Callable facttypes
-    """
-
-    child_type = C
-
-    def matches(self, other):
+    def matches_T(self, other):
         """
         Evaluate callable, returns evaluation result
         """
@@ -281,13 +276,7 @@ class CValueSet(ValueSet):
                     raise
                 return False
 
-
-class WValueSet(ValueSet):
-    """ Wildcard value set """
-
-    child_type = T
-
-    def matches(self, other):
+    def matches_W(self, other):
         """
         - If ANY value is True and is not in keyset, False
         - If ANY value is False and is in keyset, False
@@ -301,13 +290,7 @@ class WValueSet(ValueSet):
                 return False
         return True
 
-
-class CapValueSet(ValueSet):
-    """ Capture value value set """
-
-    child_type = C
-
-    def matches(self, other):
+    def matches_C(self, other):
         """
         Gets a resolved value from the ``other`` fact.
         If the other fact didn't contain the value, return False
@@ -326,3 +309,5 @@ class CapValueSet(ValueSet):
             self.context[key_] = other.value[key].resolve()
 
         return True
+
+FACT_TYPES = [L, V, N, C, T, W]

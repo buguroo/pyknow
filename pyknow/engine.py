@@ -9,6 +9,7 @@ from pyknow.fact import InitialFact, Context, L
 from pyknow.factlist import FactList
 from pyknow.rule import Rule
 from pyknow.strategies import Depth
+from pyknow.watchers import FACT_WATCHER
 
 
 class KnowledgeEngine:
@@ -87,6 +88,7 @@ class KnowledgeEngine:
 
         """
         for fact in facts:
+            FACT_WATCHER.debug("Declaring fact %s", self)
             for value in fact.value.values():
                 if not isinstance(value, L):
                     raise TypeError("Cant use types T, C, V declaring a fact")

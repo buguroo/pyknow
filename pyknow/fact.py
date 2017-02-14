@@ -7,8 +7,9 @@ See :ref:conditional_elements
 """
 # pylint: disable=no-member, too-few-public-methods
 # pylint: disable=unused-import
-from pyknow.facttypes import CapValueSet, LValueSet, CValueSet, WValueSet
-from pyknow.facttypes import L, V, N, C, T, W  # NOQA
+from pyknow.facttypes import ValueSet
+from pyknow.facttypes import L, V, N, C, T, W, FACT_TYPES  # NOQA
+from pyknow.watchers import FACT_WATCHER
 
 
 class Context(dict):
@@ -25,11 +26,9 @@ class Fact:
     def __init__(self, **value):
         self._context = False
         self.rule = False
-
         self.value = value
         self.keyset = set(value.keys())
-        self.valuesets = {'L': LValueSet(self), 'W': WValueSet(self),
-                          'T': CValueSet(self), 'C': CapValueSet(self)}
+        self.valuesets = {i: ValueSet(self, i) for i in FACT_TYPES}
         self.populated = False
 
     @property
@@ -86,11 +85,12 @@ class Fact:
                     (key, value))
             self.populated = True
 
-        # We have some wildcards.
         for valueset in self.valuesets.values():
             if not valueset.matches(other):
                 return False
 
+            FACT_WATCHER.debug("Valueset %s (%s) proved positive.",
+                               valueset.__class__.__name__, valueset.values)
         return True
 
     def __eq__(self, other):
