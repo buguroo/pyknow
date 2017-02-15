@@ -413,4 +413,4 @@ def test_cv_updates_context():
     tlm.declare(Fact(second=L(1), first=L(1)))
     tlm.run()
     assert len(tlm.shared_attributes['executions']) == 2
-    assert tlm.shared_attributes['executions'] == [1, 2]
+    assert set(tlm.shared_attributes['executions']) == set([1, 2])
