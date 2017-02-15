@@ -98,9 +98,10 @@ class FactList:
         for idx, value in self._facts.items():
             if fact == value:
                 facts.append(idx)
-                self.retract(idx)
 
         if facts:
+            for fact in facts:
+                self.retract(fact)
             return facts
 
         raise ValueError("No matching fact")
