@@ -31,16 +31,18 @@ Of those, the following are currently implemented in ``pyknow``:
  #. Predicate Constraints (:obj:`pyknow.fact.T`)
  #. Return Value Constraints (:obj:`pyknow.fact.T`)
  #. Pattern‑Matching with Object Patterns (:obj:`pyknow.fact.T`),
-    (:obj:`pyknow.fact.C`) and (:obj:`pyknow.fact.V`)
+    (:obj:`pyknow.fact.C`), (:func:`pyknow.fact.V`) (:func:`pyknow.fact.N`)
+ #. Wildcard ($?) facts with (:obj:`pyknow.fact.W`)
+
 
 .. note:: Predicate constraints, Pattern‑Matching with Object Patterns
           and Return Value Constraints are both implemented as
-          :obj:`pyknow.fact.T`
+          :obj:`pyknow.fact.T` or derivatives.
 
 .. note:: Pyknow also has the hability to capture and use values inside
           an engine context, between different Fact objects using
-          :obj:`pyknow.fact.C` and :obj:`pyknow.fact.V`. This is probably
-          similar to Pattern-Matching with Object Patterns
+          :obj:`pyknow.fact.C`, :func:`pyknow.fact.V` :func:`pyknow.fact.N`.
+          This is probably similar to Pattern-Matching with Object Patterns
 
 According to clips' documentation::
 
@@ -92,6 +94,7 @@ See section 5.4.X in the
            @Rule(AND(Fact(light=L("on")), Fact(door=L("open"))))
            def food_spoiled(self):
                self.food_spoiled = True
+
        ke = RefrigeratorLogic()
        ke.reset()
        ke.declare(Fact(light="on"))
@@ -149,8 +152,8 @@ More examples from the manual:
 .. code-block:: python
 
     class KE(KnowledgeEngine):
-        @Rule(f0=T(lambda True), f1="blue", f2="red")
-        def matches(self):
+        @Rule(Fact(f0=W(True), f1=L("blue"), f2=L("red")))
+        def find_data(self):
             pass
 
     a = KE()
