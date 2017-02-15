@@ -86,8 +86,10 @@ class Rule:
         if 'activation' in kwargs:
             activation = kwargs.pop('activation')
             for capture in get_captures(activation.rule):
-                context_key = capture.resolve()
-                kwargs.update({context_key: self.context[context_key]})
+                for fact in activation.facts:
+                    kwargs.update(self.context.get(
+                        hash(self.ke._facts._facts[fact]), {}))
+                break
 
         if self.__fn is None:
             if fst is not None:

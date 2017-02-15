@@ -91,16 +91,13 @@ class Fact:
         for valueset in self.valuesets.values():
             if not valueset.matches(other):
                 return False
-
-            FACT_WATCHER.debug("Valueset %s (%s) proved positive.",
-                               valueset.__class__.__name__, valueset)
         return True
 
     def __eq__(self, other):
         return self.value == other.value
 
     def __hash__(self):
-        return hash(self.value)
+        return hash(tuple(self.value.items()))
 
     def __repr__(self):
         value = ', '.join("{}={}".format(a, b) for a, b in self.value.items())

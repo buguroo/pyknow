@@ -35,6 +35,8 @@ Fact matching process is as follows::
 from contextlib import suppress
 from .config import PYKNOW_STRICT
 
+INTERNAL_CALLABLE_NAMES = ['_N', '_V']  # Special callable methods
+
 # pylint: disable=invalid-name, too-few-public-methods, no-member
 
 
@@ -96,7 +98,7 @@ class T(FactType):
         super().__init__(value)
         self.callable = value
 
-    def resolve(self, to_what=L(False)):
+    def resolve(self, to_what, key):
         """
         Allows:
 
@@ -106,8 +108,10 @@ class T(FactType):
 
         Defaults to L(False)
         """
+        if self.callable.__name__ in INTERNAL_CALLABLE_NAMES:
+            return self.callable(self.context, to_what.value[key], to_what)
 
-        return self.callable(self.context, to_what.resolve())
+        return self.callable(self.context, to_what.value[key].resolve())
 
     def __repr__(self):
         return "{}(\"{}\")".format(self.__class__.__name__,
@@ -119,7 +123,10 @@ def N(dest):
     Matcher using ``pyknow.fact.T`` returning
     True if the given context's value is NOT the same as our own.
     """
-    return T(lambda context, value: context[dest] != value)
+    def _N(context, value, other):
+        return context[hash(other)][dest] != value.resolve()
+
+    return T(_N)
 
 
 def V(dest):
@@ -127,7 +134,10 @@ def V(dest):
     Matcher using ``pyknow.fact.T`` returning
     True if the given context's value is the same as our own.
     """
-    return T(lambda context, value: context[dest] == value)
+    def _V(context, value, other):
+        return context[hash(other)][dest] == value.resolve()
+
+    return T(_V)
 
 
 class C(FactType):
@@ -262,7 +272,7 @@ class ValueSet:
         for key, value in self.value:
             # pylint: disable=broad-except
             try:
-                return value.resolve(other.value[key])
+                return value.resolve(other, key)
             except Exception:
                 if PYKNOW_STRICT:
                     raise
@@ -298,7 +308,10 @@ class ValueSet:
 
         for key, value in self.value:
             key_ = value.resolve(other.value[key])
-            self.context[key_] = other.value[key].resolve()
+            hash_ = hash(other)
+            if hash_ not in self.context:
+                self.context[hash_] = {}
+            self.context[hash_][key_] = other.value[key].resolve()
 
         return True
 
