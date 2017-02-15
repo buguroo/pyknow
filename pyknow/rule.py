@@ -89,6 +89,7 @@ class Rule:
                 for fact in activation.facts:
                     kwargs.update(self.context.get(
                         hash(self.ke._facts._facts[fact]), {}))
+                break
 
         if self.__fn is None:
             if fst is not None:
