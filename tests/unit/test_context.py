@@ -330,3 +330,87 @@ def test_C_with_context_alone():
     engine.declare(Fact(name=L("Rodriguez"), surname=L("Rodriguez")))
     engine.run()
     assert len(executions) == 2
+
+
+def test_V_with_context_multi():
+    """
+    Basic test V operator
+    """
+    from pyknow.rule import Rule
+    from pyknow.fact import Fact, C, L, V
+    from pyknow.engine import KnowledgeEngine
+
+    executions = []
+
+    class PeopleEngine(KnowledgeEngine):
+        @Rule(Fact(name=C('name_t'), surname=V('name_t')))
+        def name_is_same_as_surname(self, name_t):
+            nonlocal executions
+            executions.append(name_t)
+            print("Name {} has the same surname".format(name_t))
+
+    engine = PeopleEngine()
+    engine.reset()
+    engine.declare(Fact(name=L("David"), surname=L("Francos")))
+    engine.declare(Fact(name=L("Rodriguez"), surname=L("Rodriguez")))
+    engine.declare(Fact(surname=L("Rodriguez")))
+    engine.run()
+    assert executions == ["Rodriguez"]
+
+
+def test_cv_once():
+    """
+    Test that capture/value works on the same fact.
+    """
+
+    from pyknow.rule import Rule
+    from pyknow.fact import Fact, L, C, V
+    from pyknow.engine import KnowledgeEngine
+
+    class HasItAll(KnowledgeEngine):
+        """ Sample KE """
+
+        @Rule(Fact(first=C('members'), second=V('members')))
+        def has_the_same(self, members):
+            """ Sample RHS """
+            self.shared_attributes['executions'].append(True)
+
+    tlm = HasItAll()
+    tlm.shared_attributes['executions'] = []
+    tlm.reset()
+    tlm.declare(Fact(second=L(2), first=L(2)))
+    tlm.declare(Fact(second=L(3), first=L(2)))
+    tlm.declare(Fact(second=L(4), first=L(2)))
+    tlm.declare(Fact(second=L(1), first=L(1)))
+    tlm.run()
+    assert len(tlm.shared_attributes['executions']) == 2
+
+
+def test_cv_updates_context():
+    """
+    Test that C/V's context gets updated on each declare,
+    and the method is called with the latest version
+    """
+    from pyknow.rule import Rule
+    from pyknow.fact import Fact, L, C, V
+    from pyknow.engine import KnowledgeEngine
+
+    class HasItAll(KnowledgeEngine):
+        """ Sample KE """
+
+        @Rule(Fact(first=C('members'), second=V('members')))
+        def has_the_same(self, members):
+            """ Sample RHS """
+            print(members)
+            self.shared_attributes['executions'].append(members)
+
+    tlm = HasItAll()
+    tlm.shared_attributes['executions'] = []
+    tlm.reset()
+    tlm.declare(Fact(second=L(2), first=L(2)))
+    tlm.declare(Fact(second=L(3), first=L(2)))
+    tlm.declare(Fact(second=L(4), first=L(2)))
+    tlm.declare(Fact(second=L(1), first=L(1)))
+    tlm.run()
+    assert len(tlm.shared_attributes['executions']) == 2
+    assert tlm.shared_attributes['executions'] == [1, 2]
