@@ -253,7 +253,7 @@ class ValueSet:
                   MORE values, we'll still match.
         """
 
-        if not self.resolved:
+        if not self:
             return True
         return other.valuesets['L'].resolved.issuperset(self.resolved)
 
