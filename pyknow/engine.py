@@ -87,17 +87,20 @@ class KnowledgeEngine:
             This updates the agenda.
 
         """
+        ids = []
+
         for fact in facts:
             FACT_WATCHER.debug("Declaring fact %s", self)
             for value in fact.value.values():
                 if not isinstance(value, L):
                     raise TypeError("Cant use types T, C, V declaring a fact")
             idx = self._facts.declare(fact)
+            ids.append(idx)
             self.strategy.update_agenda(self.agenda, self.get_activations())
 
         if persistent:
             self._fixed_facts.extend(facts)
-        return idx
+        return ids
 
     def retract(self, idx):
         """
