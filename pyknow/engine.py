@@ -74,7 +74,13 @@ class KnowledgeEngine:
         """
         self._parent = parent
 
-    def declare(self, *facts, persistent=False):
+    def declare_from_fact(self, *facts):
+        """
+        Declare from inside a fact, that is a non-persistent fact.
+        """
+        self.declare(*facts, persistent=True)
+
+    def declare(self, *facts, persistent=True):
         """
         Declare a Fact in the KE.
 
@@ -96,7 +102,6 @@ class KnowledgeEngine:
                     raise TypeError("Cant use types T, C, V declaring a fact")
             idx = self._facts.declare(fact)
             ids.append(idx)
-            self.strategy.update_agenda(self.agenda, self.get_activations())
 
         if persistent:
             self._fixed_facts.extend(facts)
@@ -197,3 +202,4 @@ class KnowledgeEngine:
         self._facts = FactList()
         self.declare(InitialFact())
         self.load_initial_facts()
+        self.strategy.update_agenda(self.agenda, self.get_activations())
