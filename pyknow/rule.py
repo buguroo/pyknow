@@ -88,7 +88,7 @@ class Rule:
             for capture in get_captures(activation.rule):
                 for fact in activation.facts:
                     kwargs.update(self.context.get(
-                        hash(self.ke._facts._facts[fact]), {}))
+                        hash(self.ke._facts._facts.get(fact, False)), {}))
                 break
 
         if self.__fn is None:
