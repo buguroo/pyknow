@@ -26,7 +26,7 @@ def test_tree_NOT():
     from pyknow.tree import KETree
     from pyknow.engine import KnowledgeEngine
     from pyknow.rule import Rule, NOT
-    from pyknow.fact import Fact, InitialFact, L
+    from pyknow.fact import Fact, L
 
     executions = []
     global executions
@@ -51,10 +51,10 @@ def test_tree_NOT():
         'children': [{'node': Child(), 'children': []},
                      {'node': Child(), 'children': []}]}
 
-    tree_['node'].declare(InitialFact())
-    tree_['children'][0]['node'].declare(InitialFact())
-    tree_['children'][0]['node'].declare(Fact(always_run=L(True)))
-    tree_['children'][0]['node'].declare(Fact(not_inherited=L(False)))
+    tree_['children'][0]['node'].deffacts(Fact(always_run=L(True)))
+
+    # Parent does not inherit its children facts:
+    tree_['children'][0]['node'].deffacts(Fact(not_inherited=L(True)))
 
     KETree(tree_).run_sequential()
     print(executions)
@@ -69,7 +69,7 @@ def test_tree_retract_matching():
     from pyknow.tree import KETree
     from pyknow.engine import KnowledgeEngine
     from pyknow.rule import Rule, NOT
-    from pyknow.fact import Fact, L, InitialFact
+    from pyknow.fact import Fact, L
 
     executions = []
     global executions
@@ -106,12 +106,10 @@ def test_tree_retract_matching():
         'children': [{'node': Child(), 'children': []},
                      {'node': Child(), 'children': []}]}
 
-    tree_['node'].declare(InitialFact())
-    tree_['node'].declare(Fact(initial=L(True)))
+    tree_['node'].deffacts(Fact(initial=L(True)))
 
-    tree_['children'][0]['node'].declare(InitialFact())
-    tree_['children'][0]['node'].declare(Fact(always_run=L(True)))
-    tree_['children'][0]['node'].declare(Fact(not_inherited=L(False)))
+    tree_['children'][0]['node'].deffacts(Fact(always_run=L(True)))
+    tree_['children'][0]['node'].deffacts(Fact(not_inherited=L(False)))
 
     KETree(tree_).run_sequential()
     print(executions)

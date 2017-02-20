@@ -97,8 +97,10 @@ See section 5.4.X in the
 
        ke = RefrigeratorLogic()
        ke.reset()
-       ke.declare(Fact(light="on"))
-       ke.declare(Fact(door="open"))
+       ke.deffacts(Fact(light="on"))
+       ke.deffacts(Fact(door="open"))
+       # or:
+       # ke.deffacts(Fact(light="on"), Fact(door="open"))
        ke.run()
        return ke.food_spoiled
 
