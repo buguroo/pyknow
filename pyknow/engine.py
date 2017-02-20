@@ -2,6 +2,7 @@
 ``pyknow engine`` represents ``CLIPS modules``
 
 """
+import logging
 from inspect import getmembers
 
 from pyknow.agenda import Agenda
@@ -10,6 +11,8 @@ from pyknow.factlist import FactList
 from pyknow.rule import Rule
 from pyknow.strategies import Depth
 from pyknow.watchers import FACT_WATCHER
+
+logging.basicConfig()
 
 
 class KnowledgeEngine:
@@ -30,6 +33,7 @@ class KnowledgeEngine:
         self.context = Context()
         self._fixed_facts = []
         self._facts = FactList()
+        self.running = False
         self.agenda = Agenda()
         self.strategy = self.__strategy__()
         self._parent = False
@@ -74,33 +78,43 @@ class KnowledgeEngine:
         """
         self._parent = parent
 
-    def declare(self, *facts, persistent=False):
+    def declare(self, *facts):
         """
-        Declare a Fact in the KE.
-
-        If persistent is specified, the facts will be there
-        even after a reset() has been performed, as with
-        clips' initialfacts
+        Declare from inside a fact, that is a non-persistent fact.
 
         .. note::
 
             This updates the agenda.
 
         """
-        ids = []
+        if not self.running:
+            logging.warning("Declaring fact while not run()")
+        self.__declare(*facts)
+        self.strategy.update_agenda(self.agenda, self.get_activations())
 
+    def __declare(self, *facts):
+        """
+        internal declaration method.
+        """
+        ids = []
         for fact in facts:
-            FACT_WATCHER.debug("Declaring fact %s", self)
+            FACT_WATCHER.debug("Declaring fact %s", fact)
             for value in fact.value.values():
                 if not isinstance(value, L):
                     raise TypeError("Cant use types T, C, V declaring a fact")
             idx = self._facts.declare(fact)
             ids.append(idx)
-            self.strategy.update_agenda(self.agenda, self.get_activations())
-
-        if persistent:
-            self._fixed_facts.extend(facts)
         return ids
+
+    def deffacts(self, *facts):
+        """
+        Declare a Fact from OUTSIDE the KE (a persistent fact)
+        """
+
+        if self.running:
+            logging.warning("Declaring fixed facts while run()")
+
+        self._fixed_facts.extend(facts)
 
     def retract(self, idx):
         """
@@ -167,6 +181,7 @@ class KnowledgeEngine:
         Execute agenda activations
 
         """
+        self.running = True
         while steps is None or steps > 0:
             activation = self.agenda.get_next()
             if activation is None:
@@ -175,6 +190,7 @@ class KnowledgeEngine:
                 if steps is not None:
                     steps -= 1
                 activation.rule(self, activation=activation)
+        self.running = False
 
     def load_initial_facts(self):
         """
@@ -182,7 +198,7 @@ class KnowledgeEngine:
 
         """
         if self._fixed_facts:
-            self.declare(*self._fixed_facts)
+            self.__declare(*self._fixed_facts)
 
     def reset(self):
         """
@@ -197,3 +213,4 @@ class KnowledgeEngine:
         self._facts = FactList()
         self.declare(InitialFact())
         self.load_initial_facts()
+        self.strategy.update_agenda(self.agenda, self.get_activations())

@@ -40,7 +40,7 @@ def rules_can_be_defined_outside_ke():
             executed = True
 
     ke_ = TestKE()
-    ke_.declare(Fact(name=L("foo")))
+    ke_.deffacts(Fact(name=L("foo")))
     ke_.run()
 
     assert ke_.context
@@ -48,7 +48,7 @@ def rules_can_be_defined_outside_ke():
     assert executed
 
     fl_ = FactList()
-    fl_.declare(Fact(name=L('foo')))
+    fl_.deffacts(Fact(name=L('foo')))
 
     rule.get_activations(fl_)
     assert rule.context == {'name': 'stuff'}
@@ -93,7 +93,6 @@ def test_rule_inherit_ke_context():
             executions.append('rule2')
 
     ke_ = Test()
-    ke_.reset()
 
     to_declare = []
 
@@ -103,7 +102,7 @@ def test_rule_inherit_ke_context():
     to_declare = dict(enumerate(to_declare))
 
     for k, n in to_declare.items():
-        ke_.declare(Fact(name=n))
+        ke_.deffacts(Fact(name=n))
 
     results = defaultdict(list)
     acts = []
@@ -112,6 +111,7 @@ def test_rule_inherit_ke_context():
         results[''.join([str(to_declare[a - 1].resolve())
                          for a in activation.facts])].append(1)
 
+    ke_.reset()
     ke_.run()
 
     for act in acts:
@@ -168,7 +168,6 @@ def test_can_capture_values():
             executions.append('rule5')
 
     ke_ = Test()
-    ke_.reset()
 
     to_declare = []
 
@@ -178,7 +177,7 @@ def test_can_capture_values():
     to_declare = dict(enumerate(to_declare))
 
     for k, n in to_declare.items():
-        ke_.declare(Fact(n=L(k), name=n))
+        ke_.deffacts(Fact(n=L(k), name=n))
 
     results = defaultdict(list)
     acts = []
@@ -187,6 +186,7 @@ def test_can_capture_values():
         results[''.join([str(to_declare[a - 1].resolve())
                          for a in activation.facts])].append(1)
 
+    ke_.reset()
     ke_.run()
 
     for act in acts:
@@ -217,7 +217,7 @@ def test_cv_rhs_arguments(kwargs):
             assert stuff == "foo"
 
     ke_ = TestKE()
-    ke_.declare(Fact(name=L("foo")))
+    ke_.deffacts(Fact(name=L("foo")))
     ke_.run()
 
 
@@ -242,10 +242,12 @@ def test_cv_rhs_arguments_not_on_others(kwargs):
             assert True
 
     ke_ = TestKE()
-    ke_.declare(Fact(name=L("foo")))
+    ke_.deffacts(Fact(name=L("foo")))
+    ke_.reset()
     ke_.run()
 
 
+@pytest.mark.wip
 def test_can_produce_values():
     """
         KnowledgeEngine has context
@@ -272,11 +274,11 @@ def test_can_produce_values():
             executions.append('rule2')
 
     ke_ = Test()
+
+    ke_.deffacts(Fact(name=L("Foo"), other=L("asdf")))
+    ke_.deffacts(Fact(name=L("Foo"), other=L("Foo")))
+
     ke_.reset()
-
-    ke_.declare(Fact(name=L("Foo"), other=L("asdf")))
-    ke_.declare(Fact(name=L("Foo"), other=L("Foo")))
-
     ke_.run()
 
     assert executions.count('rule2') == 1
@@ -301,9 +303,9 @@ def test_V_with_context():
             print("Name {} has the same surname".format(name_t))
 
     engine = PeopleEngine()
+    engine.deffacts(Fact(name=L("David"), surname=L("Francos")))
+    engine.deffacts(Fact(name=L("Rodriguez"), surname=L("Rodriguez")))
     engine.reset()
-    engine.declare(Fact(name=L("David"), surname=L("Francos")))
-    engine.declare(Fact(name=L("Rodriguez"), surname=L("Rodriguez")))
     engine.run()
     assert executions == ["Rodriguez"]
 
@@ -325,9 +327,9 @@ def test_C_with_context_alone():
             executions.append(name_t)
 
     engine = PeopleEngine()
+    engine.deffacts(Fact(name=L("David"), surname=L("Francos")))
+    engine.deffacts(Fact(name=L("Rodriguez"), surname=L("Rodriguez")))
     engine.reset()
-    engine.declare(Fact(name=L("David"), surname=L("Francos")))
-    engine.declare(Fact(name=L("Rodriguez"), surname=L("Rodriguez")))
     engine.run()
     assert len(executions) == 2
 
@@ -350,10 +352,10 @@ def test_V_with_context_multi():
             print("Name {} has the same surname".format(name_t))
 
     engine = PeopleEngine()
+    engine.deffacts(Fact(name=L("David"), surname=L("Francos")))
+    engine.deffacts(Fact(name=L("Rodriguez"), surname=L("Rodriguez")))
+    engine.deffacts(Fact(surname=L("Rodriguez")))
     engine.reset()
-    engine.declare(Fact(name=L("David"), surname=L("Francos")))
-    engine.declare(Fact(name=L("Rodriguez"), surname=L("Rodriguez")))
-    engine.declare(Fact(surname=L("Rodriguez")))
     engine.run()
     assert executions == ["Rodriguez"]
 
@@ -377,11 +379,11 @@ def test_cv_once():
 
     tlm = HasItAll()
     tlm.shared_attributes['executions'] = []
+    tlm.deffacts(Fact(second=L(2), first=L(2)))
+    tlm.deffacts(Fact(second=L(3), first=L(2)))
+    tlm.deffacts(Fact(second=L(4), first=L(2)))
+    tlm.deffacts(Fact(second=L(1), first=L(1)))
     tlm.reset()
-    tlm.declare(Fact(second=L(2), first=L(2)))
-    tlm.declare(Fact(second=L(3), first=L(2)))
-    tlm.declare(Fact(second=L(4), first=L(2)))
-    tlm.declare(Fact(second=L(1), first=L(1)))
     tlm.run()
     assert len(tlm.shared_attributes['executions']) == 2
 
@@ -406,11 +408,11 @@ def test_cv_updates_context():
 
     tlm = HasItAll()
     tlm.shared_attributes['executions'] = []
+    tlm.deffacts(Fact(second=L(2), first=L(2)))
+    tlm.deffacts(Fact(second=L(3), first=L(2)))
+    tlm.deffacts(Fact(second=L(4), first=L(2)))
+    tlm.deffacts(Fact(second=L(1), first=L(1)))
     tlm.reset()
-    tlm.declare(Fact(second=L(2), first=L(2)))
-    tlm.declare(Fact(second=L(3), first=L(2)))
-    tlm.declare(Fact(second=L(4), first=L(2)))
-    tlm.declare(Fact(second=L(1), first=L(1)))
     tlm.run()
     assert len(tlm.shared_attributes['executions']) == 2
     assert set(tlm.shared_attributes['executions']) == set([1, 2])

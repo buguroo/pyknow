@@ -134,6 +134,13 @@ class KETree:
         :func:`pyknow.engine.KnowledgeEngine.run`.
 
         """
+        ordered = []
         for elements in self:
             for element in elements:
-                element.run()
+                ordered.append(element)
+
+        for element in ordered:
+            element.reset()
+
+        for element in ordered:
+            element.run()

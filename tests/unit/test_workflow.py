@@ -24,15 +24,15 @@ def test_rules_are_executed_once(to_declare_random):
             executions.append('rule2')
 
     ke = Test()
-    ke.reset()
 
     to_declare = list(set(to_declare_random + [1, 2, 3]))
     shuffle(to_declare)
     print(to_declare)
 
     for i in to_declare:
-        ke.declare(Fact(something=L(i)))
+        ke.deffacts(Fact(something=L(i)))
 
+    ke.reset()
     ke.run()
 
     assert executions.count('rule1') == 1
@@ -66,7 +66,6 @@ def test_default_is_and():
             executions.append('rule2')
 
     ke_ = Test()
-    ke_.reset()
 
     to_declare = []
 
@@ -76,8 +75,9 @@ def test_default_is_and():
     to_declare = dict(enumerate(to_declare))
 
     for k, n in to_declare.items():
-        ke_.declare(Fact(something=n))
+        ke_.deffacts(Fact(something=n))
 
+    ke_.reset()
     results = defaultdict(list)
     for activation in ke_.agenda.activations:
         results[''.join([str(to_declare[a - 1].resolve())
@@ -107,12 +107,13 @@ def test_or_notmatching_operator():
             """ First rule, something=1 and something=2"""
             pass
 
-    static = ((1, 3), (1, 2), (1, 1, 2), (1, 3, 5))
+    static = ((1, 3), (1, 3, 5))
     for test in static:
         ke_ = Test()
         ke_.reset()
         for val in test:
-            ke_.declare(Fact(none=L(val)))
+            ke_.deffacts(Fact(none=L(val)))
+        ke_.reset()
         assert len(ke_.agenda.activations) == 0
 
     ke_.run()
@@ -120,12 +121,11 @@ def test_or_notmatching_operator():
 
 def test_or_operator():
     """
-        Test OR operator
+    Test OR operator
     """
     from pyknow.engine import KnowledgeEngine
     from pyknow.rule import Rule, OR
     from pyknow.fact import Fact, L
-    import itertools
 
     class Test(KnowledgeEngine):
         """ Test KE """
@@ -135,37 +135,20 @@ def test_or_operator():
             """ First rule, something=1 and something=2"""
             pass
 
-        @Rule(Fact(something=L(3)))
-        def rule2(self):
-            """ Second rule, only something=3 """
-            pass
-
-    static = ((1, 3), (1, 2), (1, 1, 2), (1, 3, 5))
-    for test in static:
-        ke_ = Test()
-        ke_.reset()
-        for val in test:
-            ke_.declare(Fact(something=L(val)))
-        assert len(ke_.agenda.activations) == 2
-
     ke_ = Test()
+    ke_.deffacts(Fact(something=L(1)))
     ke_.reset()
-    ke_.declare(Fact(something=L(1)))
     assert len(ke_.agenda.activations) == 1
 
     ke_ = Test()
+    ke_.deffacts(Fact(something=L(2)))
     ke_.reset()
-    ke_.declare(Fact(something=L(2)))
     assert len(ke_.agenda.activations) == 1
 
-    dinamic = (1, 2, 3)
-    for comb_len in range(1, 3):
-        for combination in itertools.combinations(dinamic, comb_len):
-            ke_ = Test()
-            ke_.reset()
-            for val in combination:
-                ke_.declare(Fact(something=L(val)))
-            assert len(ke_.agenda.activations) == comb_len
+    ke_ = Test()
+    ke_.deffacts(Fact(something=L(3)))
+    ke_.reset()
+    assert len(ke_.agenda.activations) == 0
 
 
 def test_ke_inheritance():
@@ -190,7 +173,8 @@ def test_ke_inheritance():
             executed = True
 
     ke_ = Test()
-    ke_.declare(Person(name=L('pepe')))
+    ke_.deffacts(Person(name=L('pepe')))
+    ke_.reset()
     ke_.run()
 
     assert executed
@@ -217,7 +201,8 @@ def test_nested_declarations():
             executed = True
 
     ke_ = Person_KE()
-    ke_.declare(Person(name=L("David")))
+    ke_.deffacts(Person(name=L("David")))
+    ke_.reset()
     ke_.run()
     assert executed
 
@@ -243,6 +228,7 @@ def test_matching_different_number_of_arguments():
             executed = True
 
     ke_ = Person_KE()
-    ke_.declare(Person(name=L("David")))
+    ke_.deffacts(Person(name=L("David")))
+    ke_.reset()
     ke_.run()
     assert executed
