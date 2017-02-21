@@ -34,8 +34,7 @@ Fact matching process is as follows::
 
 from contextlib import suppress
 from .config import PYKNOW_STRICT
-
-INTERNAL_CALLABLE_NAMES = ['_N', '_V']  # Special callable methods
+from .watchers import FACT_WATCHER
 
 # pylint: disable=invalid-name, too-few-public-methods, no-member
 
@@ -53,8 +52,10 @@ class FactType:
 
     """
     def __init__(self, value):
+        from .fact import Context
         self.value = value
         self.key = False
+        self.context = Context()
 
     def resolve(self, _=False):
         """
@@ -108,9 +109,6 @@ class T(FactType):
 
         Defaults to L(False)
         """
-        if self.callable.__name__ in INTERNAL_CALLABLE_NAMES:
-            return self.callable(self.context, to_what.value[key], to_what)
-
         return self.callable(self.context, to_what.value[key].resolve())
 
     def __repr__(self):
@@ -123,8 +121,8 @@ def N(dest):
     Matcher using ``pyknow.fact.T`` returning
     True if the given context's value is NOT the same as our own.
     """
-    def _N(context, value, other):
-        return context[hash(other)][dest] != value.resolve()
+    def _N(context, value):
+        return context[dest] != value.resolve()
 
     return T(_N)
 
@@ -134,8 +132,13 @@ def V(dest):
     Matcher using ``pyknow.fact.T`` returning
     True if the given context's value is the same as our own.
     """
-    def _V(context, value, other):
-        return context[hash(other)][dest] == value.resolve()
+    def _V(context, value):
+        with suppress(KeyError):
+            FACT_WATCHER.debug(
+                "Trying to extract %s from %s == %s",
+                dest, context, value)
+            return context[dest] == value
+        return False
 
     return T(_V)
 
@@ -157,6 +160,7 @@ class W(FactType):
     Except only allowing True/False, this one
     will be used as a "key wildcard" when compared within
     WValueSet.
+
     """
 
     def __init__(self, value):
@@ -189,6 +193,7 @@ class ValueSet:
         Returns, depending on the type we're matching,
         its matched value
         """
+        FACT_WATCHER.debug("Trying to match against %s", self.type_)
         return getattr(self, "matches_{}".format(self.type_))(other)
 
     @property
@@ -213,8 +218,10 @@ class ValueSet:
         Returns the asigned :obj:`pyknow.engine.KnowledgeEngine`'s
         :obj:`pyknow.fact.Context`
         """
-
-        return self.parent.context
+        if self.parent:
+            return self.parent.context
+        else:
+            return {}
 
     @property
     def resolved(self):
@@ -271,6 +278,7 @@ class ValueSet:
 
         for key, value in self.value:
             # pylint: disable=broad-except
+            value.context = self.context
             try:
                 return value.resolve(other, key)
             except Exception:
@@ -306,12 +314,12 @@ class ValueSet:
             # we don't match
             return False
 
+        FACT_WATCHER.debug("Trying to match %s: %s", self.value, other.value)
+
         for key, value in self.value:
             key_ = value.resolve(other.value[key])
-            hash_ = hash(other)
-            if hash_ not in self.context:
-                self.context[hash_] = {}
-            self.context[hash_][key_] = other.value[key].resolve()
+            self.context[key_] = other.value[key].resolve()
+            FACT_WATCHER.debug("Context updated %s", self.context)
 
         return True
 

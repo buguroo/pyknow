@@ -40,7 +40,7 @@ def test_Rule_empty_matches_with_initial_fact():
     fl = FactList()
     idx = fl.declare(InitialFact())
 
-    assert Activation(r, (0,)) in r.get_activations(fl)
+    assert Activation(r, (0,), ((0, {}),)) in r.get_activations(fl)
 
 
 def test_Rule_with_empty_Fact_matches_all_Facts():
@@ -59,7 +59,7 @@ def test_Rule_with_empty_Fact_matches_all_Facts():
     activations = r.get_activations(fl)
     assert len(activations) == 3
     for i in range(3):
-        assert Activation(r, (i, )) in activations
+        assert Activation(r, (i, ), ((i, {}),)) in activations
 
 
 def test_Rule_multiple_criteria_generates_activation_with_matching_facts():

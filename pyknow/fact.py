@@ -10,14 +10,14 @@ See :ref:conditional_elements
 from collections import OrderedDict
 from pyknow.facttypes import ValueSet
 from pyknow.facttypes import L, V, N, C, T, W, FACT_TYPES  # NOQA
-from pyknow.watchers import FACT_WATCHER
 
 
 class Context(dict):
     """
     Context is a just dictionary for now
     """
-    pass
+    def __hash__(self):
+        return hash(tuple(self.items()))
 
 
 class Fact:
@@ -25,7 +25,6 @@ class Fact:
     Base Fact class
     """
     def __init__(self, **value):
-        self._context = False
         self.rule = False
         self.value = value
         self.keyset = set(value.keys())
@@ -36,16 +35,11 @@ class Fact:
 
     @property
     def context(self):
-        """
-        Return our context based on the parent rule's context.
-        If we don't have neither a rule nor a context, add one.
-        """
-
-        if self.rule and self.rule.context is not None:
-            self._context = self.rule.context
-        elif not self._context:
-            self._context = Context()
-        return self._context
+        """ Rule context """
+        if self.rule:
+            return self.rule.context
+        else:
+            return {}
 
     def __contains__(self, other):
         """
@@ -73,7 +67,6 @@ class Fact:
         # The first time we compare a fact, populate its valuesets.
         if not other.populated:
             for key, value in other.value.items():
-                value.context = other.context
                 value.key = key
                 value_ = (key, value)
                 other.valuesets[value.__class__.__name__].value.add(value_)
@@ -82,7 +75,6 @@ class Fact:
         # and ours
         if not self.populated:
             for key, value in self.value.items():
-                value.context = self.context
                 value.key = key
                 self.valuesets[value.__class__.__name__].value.add(
                     (key, value))

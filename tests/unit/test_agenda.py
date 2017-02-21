@@ -75,8 +75,8 @@ def test_Agenda_get_next_adds_to_executed():
     from pyknow.activation import Activation
     from collections import deque
 
-    act1 = Activation(rule=Rule(), facts=(1, ))
-    act2 = Activation(rule=Rule(), facts=(2, ))
+    act1 = Activation(rule=Rule(), facts=(1, ), contexts=(1,))
+    act2 = Activation(rule=Rule(), facts=(2, ), contexts=(2,))
 
     a = Agenda()
     a.activations = deque([act1, act2])

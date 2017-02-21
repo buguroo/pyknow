@@ -9,28 +9,14 @@ case implemented in :mod:`pyknow.fact`.
 
 """
 
+from contextlib import suppress
 from functools import update_wrapper
 from itertools import product
 
 from pyknow.factlist import FactList
-from pyknow.fact import InitialFact, Fact, Context, C
+from pyknow.fact import InitialFact, Fact, Context
 from pyknow.activation import Activation
 from pyknow.watchers import RULE_WATCHER
-
-
-def get_captures(cond):
-    """
-    Get all level of captured items in the rule.
-    """
-
-    for cond in cond.conds():
-        if isinstance(cond, Rule):
-            for cond_ in get_captures(cond):
-                yield cond_
-        else:
-            for cond_ in cond.value.values():
-                if isinstance(cond_, C):
-                    yield cond_
 
 
 class Rule:
@@ -59,7 +45,7 @@ class Rule:
         RULE_WATCHER.debug("Initialized rule with conds %s", conds)
         self.__fn = None
         self.ke = None
-
+        self.context = Context()
         if not conds:
             conds = (InitialFact(),)
         self.__conds = conds
@@ -68,28 +54,15 @@ class Rule:
     def __repr__(self):
         return "{}({})".format(self.__class__.__name__, self.__conds)
 
-    @property
-    def context(self):
-        """
-        Shared context between rule's facts.
-
-        This is used to implement :obj:`pyknow.fact.C` and
-        :obj:`pyknow.fact.V`
-
-        """
-        if self.ke:
-            return self.ke.context
-        else:
-            return None
-
     def __call__(self, fst=None, *args, **kwargs):
         if 'activation' in kwargs:
             activation = kwargs.pop('activation')
-            for capture in get_captures(activation.rule):
-                for fact in activation.facts:
-                    kwargs.update(self.context.get(
-                        hash(self.ke._facts._facts.get(fact, False)), {}))
-                break
+            contexts = dict(activation.contexts)
+            RULE_WATCHER.debug("Activation received, executing")
+            RULE_WATCHER.debug("Facts: %s", activation.facts)
+
+            for fact in activation.facts:
+                kwargs.update(contexts.get(fact, {}))
 
         if self.__fn is None:
             if fst is not None:
@@ -98,10 +71,6 @@ class Rule:
             else:
                 raise AttributeError("Mandatory function not provided.")
         else:
-            if hasattr(fst, 'context') and isinstance(fst.context, Context):
-                self.ke = fst
-
-            RULE_WATCHER.debug("Processing with context: %s", self.context)
             args = (tuple() if fst is None else (fst,)) + args
             return self.__fn(*args, **kwargs)
 
@@ -125,13 +94,15 @@ class Rule:
                 for cond in self.__conds:
                     factlist.rule = self
                     if issubclass(cond.__class__, Rule):
-                        cond.ke = self.ke
+                        cond.context = self.context
                         acts = cond.get_activations(factlist)
                         if not acts:
                             break
                         for act in acts:
+                            RULE_WATCHER.debug("Processing activation %s", act)
                             for fact in act.facts:
-                                matches.append([fact])
+                                context = dict(act.contexts).get(fact)
+                                matches.append([(fact, context)])
                     elif isinstance(cond, Fact):
                         cond.rule = self
                         match = factlist.matches(cond)
@@ -141,9 +112,13 @@ class Rule:
                             break
                 else:
                     for match in product(*matches):
-                        facts = tuple(sorted(set(match)))
+                        contexts = {}
+                        with suppress(ValueError):
+                            contexts = dict(match)
+                        facts = tuple(sorted(set(contexts.keys())))
                         if facts:
-                            act = Activation(rule=self, facts=facts)
+                            act = Activation(rule=self, facts=facts,
+                                             contexts=tuple(contexts.items()))
                             RULE_WATCHER.debug("Got activation: %s", act)
                             yield act
 
@@ -198,17 +173,19 @@ class NOT(Rule):
 
         """
         activations = super().get_activations(factlist)
-        if activations:
-            return tuple()
-        else:
-            fact = factlist.matches(InitialFact())
-            if fact:
-                factidx = fact[0]
-                act = tuple([Activation(rule=self, facts=(factidx, ))])
+        if not activations:
+            # If not activations found, try to match against the initial
+            # fact. If matches, then we produce an activation, as that
+            # would mean we have an InitialFact and NOT() condition is
+            # satisfied. The activation we raise has the factlist's initial
+            # fact id.
+            with suppress(IndexError):
+                factidx, context = factlist.matches(InitialFact())[0]
+                act = tuple([Activation(rule=self, facts=(factidx, ),
+                                        contexts=((factidx, context),))])
                 RULE_WATCHER.debug("Got activation: %s", act)
                 return act
-            else:
-                return tuple()
+        return tuple()
 
 
 class OR(Rule):
@@ -232,15 +209,19 @@ class OR(Rule):
                         break
                     for act in acts:
                         for fact in act.facts:
-                            matches.append([fact])
+                            context = dict(act.contexts)
+                            matches.append(
+                                (fact, tuple(context.items())))
                 elif isinstance(cond, Fact):
+                    cond.rule = self
                     match = factlist.matches(cond)
                     if match:
                         matches.append(match)
 
         if matches:
             act = tuple([Activation(rule=self,
-                                    facts=[fact[0] for fact in matches])])
+                                    facts=[fact[0] for fact in matches],
+                                    contexts=tuple())])
             RULE_WATCHER.debug("Got activation: %s", act)
             return act
         else:

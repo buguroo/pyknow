@@ -10,8 +10,8 @@ Also see `retrieving the fact-list \
 
 """
 
-from collections import OrderedDict
-from pyknow.fact import Fact
+from collections import OrderedDict, namedtuple
+from pyknow.fact import Fact, Context
 from pyknow.watchers import FACT_WATCHER
 
 
@@ -106,9 +106,13 @@ class FactList:
 
         raise ValueError("No matching fact")
 
-    def matches(self, fact):
+    def matches(self, condition):
         """
         Checks for matches of a fact inside this factlist
+
+        The fact we match against is usually the Condition of a ``Rule``,
+        thus the naming on ``condition`` param. Yet this is not absolute
+        and must only be used as a reference.
 
         :param fact: :obj:`pyknow.fact.Fact` to match against
         :return: list of indexes of matching facts
@@ -116,10 +120,17 @@ class FactList:
         """
 
         def _matches():
-            for idx, value in self._facts.items():
-                if value in fact:
-                    FACT_WATCHER.debug("Match found for %s on %s", value, fact)
-                    yield idx
+            for idx, fact in self._facts.items():
+                if condition.rule:
+                    condition.rule.context = Context()
+                FACT_WATCHER.debug(
+                    "Comparing %s with %s", fact, condition)
+                if fact in condition:
+                    FACT_WATCHER.debug("Match found")
+                    if condition.rule:
+                        yield idx, condition.rule.context
+                    else:
+                        yield idx, Context()
         result = list(_matches())
         return result
 

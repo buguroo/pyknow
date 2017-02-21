@@ -64,8 +64,8 @@ def test_Depth_update_agenda_activations_to_agenda():
     from pyknow.rule import Rule
     from pyknow.agenda import Agenda
 
-    act1 = Activation(rule=Rule(), facts=(1, ))
-    act2 = Activation(rule=Rule(), facts=(2, ))
+    act1 = Activation(rule=Rule(), facts=(1, ), contexts=(1, tuple()))
+    act2 = Activation(rule=Rule(), facts=(2, ), contexts=(2, tuple()))
 
     a = Agenda()
 
@@ -82,12 +82,12 @@ def test_Depth_update_agenda_asertion_order_affects_agenda_order_1():
     from pyknow.rule import Rule
     from pyknow.agenda import Agenda
 
-    act1 = Activation(rule=Rule(), facts=(1, ))
-    act2 = Activation(rule=Rule(), facts=(2, ))
+    act1 = Activation(rule=Rule(), facts=(1, ), contexts=(1, tuple()))
+    act2 = Activation(rule=Rule(), facts=(2, ), contexts=(1, tuple()))
     first = {act1, act2}
 
-    act3 = Activation(rule=Rule(), facts=(3, ))
-    act4 = Activation(rule=Rule(), facts=(4, ))
+    act3 = Activation(rule=Rule(), facts=(3, ), contexts=(1, tuple()))
+    act4 = Activation(rule=Rule(), facts=(4, ), contexts=(1, tuple()))
     second = {act3, act4}
 
     a = Agenda()
@@ -109,12 +109,12 @@ def test_Depth_update_agenda_asertion_order_affects_agenda_order_2():
     from pyknow.rule import Rule
     from pyknow.agenda import Agenda
 
-    act1 = Activation(rule=Rule(), facts=(1, ))
-    act2 = Activation(rule=Rule(), facts=(2, ))
+    act1 = Activation(rule=Rule(), facts=(1, ), contexts=(1, tuple()))
+    act2 = Activation(rule=Rule(), facts=(2, ), contexts=(1, tuple()))
     first = {act1, act2}
 
-    act3 = Activation(rule=Rule(), facts=(3, ))
-    act4 = Activation(rule=Rule(), facts=(4, ))
+    act3 = Activation(rule=Rule(), facts=(3, ), contexts=(1, tuple()))
+    act4 = Activation(rule=Rule(), facts=(4, ), contexts=(1, tuple()))
     second = {act3, act4}
 
     a = Agenda()
@@ -138,10 +138,14 @@ def test_Depth_update_agenda_different_salience():
     from pyknow.rule import Rule
     from pyknow.agenda import Agenda
 
-    act1 = Activation(rule=Rule(salience=1), facts=(1, ))
-    act2 = Activation(rule=Rule(salience=2), facts=(2, ))
-    act3 = Activation(rule=Rule(salience=3), facts=(3, ))
-    act4 = Activation(rule=Rule(salience=4), facts=(4, ))
+    act1 = Activation(
+        rule=Rule(salience=1), facts=(1, ), contexts=(1, tuple()))
+    act2 = Activation(
+        rule=Rule(salience=2), facts=(2, ), contexts=(1, tuple()))
+    act3 = Activation(
+        rule=Rule(salience=3), facts=(3, ), contexts=(1, tuple()))
+    act4 = Activation(
+        rule=Rule(salience=4), facts=(4, ), contexts=(1, tuple()))
 
     acts = [act1, act2, act3, act4]
     shuffle(acts)
@@ -164,8 +168,8 @@ def test_Strategy_update_agenda_doesnt_add_executed_activations(strategy):
     from pyknow.rule import Rule
     from pyknow.agenda import Agenda
 
-    act1 = Activation(rule=Rule(), facts=(1, ))
-    act2 = Activation(rule=Rule(), facts=(2, ))
+    act1 = Activation(rule=Rule(), facts=(1, ), contexts=(1, tuple()))
+    act2 = Activation(rule=Rule(), facts=(2, ), contexts=(1, tuple()))
 
     acts = [act1, act2]
 
@@ -186,8 +190,8 @@ def test_Strategy_update_agenda_update_executed(strategy):
     from pyknow.rule import Rule
     from pyknow.agenda import Agenda
 
-    act1 = Activation(rule=Rule(), facts=(1, ))
-    act2 = Activation(rule=Rule(), facts=(2, ))
+    act1 = Activation(rule=Rule(), facts=(1, ), contexts=(1, tuple()))
+    act2 = Activation(rule=Rule(), facts=(2, ), contexts=(1, tuple()))
 
     st = getattr(strategies, strategy)()
     a = Agenda()
