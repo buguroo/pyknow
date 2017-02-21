@@ -4,20 +4,6 @@
 
 from hypothesis import given
 from conftest import random_kwargs
-import pytest
-
-
-def test_context_not_defined_on_simple_rules():
-    """
-        test that a captured value is added to context, wich can
-        be externally added so we'll be able to have a general context
-        for all the facts in a rule
-    """
-    from pyknow.fact import Fact, C
-    from pyknow.rule import Rule
-
-    rule = Rule(Fact(name=C('stuff')))
-    assert rule.context is None
 
 
 def rules_can_be_defined_outside_ke():
@@ -136,14 +122,6 @@ def test_can_capture_values():
             nonlocal executions
             executions.append('rule1')
 
-        @Rule(Fact(n=L(1), name=C('name_p')), Fact(n=L(1), name=V("name_p")))
-        def rule2(self, name_p):
-            """
-            Second rule, only when when we can capture a name.
-            """
-            nonlocal executions
-            executions.append('rule2')
-
         @Rule(Fact(other=L('foo')))
         def rule3(self):
             """ third rule, check that name_p is not here """
@@ -158,8 +136,8 @@ def test_can_capture_values():
             nonlocal executions
             executions.append('rule4')
 
-        @Rule(Fact(n=L(1), name=V("name_p")))
-        def rule5(self):
+        @Rule(Fact(n=C("name_p"), y=V("name_p")))
+        def rule5(self, name_p):
             """
             Fifth rule, we should only match against the captured
             value in the first rule, wich should be 1.
@@ -177,7 +155,7 @@ def test_can_capture_values():
     to_declare = dict(enumerate(to_declare))
 
     for k, n in to_declare.items():
-        ke_.deffacts(Fact(n=L(k), name=n))
+        ke_.deffacts(Fact(n=L(k), y=L(k), name=n))
 
     results = defaultdict(list)
     acts = []
@@ -189,16 +167,11 @@ def test_can_capture_values():
     ke_.reset()
     ke_.run()
 
-    for act in acts:
-        assert act.rule.context is ke_.context
-
-    assert ke_.context
     print(executions)
     assert executions.count('rule4') == len(to_declare)
     assert executions.count('rule1') == 1
-    assert executions.count('rule5') == 1
-    assert executions.count('rule2') == 1
-    assert len(executions) == len(to_declare) + 3
+    assert executions.count('rule5') == len(to_declare)
+    assert len(executions) == len(to_declare) * 2 + 1
 
 
 @given(kwargs=random_kwargs)
@@ -247,13 +220,12 @@ def test_cv_rhs_arguments_not_on_others(kwargs):
     ke_.run()
 
 
-@pytest.mark.wip
 def test_can_produce_values():
     """
         KnowledgeEngine has context
     """
     from pyknow.engine import KnowledgeEngine
-    from pyknow.rule import Rule, NOT
+    from pyknow.rule import Rule
     from pyknow.fact import Fact, C, L, V
 
     executions = []
@@ -263,26 +235,25 @@ def test_can_produce_values():
 
     class Test(KnowledgeEngine):
         """ Test KE """
-        @Rule(Fact(name=C('name_p')),
-              NOT(Fact(other=V("name_p"))))
+        @Rule(Fact(name=C('name_p'), value=V("name_p")))
         def rule2(self, name_p):
             """
-            Second rule, only something=3
-            THIS ONE SHOULD NOT BE EXECUTED
+            Captured value is NOT the same as current value.
+            This CANNOT happen (as we're comparing against the same fact).
             """
             nonlocal executions
             executions.append('rule2')
 
     ke_ = Test()
 
-    ke_.deffacts(Fact(name=L("Foo"), other=L("asdf")))
-    ke_.deffacts(Fact(name=L("Foo"), other=L("Foo")))
+    ke_.deffacts(Fact(name=L("Foobar")))
+    ke_.deffacts(Fact(name=L("Foobar"), value=L("Foobar")))
 
     ke_.reset()
     ke_.run()
 
-    assert executions.count('rule2') == 1
     print(executions)
+    assert executions.count('rule2') == 1
 
 
 def test_V_with_context():
@@ -315,7 +286,7 @@ def test_C_with_context_alone():
     Basic test C operator alone
     """
     from pyknow.rule import Rule
-    from pyknow.fact import Fact, C, L, V
+    from pyknow.fact import Fact, C, L
     from pyknow.engine import KnowledgeEngine
 
     executions = []

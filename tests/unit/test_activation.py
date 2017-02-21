@@ -25,7 +25,8 @@ def test_Activation_store_rule_and_facts():
     class S:
         pass
 
-    a = Activation(rule=S, facts=[S, S])
+    a = Activation(rule=S, facts=[S, S], contexts={1: 2})
 
     assert a.rule is S
     assert a.facts == [S, S]
+    assert a.contexts == {1: 2}

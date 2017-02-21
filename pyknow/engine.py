@@ -171,7 +171,6 @@ class KnowledgeEngine:
         """
         def _activations():
             for rule in self.get_rules():
-                rule.ke = self
                 for act in rule.get_activations(self._facts):
                     yield act
         return list(_activations())
@@ -211,6 +210,6 @@ class KnowledgeEngine:
         """
         self.agenda = Agenda()
         self._facts = FactList()
-        self.declare(InitialFact())
+        self.__declare(InitialFact())
         self.load_initial_facts()
         self.strategy.update_agenda(self.agenda, self.get_activations())

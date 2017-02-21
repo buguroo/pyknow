@@ -187,4 +187,4 @@ def test_FactList_matches():
     fl.declare(f0)
     fl.declare(f1)
 
-    assert fl.matches(f) == [0, 1]
+    assert list(dict(fl.matches(f)).keys()) == [0, 1]
