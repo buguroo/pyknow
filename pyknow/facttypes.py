@@ -187,8 +187,6 @@ class ValueSet:
         """
         if context is None:
             context = Context()
-        FACT_WATCHER.debug("Matching %s with context %s", self.type_,
-                           id(context))
         result = getattr(self, "matches_{}".format(self.type_))(other, context)
         FACT_WATCHER.debug("Match type %s on %s against %s resulted %s",
                            self.type_, self.value, other, result)

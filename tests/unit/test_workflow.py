@@ -2,6 +2,8 @@ from hypothesis import given
 from hypothesis import strategies as st
 import pytest
 
+# pylint: disable=missing-docstring, invalid-name
+
 
 @given(to_declare_random=st.lists(st.integers()))
 def test_rules_are_executed_once(to_declare_random):
@@ -233,3 +235,120 @@ def test_matching_different_number_of_arguments():
     ke_.reset()
     ke_.run()
     assert executed
+
+
+def test_matching_captured_different_facts_AND():
+    from pyknow.rule import Rule
+    from pyknow.fact import Fact, L, V, C
+    from pyknow.engine import KnowledgeEngine
+
+    class Person(Fact):
+        pass
+
+    executions = []
+
+    class Person_KE(KnowledgeEngine):
+        @Rule(Person(name=C("name")), Person(surname=V('name')))
+        def same_name(self, name):
+            nonlocal executions
+            executions.append(name)
+
+    ke_ = Person_KE()
+    ke_.deffacts(Person(surname=L('surname'), name=L("NotAName")))
+    ke_.deffacts(Person(name=L('name'), surname=L("NotAName")))
+    ke_.reset()
+    ke_.run()
+    assert executions == ["NotAName"]
+
+
+@pytest.mark.wip
+def test_matching_captured_same_facts_AND():
+    """
+    TODO: This returns TWO activations, should only return ONE.
+    Returns fact 1 and fact 2...
+    Fact2 SHOULDNT MATCH.
+    """
+    from pyknow.rule import Rule
+    from pyknow.fact import Fact, L, V, C
+    from pyknow.engine import KnowledgeEngine
+
+    class Person(Fact):
+        pass
+
+    executions = []
+
+    class Person_KE(KnowledgeEngine):
+        @Rule(Person(name=C("name"), surname=V('name')))
+        def same_name(self, name):
+            nonlocal executions
+            executions.append(name)
+
+    ke_ = Person_KE()
+    ke_.deffacts(Person(name=L('NotAName'), surname=L("NotAName")))
+    ke_.deffacts(Person(name=L('name'), surname=L("NotAName")))
+    ke_.reset()
+    ke_.run()
+    assert executions == ["NotAName"]
+
+
+def test_matching_captured_different_facts_NOT_positive():
+    """
+    Declaring a NOT() using C/V should be a factlist-wide
+    comparision.
+
+    Positive test (returning activation because there were
+    NO matches (the NOT is therefore executed).
+    """
+    from pyknow.rule import Rule, NOT
+    from pyknow.fact import Fact, L, V, C
+    from pyknow.engine import KnowledgeEngine
+
+    class Person(Fact):
+        pass
+
+    executions = []
+
+    class Person_KE(KnowledgeEngine):
+        @Rule(Person(name=C("name")),
+              NOT(Person(surname=V('name'))))
+        def same_name(self, name):
+            nonlocal executions
+            executions.append(name)
+
+    ke_ = Person_KE()
+    ke_.deffacts(Person(name=L('name'), surname=L("NotAName")))
+    ke_.reset()
+    ke_.run()
+    assert executions == ["name"]
+
+
+def test_matching_captured_different_facts_NOT_negative():
+    """
+    Declaring a NOT() using C/V should be a factlist-wide
+    comparision.
+
+    Negative test (returning no activation because there were
+    matches (the NOT is therefore not executed).
+    """
+    from pyknow.rule import Rule, NOT
+    from pyknow.fact import Fact, L, V, C
+    from pyknow.engine import KnowledgeEngine
+
+    class Person(Fact):
+        pass
+
+    executions = []
+
+    class Person_KE(KnowledgeEngine):
+        @Rule(Person(name=C("name")),
+              NOT(Person(surname=V('name'))))
+        def same_name(self, name):
+            nonlocal executions
+            executions.append(name)
+
+    ke_ = Person_KE()
+    ke_.deffacts(Person(name=L('name'), surname=L("NotAName")))
+    ke_.deffacts(Person(name=L('name'), surname=L("name")))
+    ke_.reset()
+    ke_.run()
+    assert executions == []
