@@ -180,14 +180,18 @@ class ValueSet:
         self.parent = parent
         self.type_ = type_
 
-    def matches(self, other, context=Context()):
+    def matches(self, other, context=None):
         """
         Returns, depending on the type we're matching,
         its matched value
         """
+        if context is None:
+            context = Context()
+        FACT_WATCHER.debug("Matching %s with context %s", self.type_,
+                           id(context))
         result = getattr(self, "matches_{}".format(self.type_))(other, context)
-        FACT_WATCHER.debug("Match type {} on {} against {} resulted {}".format(
-            self.type_, self.value, other, result))
+        FACT_WATCHER.debug("Match type %s on %s against %s resulted %s",
+                           self.type_, self.value, other, result)
         return result
 
     @property
@@ -291,6 +295,8 @@ class ValueSet:
         If the other fact didn't contain the value, return False
 
         """
+        FACT_WATCHER.debug("Extracting context from %s and %s",
+                           self.value, other.value)
 
         if self.keyset - other.keyset:
             # If there is any key on our keyset

@@ -5,12 +5,14 @@ Activations represent rules that matches against a specific factlist.
 
 # pylint: disable=too-few-public-methods
 
+from pyknow.match import Context
+
 
 class Activation:
     """
     Activation object
     """
-    def __init__(self, rule, facts):
+    def __init__(self, rule, facts, context=None):
         from pyknow.rule import Rule
         if rule:
             if not isinstance(rule, Rule):
@@ -19,13 +21,18 @@ class Activation:
             raise ValueError("Facts must be tuple")
         self.rule = rule
         self.facts = facts
+        self.context = context
 
     def __add__(self, other):
         facts = set(self.facts + other.facts)
-        return Activation(rule=self.rule, facts=tuple(facts))
+        contexts = (self.context, other.context)
+        context = sum((a for a in contexts if a), Context())
+        return Activation(rule=self.rule, facts=tuple(facts),
+                          context=context)
 
     def __repr__(self):
-        return "Activation(rule={}, facts={})".format(self.rule, self.facts)
+        return "Activation(rule={}, facts={}, context={})".format(
+            self.rule, self.facts, self.context)
 
     def __eq__(self, other):
         return self.rule == other.rule and self.facts == other.facts

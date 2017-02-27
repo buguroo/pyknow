@@ -45,17 +45,18 @@ class Fact:
             FACT_WATCHER.debug("No capturations found")
             for idx, fact in factlist.facts.items():
                 if self.matches(fact, Context()):
-                    yield Activation(rule=None, facts=(idx,))
+                    act = Activation(rule=None, facts=(idx,))
+                    FACT_WATCHER.debug("Yielding uncontexted act: %s", act)
+                    yield act
         else:
             for (idx, fact), caps in product(factlist.facts.items(),
-                                             capturations):
+                                             capturations.items()):
                 cap_facts, ctx = caps
-                FACT_WATCHER.debug("Activations for %s on %s and ctx %s",
-                                   self, fact, ctx)
                 if self.matches(fact, ctx):
-                    FACT_WATCHER.debug("Activation generated")
                     facts = tuple(set([int(a) for a in cap_facts] + [idx]))
-                    yield Activation(rule=None, facts=facts)
+                    act = Activation(rule=None, facts=facts, context=ctx)
+                    FACT_WATCHER.debug("Yielding contexted act: %s", act)
+                    yield act
         FACT_WATCHER.debug("Got all activations")
 
     def get_capturations(self, factlist):

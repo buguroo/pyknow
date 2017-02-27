@@ -72,6 +72,8 @@ class Rule:
             activation = kwargs.pop('activation')
             RULE_WATCHER.debug("Executing rule %s for activation %s",
                                self, activation)
+            if activation.context:
+                kwargs.update(activation.context)
 
         return self.__fn(*tuple(obj for obj in (fst,) if obj) + args, **kwargs)
 
