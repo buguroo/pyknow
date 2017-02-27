@@ -1,3 +1,10 @@
+"""
+Test pyknow KE Tree
+"""
+
+# pylint: disable=invalid-name, missing-docstring
+
+
 def test_tree_iterations():
     """ test tree iteration """
     from pyknow.tree import KETree
@@ -78,12 +85,7 @@ def test_tree_retract_matching():
         @Rule(Fact(always_run=L(True)))
         def always_run(self):
             executions.append(1)
-            # pytest.set_trace()
-            print(self.parent._facts._facts)
-            ret = self.parent.retract_matching(Fact(initial=L(True)))
-            print(ret)
-            print(self.parent._facts._facts)
-            # pytest.set_trace()
+            self.parent.retract_matching(Fact(initial=L(True)))
             self.parent.declare(Fact(inherited=L(True)))
 
     class Parent(KnowledgeEngine):

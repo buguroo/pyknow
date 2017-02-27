@@ -9,220 +9,137 @@ case implemented in :mod:`pyknow.fact`.
 
 """
 
-from contextlib import suppress
 from functools import update_wrapper
-from itertools import product
+from itertools import chain, product
 
+from pyknow.fact import InitialFact
 from pyknow.factlist import FactList
-from pyknow.fact import InitialFact, Fact, Context
 from pyknow.activation import Activation
 from pyknow.watchers import RULE_WATCHER
+from pyknow.match import Capturation
+
+
+def sum_objs(objs):
+    """
+    Sum objects. This is done like this for if not, sum() by default uses
+    '0' as start, thus tries to sum whatever with provide with zero.
+    """
+
+    first_obj = next(objs, None)
+    if first_obj is not None:
+        return sum(objs, first_obj)
 
 
 class Rule:
     """
-        Base ``CE``, all ``CE`` are to derive from this class.
+    Base ``CE``, all ``CE`` are to derive from this class.
 
-        This class is used as a decorator, thus provoking __call__
-        to be called twice:
+    This class is used as a decorator, thus provoking __call__
+    to be called twice:
 
-        #. The first call is when the decorator is been created. At this
-           point we assign the function decorated to ``self.__fn`` and
-           return ``self`` to be called the second time.
+    #. The first call is when the decorator is been created. At this
+       point we assign the function decorated to ``self.__fn`` and
+       return ``self`` to be called the second time.
 
-        #. The second call is to execute the decorated function, se we
-           pass all the arguments along.
-           We also assign the KnowledgeEngine's context to the rule, if
-           available and if we're being called from a KE.
-           Otherwise, each rule will make their own Context() object, empty
-           and not shared between rules, when they're being evaluated.
-
-        .. note:: We can assign rules to variables and apply them directly
-                  as well as using KEs
-
+    #. The second call is to execute the decorated function, se we
+       pass all the arguments along.
     """
+
     def __init__(self, *conds, salience=0):
-        RULE_WATCHER.debug("Initialized rule with conds %s", conds)
-        self.__fn = None
-        self.ke = None
-        self.context = Context()
         if not conds:
             conds = (InitialFact(),)
-        self.__conds = conds
+        self.__fn = None
+        self._conds = conds
         self.salience = salience
+        RULE_WATCHER.debug("Initialized rule with conds %s", conds)
 
     def __repr__(self):
-        return "{}({})".format(self.__class__.__name__, self.__conds)
+        return "{}({})".format(self.__class__.__name__, self._conds)
 
     def __call__(self, fst=None, *args, **kwargs):
+        """
+        Make method checks if it's the first call, and update wrapper.
+        Othersise execute the RHS.
+        """
+        if self.__fn is None and fst is None:
+            raise AttributeError("Mandatory function not provided.")
+
+        if self.__fn is None and fst is not None:
+            self.__fn = fst
+            return update_wrapper(self, self.__fn)
+
         if 'activation' in kwargs:
             activation = kwargs.pop('activation')
-            contexts = dict(activation.contexts)
-            RULE_WATCHER.debug("Activation received, executing")
-            RULE_WATCHER.debug("Facts: %s", activation.facts)
+            RULE_WATCHER.debug("Executing rule %s for activation %s",
+                               self, activation)
 
-            for fact in activation.facts:
-                kwargs.update(contexts.get(fact, {}))
+        return self.__fn(*tuple(obj for obj in (fst,) if obj) + args, **kwargs)
 
-        if self.__fn is None:
-            if fst is not None:
-                self.__fn = fst
-                return update_wrapper(self, self.__fn)
-            else:
-                raise AttributeError("Mandatory function not provided.")
-        else:
-            args = (tuple() if fst is None else (fst,)) + args
-            return self.__fn(*args, **kwargs)
-
-    def get_activations(self, factlist):
+    def get_activations(self, factlist, capturations=Capturation()):
         """
         For this :obj:`pyknow.rule.Rule`, returns all the
         :obj:`pyknow.activation.Activation`, for the provided factlist.
 
         :param factlist: :obj:`pyknow.factlist.FactList` to match against.
         :return: Tuple of unique :obj:`pyknow.activation.Activation` matches.
-
         """
-        RULE_WATCHER.debug("Getting activations for %s on %s", self, factlist)
 
         if not isinstance(factlist, FactList):
-            raise ValueError("factlist must be an instance of FactList")
-        else:
-            def _activations():
-                matches = []
+            raise ValueError("Factlist must be a factlist instance")
 
-                for cond in self.__conds:
-                    factlist.rule = self
-                    if issubclass(cond.__class__, Rule):
-                        cond.context = self.context
-                        acts = cond.get_activations(factlist)
-                        if not acts:
-                            break
-                        for act in acts:
-                            RULE_WATCHER.debug("Processing activation %s", act)
-                            for fact in act.facts:
-                                context = dict(act.contexts).get(fact)
-                                matches.append([(fact, context)])
-                    elif isinstance(cond, Fact):
-                        cond.rule = self
-                        match = factlist.matches(cond)
-                        if match:
-                            matches.append(match)
-                        else:
-                            break
-                else:
-                    for match in product(*matches):
-                        contexts = {}
-                        with suppress(ValueError):
-                            contexts = dict(match)
-                        facts = tuple(sorted(set(contexts.keys())))
-                        if facts:
-                            act = Activation(rule=self, facts=facts,
-                                             contexts=tuple(contexts.items()))
-                            RULE_WATCHER.debug("Got activation: %s", act)
-                            yield act
+        def _all_activations():
+            """
+            Tengo un problema aqui al sacar las activaciones.
+            El InitialFact tambien matchea y entra dentro del product(),
+            entonces acabo con una activación con el initialfact y otra
+            sin el en el caso de los or
+            """
+            for cond in self._conds:
+                yield (a for a in cond.get_activations(factlist, capturations))
 
-            return tuple(set(_activations()))
+        return (sum_objs(iter(a)) for a in product(*_all_activations()))
 
-    def conds(self):
+    def get_capturations(self, factlist):
         """
-        Simple method to access Rule's conditions from heirs
-
+        Return captured values with its facts from all our children
         """
-        return self.__conds
-
-    def fn(self):
-        """
-        Simple method to access Rule's function from heirs
-
-        """
-        return self.__fn
+        capturations = Capturation()
+        for cond in self._conds:
+            for capturation in cond.get_capturations(factlist):
+                capturations += capturation
+        return capturations
 
 
 class AND(Rule):
     """
-        ``AND`` **conditional element.**
+    ``AND CE``
+    ----------
 
-        See (:ref:`conditional_and`) narrative documentation.
-
+    See (:ref:`conditional_and`) narrative documentation.
     """
     pass
+
+
+class OR(Rule):
+    """
+    ``Or CE``
+    ---------
+    See (:ref:`conditional_or`) narrative documentation
+    """
+
+    def get_activations(self, factlist, capturations):
+        activations = (cond.get_activations(factlist, capturations)
+                       for cond in self._conds)
+        return iter(set(chain(*activations)))
 
 
 class NOT(Rule):
     """
     ``NOT CE``
-
+    ----------
     See (:ref:`conditional_not`) narrative documentation
-
-    .. TODO:: Raise exception when multiple patterns are given to NOT
-
     """
-    def __init__(self, *conds, salience=0):
-        super().__init__(*conds, salience=salience)
-
-    def get_activations(self, factlist):
-        """
-        Returns an Activation for each fact that
-        **does not match** this rule
-
-        This is the opposite of :obj:`pyknow.rule.Rule.get_activations`
-
-        :param factlist: FactList of type :obj:`pyknow.factlist.FactList`
-        :return: tuple containing the matching activation
-
-        """
-        activations = super().get_activations(factlist)
-        if not activations:
-            # If not activations found, try to match against the initial
-            # fact. If matches, then we produce an activation, as that
-            # would mean we have an InitialFact and NOT() condition is
-            # satisfied. The activation we raise has the factlist's initial
-            # fact id.
-            with suppress(IndexError):
-                factidx, context = factlist.matches(InitialFact())[0]
-                act = tuple([Activation(rule=self, facts=(factidx, ),
-                                        contexts=((factidx, context),))])
-                RULE_WATCHER.debug("Got activation: %s", act)
-                return act
-        return tuple()
-
-
-class OR(Rule):
-    """
-
-    ``Or CE``
-    See (:ref:`conditional_or`) narrative documentation
-
-    """
-    def __init__(self, *conds, salience=0):
-        super().__init__(*conds, salience=salience)
-
-    def get_activations(self, factlist):
-        """Return a tuple with the activations of this rule."""
-        matches = []
-        for cond in self._Rule__conds:
-            for cond in self._Rule__conds:
-                if issubclass(cond.__class__, Rule):
-                    acts = cond.get_activations(factlist)
-                    if not acts:
-                        break
-                    for act in acts:
-                        for fact in act.facts:
-                            context = dict(act.contexts)
-                            matches.append(
-                                (fact, tuple(context.items())))
-                elif isinstance(cond, Fact):
-                    cond.rule = self
-                    match = factlist.matches(cond)
-                    if match:
-                        matches.append(match)
-
-        if matches:
-            act = tuple([Activation(rule=self,
-                                    facts=[fact[0] for fact in matches],
-                                    contexts=tuple())])
-            RULE_WATCHER.debug("Got activation: %s", act)
-            return act
-        else:
-            return tuple()
+    def get_activations(self, factlist, capturations):
+        if next(super().get_activations(factlist, capturations), None) is None:
+            if factlist.facts:
+                yield Activation(rule=None, facts=(0,))

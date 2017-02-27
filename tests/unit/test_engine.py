@@ -1,26 +1,14 @@
-def test_engine_import():
-    try:
-        from pyknow import engine
-    except ImportError as exc:
-        assert False, exc
-    else:
-        assert True
+"""
+Engine tests
+"""
 
-
-def test_KnowledgeEngine_exists():
-    from pyknow import engine
-    assert hasattr(engine, 'KnowledgeEngine')
-
-
-def test_KnowledgeEngine_is_class():
-    from pyknow import engine
-    assert isinstance(engine.KnowledgeEngine, type)
+# pylint: disable=invalid-name, missing-docstring
 
 
 def test_KnowledgeEngine_has__facts():
     from pyknow.engine import KnowledgeEngine
     ke = KnowledgeEngine()
-    assert hasattr(ke, '_facts')
+    assert hasattr(ke, 'facts')
 
 
 def test_KnowledgeEngine__facts_is_FactList():
@@ -28,7 +16,7 @@ def test_KnowledgeEngine__facts_is_FactList():
     from pyknow.factlist import FactList
 
     ke = KnowledgeEngine()
-    assert isinstance(ke._facts, FactList)
+    assert isinstance(ke.facts, FactList)
 
 
 def test_KnowledgeEngine_has_declare():
@@ -44,7 +32,7 @@ def test_KnowledgeEngine_declare_define_fact():
 
     ke = KnowledgeEngine()
     with patch('pyknow.factlist.FactList') as mock:
-        ke._facts = mock
+        ke.facts = mock
         ke.declare(Fact())
         assert mock.declare.called
 
@@ -67,7 +55,7 @@ def test_KnowledgeEngine_retract_retracts_fact():
 
     ke = KnowledgeEngine()
     with patch('pyknow.factlist.FactList') as mock:
-        ke._facts = mock
+        ke.facts = mock
         ke.retract(0)
         assert mock.retract.called
 
@@ -78,7 +66,7 @@ def test_KnowledgeEngine_retract_matching_retracts_fact():
 
     ke = KnowledgeEngine()
     with patch('pyknow.factlist.FactList') as mock:
-        ke._facts = mock
+        ke.facts = mock
         ke.retract_matching(False)
         assert mock.retract_matching.called
 
@@ -90,7 +78,7 @@ def test_KnowledgeEngine_modify_retracts_and_declares():
     ke = KnowledgeEngine()
     with patch('pyknow.factlist.FactList') as mock:
         with patch('pyknow.engine.KnowledgeEngine.declare') as declare_mock:
-            ke._facts = mock
+            ke.facts = mock
             ke.modify(False, False)
             assert mock.retract_matching.called
             assert declare_mock.called
@@ -142,13 +130,14 @@ def test_KnowledgeEngine_get_rules_return_empty_list():
 def test_KnowledgeEngine_get_rules_returns_the_list_of_rules():
     from pyknow.engine import KnowledgeEngine
     from pyknow.rule import Rule
+    from pyknow.fact import InitialFact
 
     class Test(KnowledgeEngine):
-        @Rule()
+        @Rule(InitialFact())
         def rule1(self):
             pass
 
-        @Rule()
+        @Rule(InitialFact())
         def rule2(self):
             pass
 
@@ -166,31 +155,30 @@ def test_KnowledgeEngine_get_activations_exists():
     assert hasattr(KnowledgeEngine, 'get_activations')
 
 
-def test_KnowledgeEngine_get_activations_returns_a_list():
+def test_KnowledgeEngine_get_activations_returns_a_generator():
     from pyknow.engine import KnowledgeEngine
+    import types
 
     ke = KnowledgeEngine()
-    assert ke.get_activations() == []
+    assert isinstance(ke.get_activations(), types.GeneratorType)
 
 
 def test_KnowledgeEngine_get_activations_returns_activations():
     from pyknow.engine import KnowledgeEngine
     from pyknow.rule import Rule
-    from pyknow.fact import InitialFact
+    from pyknow.fact import Fact, L
 
     class Test(KnowledgeEngine):
-        @Rule()
+        # pylint: disable=too-few-public-methods
+        @Rule(Fact(a=L(1)))
         def test(self):
+            # pylint: disable=no-self-use
             pass
 
     ke = Test()
-
-    activations = ke.get_activations()
-    assert len(activations) == 0
-
-    ke.declare(InitialFact())
-
-    activations = ke.get_activations()
+    ke.deffacts(Fact(a=L(1)))
+    ke.reset()
+    activations = list(ke.get_activations())
     assert len(activations) == 1
 
 
@@ -216,21 +204,10 @@ def test_KnowledgeEngine_reset_resets_agenda():
 def test_KnowledgeEngine_reset_resets_facts():
     from pyknow.engine import KnowledgeEngine
     ke = KnowledgeEngine()
-    ke._facts = None
+    ke.facts = None
 
     ke.reset()
-    assert ke._facts is not None
-
-
-def test_KnowledgeEngine_reset_declares_InitialFact():
-    from pyknow.engine import KnowledgeEngine
-    from pyknow.fact import InitialFact
-
-    ke = KnowledgeEngine()
-    assert not ke._facts.matches(InitialFact())
-
-    ke.reset()
-    assert ke._facts.matches(InitialFact())
+    assert ke.facts is not None
 
 
 def test_KnowledgeEngine_run_1_fires_activation():
@@ -240,8 +217,10 @@ def test_KnowledgeEngine_run_1_fires_activation():
     executed = False
 
     class Test(KnowledgeEngine):
+        # pylint: disable=too-few-public-methods
         @Rule()
         def rule1(self):
+            # pylint: disable=no-self-use
             nonlocal executed
             executed = True
 
@@ -263,16 +242,19 @@ def test_KnowledgeEngine_run_fires_all_activation():
     class Test(KnowledgeEngine):
         @Rule()
         def rule1(self):
+            # pylint: disable=no-self-use
             nonlocal executed
             executed += 1
 
         @Rule()
         def rule2(self):
+            # pylint: disable=no-self-use
             nonlocal executed
             executed += 1
 
         @Rule()
         def rule3(self):
+            # pylint: disable=no-self-use
             nonlocal executed
             executed += 1
 
@@ -287,6 +269,7 @@ def test_KnowledgeEngine_run_fires_all_activation():
 
 def test_KnowledgeEngine_has_initialfacts():
     from pyknow.engine import KnowledgeEngine
+    # pylint: disable=protected-access
     assert KnowledgeEngine()._fixed_facts == []
 
 
@@ -294,6 +277,40 @@ def test_KE_parent():
     from pyknow.engine import KnowledgeEngine
     engine = KnowledgeEngine()
     assert not engine.parent
-    parent = KnowledgeEngine
+    parent = KnowledgeEngine()
     engine.parent = parent
     assert parent is engine.parent
+
+
+def test_KnowledgeEngine_reset():
+    """
+    Given a set of fixed facts, they're still there
+    after a reset.
+    Also, we have in account that InitialFact() is always there.
+    And that if we add a normal fact after that, it's not persistent
+    """
+
+    from pyknow.engine import KnowledgeEngine
+    from pyknow.fact import Fact, L
+
+    ke = KnowledgeEngine()
+    ke.deffacts(Fact(foo=L(1)))
+    ke.deffacts(Fact(foo=L(1), bar=L(2)))
+    ke.reset()
+
+    assert len(ke.facts.facts) == 3
+
+    ke = KnowledgeEngine()
+    ke.deffacts(Fact(foo=L(1)))
+    ke.declare(Fact(foo=L(9)))
+    ke.deffacts(Fact(foo=L(1), bar=L(2)))
+    ke.reset()
+
+    assert len(ke.facts.facts) == 3
+
+    ke = KnowledgeEngine()
+    ke.deffacts(Fact(foo=L(1)))
+    ke.declare(Fact(foo=L(9)))
+    ke.reset()
+
+    assert len(ke.facts.facts) == 2

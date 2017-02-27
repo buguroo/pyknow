@@ -7,11 +7,10 @@ Also see `retrieving the fact-list \
   <http://clipsrules.sourceforge.net/d\
           ocumentation/v624/bpg.htm#_Toc11859921>`_ on the clips\
           programming manual
-
 """
 
-from collections import OrderedDict, namedtuple
-from pyknow.fact import Fact, Context
+from collections import OrderedDict
+from pyknow.fact import Fact
 from pyknow.watchers import FACT_WATCHER
 
 
@@ -26,12 +25,10 @@ class FactList:
     A factlist acts as both the module's factlist and a ``fact-set``
     yet currently most methods from a ``fact-set`` are not yet
     implemented
-
-    .. TODO:: Implement remaining ``fact-set`` methods
-
     """
+
     def __init__(self):
-        self._facts = OrderedDict()
+        self.facts = OrderedDict()
         self._fidx = 0
 
     def declare(self, fact):
@@ -53,11 +50,11 @@ class FactList:
         if not isinstance(fact, Fact):
             raise ValueError('The fact must descend the Fact class.')
 
-        if fact not in self._facts.values():
+        if fact not in self.facts.values():
             idx = self._fidx
-            self._facts[idx] = fact
+            self.facts[idx] = fact
             self._fidx += 1
-            FACT_WATCHER.debug("Declared fact: %s", fact)
+            FACT_WATCHER.debug("Declared fact: %s at %s", fact, idx)
             return idx
         else:
             return None
@@ -73,73 +70,27 @@ class FactList:
         :param idx: The index of the fact to retract in the factlist
         :return: (int) The retracted fact's index
         :throws IndexError: If the fact's index providen does not exist
-
         """
-        if idx not in self._facts:
+
+        if idx not in self.facts:
             raise IndexError('Fact not found.')
-        else:
-            FACT_WATCHER.debug("Retracted fact %s", idx)
-            del self._facts[idx]
+
+        del self.facts[idx]
+        FACT_WATCHER.debug("Retracted fact %s", idx)
         return idx
 
     def retract_matching(self, fact):
         """
         Retract all matching facts
 
-        Iterates through the factlist looking for matches
-        against a given fact and calls
-        :func:`pyknow.factlist.FactList.retract` for each match.
-
         :return: list of indexes of the facts retracted
         :throws ValueError: If no fact matches in the factlist
-
-        """
-        facts = []
-        for idx, value in self._facts.items():
-            if fact == value:
-                facts.append(idx)
-
-        if facts:
-            for fact in facts:
-                self.retract(fact)
-            return facts
-
-        raise ValueError("No matching fact")
-
-    def matches(self, condition):
-        """
-        Checks for matches of a fact inside this factlist
-
-        The fact we match against is usually the Condition of a ``Rule``,
-        thus the naming on ``condition`` param. Yet this is not absolute
-        and must only be used as a reference.
-
-        :param fact: :obj:`pyknow.fact.Fact` to match against
-        :return: list of indexes of matching facts
-
         """
 
-        def _matches():
-            for idx, fact in self._facts.items():
-                if condition.rule:
-                    condition.rule.context = Context()
-                FACT_WATCHER.debug(
-                    "Comparing %s with %s", fact, condition)
-                if fact in condition:
-                    FACT_WATCHER.debug("Match found")
-                    if condition.rule:
-                        yield idx, condition.rule.context
-                    else:
-                        yield idx, Context()
-        result = list(_matches())
-        return result
-
-    def get_by_idx(self, idx):
-        """
-        Return a fact by its position in the fact list
-
-        """
-        return self._facts[idx]
+        facts = [idx for idx, value in self.facts.items() if fact == value]
+        if not facts:
+            raise ValueError("No matching fact")
+        return [self.retract(fact) for fact in facts]
 
     def __repr__(self):
-        return str(self._facts.values())
+        return str(self.facts.values())

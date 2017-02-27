@@ -7,17 +7,15 @@ See :ref:conditional_elements
 """
 # pylint: disable=no-member, too-few-public-methods
 # pylint: disable=unused-import
+
 from collections import OrderedDict
+from itertools import product
+
+from pyknow.activation import Activation
+from pyknow.facttypes import FactType, L, V, N, C, T, W, FACT_TYPES  # NOQA
 from pyknow.facttypes import ValueSet
-from pyknow.facttypes import L, V, N, C, T, W, FACT_TYPES  # NOQA
-
-
-class Context(dict):
-    """
-    Context is a just dictionary for now
-    """
-    def __hash__(self):
-        return hash(tuple(self.items()))
+from pyknow.match import Capturation, Context
+from pyknow.watchers import FACT_WATCHER
 
 
 class Fact:
@@ -29,19 +27,60 @@ class Fact:
         self.value = value
         self.keyset = set(value.keys())
         self.valuesets = OrderedDict()
+        for value in value.values():
+            if not isinstance(value, FactType):
+                raise ValueError("Fact values must descend from FactType")
         for fact_type in FACT_TYPES:
             self.valuesets[fact_type] = ValueSet(self, fact_type)
         self.populated = False
 
-    @property
-    def context(self):
-        """ Rule context """
-        if self.rule:
-            return self.rule.context
-        else:
-            return {}
+    def get_activations(self, factlist, capturations):
+        """
+        Extract activations from a given fact.
+        Will be aggregated later by a ``Rule``
+        """
+        FACT_WATCHER.debug("Getting activations")
 
-    def __contains__(self, other):
+        if not capturations:
+            FACT_WATCHER.debug("No capturations found")
+            for idx, fact in factlist.facts.items():
+                if self.matches(fact, Context()):
+                    yield Activation(rule=None, facts=(idx,))
+        else:
+            for (idx, fact), caps in product(factlist.facts.items(),
+                                             capturations):
+                cap_facts, ctx = caps
+                FACT_WATCHER.debug("Activations for %s on %s and ctx %s",
+                                   self, fact, ctx)
+                if self.matches(fact, ctx):
+                    FACT_WATCHER.debug("Activation generated")
+                    facts = tuple(set([int(a) for a in cap_facts] + [idx]))
+                    yield Activation(rule=None, facts=facts)
+        FACT_WATCHER.debug("Got all activations")
+
+    def get_capturations(self, factlist):
+        """
+        Returns ``Capturation`` objects, relating facts with its matching
+        context
+        """
+
+        FACT_WATCHER.debug("Getting capturations")
+
+        capture_valueset = ValueSet(self, 'C')
+
+        for key, value in self.value.items():
+            if value.__class__.__name__ == "C":
+                value.key = key
+                capture_valueset.value.add((key, value))
+
+        for idx, fact in factlist.facts.items():
+            captured_context = capture_valueset.matches(fact)
+            if captured_context:
+                yield Capturation(**{str(idx): captured_context})
+
+        FACT_WATCHER.debug("All capturations returned")
+
+    def matches(self, other, context):
         """
         Does this Fact contain ``other``?.
 
@@ -56,17 +95,17 @@ class Fact:
 
         .. warning:: This is a match-by-default method.
         """
-
         if self.__class__ != other.__class__:
             return False
         elif not self.value:
-            # TODO: Check if this is because of the initialfact.
-            # TODO: Maybe this is the reason I don't quite get the NOT.
+            # This is so empty Fact() conditions will match.
             return True
 
         # The first time we compare a fact, populate its valuesets.
         if not other.populated:
             for key, value in other.value.items():
+                if value.__class__.__name__ == "C":
+                    continue
                 value.key = key
                 value_ = (key, value)
                 other.valuesets[value.__class__.__name__].value.add(value_)
@@ -75,14 +114,17 @@ class Fact:
         # and ours
         if not self.populated:
             for key, value in self.value.items():
+                if value.__class__.__name__ == "C":
+                    continue
                 value.key = key
                 self.valuesets[value.__class__.__name__].value.add(
                     (key, value))
             self.populated = True
 
         for valueset in self.valuesets.values():
-            if not valueset.matches(other):
+            if not valueset.matches(other, context):
                 return False
+
         return True
 
     def __eq__(self, other):

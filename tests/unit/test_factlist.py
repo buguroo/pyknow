@@ -1,190 +1,77 @@
-import pytest
-from hypothesis import given
-from hypothesis import strategies as st
-
-from conftest import random_types
-
-
-def test_factlist_exists():
-    try:
-        from pyknow import factlist
-    except ImportError as exc:
-        assert False, exc
-    else:
-        assert True
+"""
+Factlist related tests
+"""
+# pylint: disable=invalid-name
 
 
-def test_FactList_exists():
-    from pyknow import factlist
-
-    assert hasattr(factlist, 'FactList')
-
-
-def test_FactList_is_class():
+def test_factlist_has_facts():
+    """ Factlist object has a fact list """
     from pyknow.factlist import FactList
+    assert hasattr(FactList(), "facts")
 
-    assert isinstance(FactList, type)
 
+def test_factlist_facts_are_ordereddict():
+    """ Fact list on FactList object is an OrderedDict """
 
-def test_FactList_has_declare_method():
-    """Using declare because assert is a python keyword."""
     from pyknow.factlist import FactList
+    from collections import OrderedDict
+    assert isinstance(getattr(FactList(), "facts"), OrderedDict)
 
-    assert hasattr(FactList, 'declare')
 
+def test_factlist_facts_idx_starts_zero():
+    """ Factlist idx starts at zero """
 
-@given(data=random_types)
-def test_FactList_declare_reject_not_Fact_subclass(data):
     from pyknow.factlist import FactList
-
-    fl = FactList()
-    with pytest.raises(ValueError):
-        fl.declare(data)
+    assert getattr(FactList(), "_fidx") == 0
 
 
-def test_FactList_declare_allow_Fact_instances():
+def test_factlist_declare_raises_valueError():
+    """ declare raises valueerror if not ``Fact`` object providen """
+
     from pyknow.factlist import FactList
-    from pyknow.fact import Fact
-
-    f = Fact()
-    fl = FactList()
-
-    fl.declare(f)
-
-
-def test_FactList_declare_allow_Fact_subclasses():
-    from pyknow.factlist import FactList
-    from pyknow.fact import Fact
-
-    class OtherFact(Fact):
-        pass
-
-    f = OtherFact()
-    fl = FactList()
-
-    fl.declare(f)
-
-
-def test_FactList_declare_returns_idx():
-    from pyknow.factlist import FactList
-    from pyknow.fact import Fact, L
-
-    f0 = Fact(data=L(1))
-    f1 = Fact(data=L(2))
-
-    fl = FactList()
-
-    assert fl.declare(f0) == 0
-    assert fl.declare(f1) == 1
-
-
-def test_FactList_declare_returns_None_if_fact_already_exists():
-    from pyknow.factlist import FactList
-    from pyknow.fact import Fact, L
-
-    f0 = f1 = Fact(data=L(1))
-    fl = FactList()
-
-    assert fl.declare(f0) == 0
-    assert fl.declare(f1) is None
-
-
-def test_FactList_retract_exists():
-    from pyknow.factlist import FactList
-
-    assert hasattr(FactList, 'retract')
-
-
-def test_FactList_retract_matching_exists():
-    from pyknow.factlist import FactList
-
-    assert hasattr(FactList, 'retract_matching')
-
-
-@given(idx=st.integers())
-def test_FactList_retract_unknown_index_raise_IndexError(idx):
-    from pyknow.factlist import FactList
-
-    fl = FactList()
-
-    with pytest.raises(IndexError):
-        fl.retract(idx)
-
-
-@given(idx=st.integers())
-def test_FactList_retract_matching_nomatchingfact_raise_ValueError(idx):
-    from pyknow.factlist import FactList
-    from pyknow.fact import Fact
-    fact = Fact(name=idx)
-
-    fl = FactList()
+    import pytest
 
     with pytest.raises(ValueError):
-        fl.retract_matching(fact)
+        FactList().declare("Foo")
 
 
-@given(idx=st.integers())
-def test_FactList_retract_matching(idx):
+def test_factlist_declare():
+    """ Test declare method adds to factlist and updates index """
     from pyknow.factlist import FactList
     from pyknow.fact import Fact
-
-    fact = Fact(name=idx)
-
-    fl = FactList()
-    fl.declare(fact)
-
-    fl.retract_matching(Fact(name=idx))
-
-    assert not fl._facts
+    flist = FactList()
+    assert getattr(flist, "_fidx") == 0
+    assert not flist.facts
+    flist.declare(Fact())
+    assert getattr(flist, "_fidx") == 1
+    assert isinstance(flist.facts[0], Fact)
 
 
-@given(idx=st.integers())
-def test_FactList_retract_matching_only_exact(idx):
+def test_factlist_retract():
+    """ Test retract method """
+
     from pyknow.factlist import FactList
     from pyknow.fact import Fact
-
-    fact = Fact(name=idx, value=idx)
-
-    fl = FactList()
-    fl.declare(fact)
-
-    with pytest.raises(ValueError):
-        fl.retract_matching(Fact(name=idx))
-
-    fl.retract_matching(Fact(name=idx, value=idx))
-
-    assert not fl._facts
+    flist = FactList()
+    assert getattr(flist, "_fidx") == 0
+    assert not flist.facts
+    flist.declare(Fact())
+    assert getattr(flist, "_fidx") == 1
+    assert isinstance(flist.facts[0], Fact)
+    assert flist.retract(0) == 0
+    assert not flist.facts
 
 
-def test_FactList_cant_retract_twice():
+def test_factlist_retract_matching():
+    """ Test retract_matching method """
+
     from pyknow.factlist import FactList
     from pyknow.fact import Fact
-
-    f0 = Fact()
-    fl = FactList()
-    idx = fl.declare(f0)
-
-    fl.retract(idx)
-    with pytest.raises(IndexError):
-        fl.retract(idx)
-
-
-def test_FactList_has_matches_method():
-    from pyknow.factlist import FactList
-
-    assert hasattr(FactList, 'matches')
-
-
-def test_FactList_matches():
-    from pyknow.factlist import FactList
-    from pyknow.fact import Fact, L
-
-    f = Fact()
-    f0 = Fact(something=L(True))
-    f1 = Fact(something=L(False))
-
-    fl = FactList()
-    fl.declare(f0)
-    fl.declare(f1)
-
-    assert list(dict(fl.matches(f)).keys()) == [0, 1]
+    flist = FactList()
+    assert getattr(flist, "_fidx") == 0
+    assert not flist.facts
+    flist.declare(Fact())
+    assert getattr(flist, "_fidx") == 1
+    assert isinstance(flist.facts[0], Fact)
+    assert flist.retract_matching(Fact()) == [0]
+    assert not flist.facts
