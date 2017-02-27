@@ -105,11 +105,8 @@ class Rule:
         """
         Return captured values with its facts from all our children
         """
-        capturations = Capturation()
-        for cond in self._conds:
-            for capturation in cond.get_capturations(factlist):
-                capturations += capturation
-        return capturations
+        return sum((cond.get_capturations(factlist) for cond in self._conds),
+                   Capturation())
 
 
 class AND(Rule):

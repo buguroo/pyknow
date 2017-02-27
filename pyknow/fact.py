@@ -69,17 +69,18 @@ class Fact:
 
         capture_valueset = ValueSet(self, 'C')
 
-        for key, value in self.value.items():
-            if value.__class__.__name__ == "C":
-                value.key = key
-                capture_valueset.value.add((key, value))
+        def _capturations():
+            for key, value in self.value.items():
+                if value.__class__.__name__ == "C":
+                    value.key = key
+                    capture_valueset.value.add((key, value))
 
-        for idx, fact in factlist.facts.items():
-            captured_context = capture_valueset.matches(fact)
-            if captured_context:
-                yield Capturation(**{str(idx): captured_context})
+            for idx, fact in factlist.facts.items():
+                captured_context = capture_valueset.matches(fact)
+                if captured_context:
+                    yield Capturation(**{str(idx): captured_context})
 
-        FACT_WATCHER.debug("All capturations returned")
+        return sum(_capturations(), Capturation())
 
     def matches(self, other, context):
         """
