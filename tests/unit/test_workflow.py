@@ -261,12 +261,42 @@ def test_matching_captured_different_facts_AND():
     assert executions == ["NotAName"]
 
 
-@pytest.mark.wip
 def test_matching_captured_same_facts_AND():
     """
-    TODO: This returns TWO activations, should only return ONE.
-    Returns fact 1 and fact 2...
-    Fact2 SHOULDNT MATCH.
+    CLIPs behaves like this::
+
+        (watch all)
+
+        (deftemplate person
+           (slot name)
+           (slot surname)
+        )
+
+        (defrule test_clips
+         (foo (name ?thename))
+         (foo (surname ?thename))
+        => (printout t "found " ?valor_1 crlf ))
+
+
+        (defrule test_clips
+           (person (name ?thename))
+           (person (surname ?thename))
+           =>
+           (printout t "Found"))
+
+        (deffacts thenames
+            (person (name NotAName) (surname NotAName))
+            (person (name name) (surname NotAName))
+        )
+
+        (reset)
+        (run)
+
+    Result:
+
+        FIRE    1 test_clips: f-1,f-2
+        FIRE    2 test_clips: f-1,f-1
+
     """
     from pyknow.rule import Rule
     from pyknow.fact import Fact, L, V, C
@@ -288,7 +318,7 @@ def test_matching_captured_same_facts_AND():
     ke_.deffacts(Person(name=L('name'), surname=L("NotAName")))
     ke_.reset()
     ke_.run()
-    assert executions == ["NotAName"]
+    assert executions == ["NotAName", "NotAName"]
 
 
 def test_matching_captured_different_facts_NOT_positive():
