@@ -27,9 +27,6 @@ class Fact:
         self.value = value
         self.keyset = set(value.keys())
         self.valuesets = OrderedDict()
-        for value in value.values():
-            if not isinstance(value, FactType):
-                raise ValueError("Fact values must descend from FactType")
         for fact_type in FACT_TYPES:
             self.valuesets[fact_type] = ValueSet(self, fact_type)
         self.populated = False
