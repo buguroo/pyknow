@@ -22,3 +22,11 @@ class Token(namedtuple('_Token', ['tag', 'data'])):
         data = {data} if isinstance(data, Fact) else set(data)
         self = super(Token, cls).__new__(cls, tag, data)
         return self
+
+    @classmethod
+    def valid(cls, data):
+        return cls(cls.TagType.VALID, data)
+
+    @classmethod
+    def invalid(cls, data):
+        return cls(cls.TagType.INVALID, data)

@@ -63,3 +63,17 @@ def test_token_initialization_conversions():
 
     t2 = Token(Token.TagType.VALID, [Fact(a=1), Fact(b=2)])
     assert t2.data == {Fact(a=1), Fact(b=2)}
+
+
+@pytest.mark.wip
+def test_token_shortcut_valid():
+    from pyknow.rete.token import Token
+
+    assert Token.valid([]) == Token(Token.TagType.VALID, [])
+
+
+@pytest.mark.wip
+def test_token_shortcut_invalid():
+    from pyknow.rete.token import Token
+
+    assert Token.invalid([]) == Token(Token.TagType.INVALID, [])
