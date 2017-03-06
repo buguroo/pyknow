@@ -15,18 +15,6 @@ from attrdict import AttrDict
 FactType = namedtuple("FactType", "value")
 
 
-class L(FactType):
-    """
-    Literal (``L`` FactType)
-
-    Evaluates direct content equality.
-    That is:
-
-    L("foo") == L("foo")
-    """
-    pass
-
-
 class T(FactType):
     """
     Test (``T`` FactType).
@@ -69,13 +57,6 @@ class Fact(AttrDict):
     """
 
     # pylint: disable=too-few-public-methods
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for key, value in self.items():
-            value.key = key
-            if not isinstance(value, FactType):
-                raise Exception("Wrong Fact type specified")
 
     def __hash__(self):
         return hash(tuple(set(self.items())))
