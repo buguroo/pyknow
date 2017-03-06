@@ -6,11 +6,16 @@ from pyknow.fact import Fact
 
 
 class TokenInfo(namedtuple('_TokenInfo', ['data', 'context'])):
+    def __new__(cls, data, context):
+        return super(TokenInfo, cls).__new__(cls,
+                                             frozenset(data),
+                                             frozenset(context.items()))
+
     def to_valid_token(self):
-        return Token.valid(self.data, self.context)
+        return Token.valid(self.data, dict(self.context))
 
     def to_invalid_token(self):
-        return Token.invalid(self.data, self.context)
+        return Token.invalid(self.data, dict(self.context))
 
 
 class Token(namedtuple('_Token', ['tag', 'data', 'context'])):

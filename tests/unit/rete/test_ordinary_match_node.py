@@ -31,7 +31,7 @@ def test_ordinarymatchnode_accepts_callable():
 @pytest.mark.wip
 def test_ordinarymatchnode_left_activate_valid_store_in_left_memory():
     from pyknow.rete.nodes import OrdinaryMatchNode
-    from pyknow.rete.token import Token
+    from pyknow.rete.token import Token, TokenInfo
     from pyknow.fact import Fact
 
     omn = OrdinaryMatchNode(lambda l, r: True)
@@ -42,13 +42,13 @@ def test_ordinarymatchnode_left_activate_valid_store_in_left_memory():
     token = Token.valid(fact)
     omn.activate_left(token)
 
-    assert ({fact}, {}) in omn.left_memory
+    assert TokenInfo({fact}, {}) in omn.left_memory
 
 
 @pytest.mark.wip
 def test_ordinarymatchnode_left_activate_valid_build_new_tokens(TestNode):
     from pyknow.rete.nodes import OrdinaryMatchNode
-    from pyknow.rete.token import Token
+    from pyknow.rete.token import Token, TokenInfo
     from pyknow.fact import Fact
 
     omn = OrdinaryMatchNode(lambda l, r: True)
@@ -59,8 +59,8 @@ def test_ordinarymatchnode_left_activate_valid_build_new_tokens(TestNode):
 
     rt1 = Token.valid(Fact(rightdata='rightdata1'))
     rt2 = Token.valid(Fact(rightdata='rightdata2'))
-    omn.right_memory.append((rt1.data, rt1.context))
-    omn.right_memory.append((rt2.data, rt2.context))
+    omn.right_memory.append(rt1.to_info())
+    omn.right_memory.append(rt2.to_info())
 
     token = Token.valid(Fact(leftdata='leftdata'))
     omn.activate_left(token)
@@ -86,7 +86,7 @@ def test_ordinarymatchnode_left_activate_invalid_remove_from_left_memory():
 
     fact = Fact(test='data')
     token = Token.valid(fact)
-    omn.left_memory.append((token.data, token.context))
+    omn.left_memory.append(token.to_info())
 
     omn.activate_left(Token.invalid(fact))
 
@@ -107,8 +107,8 @@ def test_ordinarymatchnode_left_activate_invalid_build_new_tokens(TestNode):
 
     rt1 = Token.valid(Fact(rightdata='rightdata1'))
     rt2 = Token.valid(Fact(rightdata='rightdata2'))
-    omn.right_memory.append((rt1.data, rt1.context))
-    omn.right_memory.append((rt2.data, rt2.context))
+    omn.right_memory.append(rt1.to_info())
+    omn.right_memory.append(rt2.to_info())
 
     token = Token.invalid(Fact(leftdata='leftdata'))
     omn.activate_left(token)
@@ -127,7 +127,7 @@ def test_ordinarymatchnode_left_activate_invalid_build_new_tokens(TestNode):
 @pytest.mark.wip
 def test_ordinarymatchnode_right_activate_valid_store_in_right_memory():
     from pyknow.rete.nodes import OrdinaryMatchNode
-    from pyknow.rete.token import Token
+    from pyknow.rete.token import Token, TokenInfo
     from pyknow.fact import Fact
 
     omn = OrdinaryMatchNode(lambda l, r: True)
@@ -138,7 +138,7 @@ def test_ordinarymatchnode_right_activate_valid_store_in_right_memory():
     token = Token.valid(fact)
     omn.activate_right(token)
 
-    assert ({fact}, {}) in omn.right_memory
+    assert TokenInfo({fact}, {}) in omn.right_memory
 
 
 @pytest.mark.wip
@@ -155,8 +155,8 @@ def test_ordinarymatchnode_right_activate_valid_build_new_tokens(TestNode):
 
     lt1 = Token.valid(Fact(leftdata='leftdata1'))
     lt2 = Token.valid(Fact(leftdata='leftdata2'))
-    omn.left_memory.append((lt1.data, lt1.context))
-    omn.left_memory.append((lt2.data, lt2.context))
+    omn.left_memory.append(lt1.to_info())
+    omn.left_memory.append(lt2.to_info())
 
     token = Token.valid(Fact(rightdata='rightdata'))
     omn.activate_right(token)
@@ -182,7 +182,7 @@ def test_ordinarymatchnode_right_activate_invalid_remove_from_right_memory():
 
     fact = Fact(test='data')
     token = Token.valid(fact)
-    omn.right_memory.append((token.data, token.context))
+    omn.right_memory.append(token.to_info())
 
     omn.activate_right(Token.invalid(fact))
 
@@ -203,8 +203,8 @@ def test_ordinarymatchnode_right_activate_invalid_build_new_tokens(TestNode):
 
     rt1 = Token.valid(Fact(leftdata='leftdata1'))
     rt2 = Token.valid(Fact(leftdata='leftdata2'))
-    omn.left_memory.append((rt1.data, rt1.context))
-    omn.left_memory.append((rt2.data, rt2.context))
+    omn.left_memory.append(rt1.to_info())
+    omn.left_memory.append(rt2.to_info())
 
     token = Token.invalid(Fact(rightdata='rightdata'))
     omn.activate_right(token)

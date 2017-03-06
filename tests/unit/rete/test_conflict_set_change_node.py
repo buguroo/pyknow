@@ -33,7 +33,7 @@ def test_conflictsetchange_accepts_rule():
 def test_conflictsetchange_valid_adds_to_memory():
     from pyknow.fact import Fact
     from pyknow.rete.nodes import ConflictSetNode
-    from pyknow.rete.token import Token
+    from pyknow.rete.token import Token, TokenInfo
     from pyknow.rule import Rule
 
     csn = ConflictSetNode(Rule())
@@ -41,18 +41,20 @@ def test_conflictsetchange_valid_adds_to_memory():
     csn.activate(Token.valid(Fact(test='data'),
                              {'mycontextdata': 'data'}))
 
-    assert ({Fact(test='data')}, {'mycontextdata': 'data'}) in csn.memory
+    assert TokenInfo([Fact(test='data')],
+                     {'mycontextdata': 'data'}) in csn.memory
 
 
 @pytest.mark.wip
 def test_conflictsetchange_invalid_removes_from_memory():
     from pyknow.fact import Fact
     from pyknow.rete.nodes import ConflictSetNode
-    from pyknow.rete.token import Token
+    from pyknow.rete.token import Token, TokenInfo
     from pyknow.rule import Rule
 
     csn = ConflictSetNode(Rule())
-    csn.memory.append(({Fact(test='data')}, {'mycontextdata': 'data'}))
+    csn.memory.append(TokenInfo([Fact(test='data')],
+                                {'mycontextdata': 'data'}))
 
     csn.activate(Token.invalid(Fact(test='data'),
                                {'mycontextdata': 'data'}))
