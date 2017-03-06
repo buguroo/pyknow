@@ -5,6 +5,14 @@ from enum import Enum
 from pyknow.fact import Fact
 
 
+class TokenInfo(namedtuple('_TokenInfo', ['data', 'context'])):
+    def to_valid_token(self):
+        return Token.valid(self.data, self.context)
+
+    def to_invalid_token(self):
+        return Token.invalid(self.data, self.context)
+
+
 class Token(namedtuple('_Token', ['tag', 'data', 'context'])):
     class TagType(Enum):
         VALID = True
@@ -27,6 +35,9 @@ class Token(namedtuple('_Token', ['tag', 'data', 'context'])):
         data = {data} if isinstance(data, Fact) else set(data)
         self = super(Token, cls).__new__(cls, tag, data, context)
         return self
+
+    def to_info(self):
+        return TokenInfo(self.data, self.context)
 
     @classmethod
     def valid(cls, data, context=None):

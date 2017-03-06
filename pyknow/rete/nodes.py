@@ -56,10 +56,10 @@ class OrdinaryMatchNode(AnyChild, HaveMatcher, TwoInputNode):
 
     def _activation(self, token, branch_memory, matching_memory):
         if token.is_valid():
-            branch_memory.append((token.data, token.context))
+            branch_memory.append(token.to_info())
         else:
             with suppress(ValueError):
-                branch_memory.remove((token.data, token.context))
+                branch_memory.remove(token.to_info())
 
         for other_data, other_context in matching_memory:
             match = self.matcher(token.context, other_context)
@@ -98,7 +98,7 @@ class ConflictSetNode(AnyChild, OneInputNode):
 
     def _activate(self, token):
         if token.is_valid():
-            self.memory.append((token.data, token.context))
+            self.memory.append(token.to_info())
         else:
             with suppress(ValueError):
-                self.memory.remove((token.data, token.context))
+                self.memory.remove(token.to_info())
