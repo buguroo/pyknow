@@ -36,5 +36,8 @@ class Token(namedtuple('_Token', ['tag', 'data', 'context'])):
     def invalid(cls, data):
         return cls(cls.TagType.INVALID, data)
 
+    def is_valid(self):
+        return self.tag == self.TagType.VALID
+
     def copy(self):
         return self.__class__(self.tag, self.data.copy(), self.context.copy())
