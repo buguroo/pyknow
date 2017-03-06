@@ -29,6 +29,7 @@ class FactList:
 
     def __init__(self):
         self.facts = OrderedDict()
+        self.last_read = OrderedDict()
         self._fidx = 0
 
     def declare(self, fact):
@@ -91,6 +92,21 @@ class FactList:
         if not facts:
             raise ValueError("No matching fact")
         return [self.retract(fact) for fact in facts]
+
+    def mark_read(self):
+        """
+        Copy last produced facts
+        """
+        self.last_read = self.facts
+
+    @property
+    def changed(self):
+        """
+        Return a tuple with the removed and added facts since last run.
+        """
+        removed = set(self.last_read.values()) - set(self.facts.values())
+        added = set(self.facts.values()) - set(self.last_read.values())
+        return added, removed
 
     def __repr__(self):
         return str(self.facts.values())
