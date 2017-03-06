@@ -207,3 +207,13 @@ def test_Rule_simple_testce():
     assert len(activations) == 1
 
     assert {0} == set(activations[0].facts)
+
+
+@pytest.mark.wip
+def test_rule_is_iterable():
+    from pyknow.rule import Rule
+    from pyknow.fact import Fact, L
+
+    rule_ = Rule(Fact(a=L(1)), Fact(a=L(2)))
+    assert next(rule_) == Fact(a=L(1))
+    assert next(rule_) == Fact(a=L(2))
