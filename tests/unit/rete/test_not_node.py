@@ -163,3 +163,51 @@ def test_notnode_right_activate_invalid_match_just_one(TestNode):
     assert Token.valid(Fact(test='data')) in tn1.added
     assert Token.valid(Fact(test='data')) in tn2.added
     assert nn.left_memory[token.to_info()] == 0
+
+
+@pytest.mark.wip
+def test_notnode_right_activate_valid_match_more_than_one(TestNode):
+    from pyknow.rete.nodes import NotNode
+    from pyknow.rete.token import Token
+    from pyknow.fact import Fact
+
+    nn = NotNode(lambda l, r: True)
+    tn1 = TestNode()
+    tn2 = TestNode()
+
+    nn.add_child(tn1, tn1.activate)
+    nn.add_child(tn2, tn2.activate)
+
+    token = Token.valid(Fact(test='data'))
+
+    nn.left_memory[token.to_info()] = -1
+
+    nn.activate_right(token)
+
+    assert not tn1.added
+    assert not tn2.added
+    assert nn.left_memory[token.to_info()] == 0
+
+
+@pytest.mark.wip
+def test_notnode_right_activate_valid_match_just_one(TestNode):
+    from pyknow.rete.nodes import NotNode
+    from pyknow.rete.token import Token
+    from pyknow.fact import Fact
+
+    nn = NotNode(lambda l, r: True)
+    tn1 = TestNode()
+    tn2 = TestNode()
+
+    nn.add_child(tn1, tn1.activate)
+    nn.add_child(tn2, tn2.activate)
+
+    token = Token.valid(Fact(test='data'))
+
+    nn.left_memory[token.to_info()] = 0
+
+    nn.activate_right(token)
+
+    assert Token.invalid(Fact(test='data')) in tn1.added
+    assert Token.invalid(Fact(test='data')) in tn2.added
+    assert nn.left_memory[token.to_info()] == 1
