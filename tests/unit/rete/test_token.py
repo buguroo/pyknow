@@ -10,6 +10,7 @@ def test_token_is_namedtuple():
     assert issubclass(Token, tuple)
     assert 'tag' in Token._fields
     assert 'data' in Token._fields
+    assert 'context' in Token._fields
 
 
 @pytest.mark.wip
@@ -42,9 +43,12 @@ def test_token_initialization_types():
     with pytest.raises(TypeError):
         Token(Token.TagType.VALID, [Fact(), None])
 
+    with pytest.raises(TypeError):
+        Token(Token.TagType.VALID, [Fact()], [])
+
     # THIS MUST NOT RAISE
-    Token(Token.TagType.VALID, Fact())
-    Token(Token.TagType.VALID, [Fact(), Fact()])
+    Token(Token.TagType.VALID, Fact(), {})
+    Token(Token.TagType.VALID, [Fact(), Fact()], {})
 
 
 @pytest.mark.wip
@@ -77,3 +81,15 @@ def test_token_shortcut_invalid():
     from pyknow.rete.token import Token
 
     assert Token.invalid([]) == Token(Token.TagType.INVALID, [])
+
+
+@pytest.mark.wip
+def test_token_copy_mutable():
+    from pyknow.rete.token import Token
+
+    a = Token.valid([])
+    b = a.copy()
+
+    assert a == b and a is not b
+    assert a.data == b.data and a.data is not b.data
+    assert a.context == b.context and a.context is not b.context
