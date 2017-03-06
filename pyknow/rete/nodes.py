@@ -5,6 +5,7 @@ from contextlib import suppress
 from .abstract import AbstractNode, OneInputNode, TwoInputNode
 from .token import Token
 from pyknow.rule import Rule
+from pyknow.activation import Activation
 
 ChildNode = namedtuple('ChildNode', ['node', 'callback'])
 
@@ -102,6 +103,12 @@ class ConflictSetNode(AnyChild, OneInputNode):
         else:
             with suppress(ValueError):
                 self.memory.remove(token.to_info())
+
+    def get_activations(self):
+        return [Activation(self.rule,
+                           tuple(info.data),
+                           dict(info.context))
+                for info in self.memory]
 
 
 class NotNode(AnyChild, HaveMatcher, TwoInputNode):

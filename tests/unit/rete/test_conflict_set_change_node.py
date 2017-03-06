@@ -18,6 +18,13 @@ def test_conflictsetchange_is_abstractnode():
 
 
 @pytest.mark.wip
+def test_conflictsetchange_interface():
+    from pyknow.rete.nodes import ConflictSetNode
+
+    assert hasattr(ConflictSetNode, 'get_activations')
+
+
+@pytest.mark.wip
 def test_conflictsetchange_accepts_rule():
     from pyknow.rete.nodes import ConflictSetNode
     from pyknow.rule import Rule
@@ -60,3 +67,22 @@ def test_conflictsetchange_invalid_removes_from_memory():
                                {'mycontextdata': 'data'}))
 
     assert not csn.memory
+
+
+@pytest.mark.wip
+def test_conflictsetchange_get_activations_data():
+    from pyknow.rete.nodes import ConflictSetNode
+    from pyknow.rete.token import TokenInfo
+    from pyknow.rule import Rule
+    from pyknow.fact import Fact
+    from pyknow.activation import Activation
+
+    rule = Rule()
+    csn = ConflictSetNode(rule)
+    csn.memory.append(TokenInfo([Fact(first=1)], {'data': 'test'}))
+
+    activations = csn.get_activations()
+    assert len(activations) == 1
+    assert activations[0].rule is rule
+    assert Fact(first=1) in activations[0].facts
+    assert activations[0].context == {'data': 'test'}
