@@ -6,12 +6,15 @@
 from inspect import getmembers
 import logging
 
+from collections import namedtuple
 from pyknow.agenda import Agenda
 from pyknow.fact import InitialFact
 from pyknow.factlist import FactList
 from pyknow.rule import Rule
 from pyknow.strategies import Depth
-from pyknow.rete import Rete
+# from pyknow.rete import Rete
+
+Rete = namedtuple("object", "obj")
 
 logging.basicConfig()
 

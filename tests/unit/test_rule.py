@@ -212,8 +212,8 @@ def test_Rule_simple_testce():
 @pytest.mark.wip
 def test_rule_is_iterable():
     from pyknow.rule import Rule
-    from pyknow.fact import Fact, L
+    from pyknow.fact import Fact
 
-    rule_ = Rule(Fact(a=L(1)), Fact(a=L(2)))
-    assert next(rule_) == Fact(a=L(1))
-    assert next(rule_) == Fact(a=L(2))
+    rule_ = Rule(Fact(a=1), Fact(a=2))
+    assert next(rule_) == Fact(a=1)
+    assert next(rule_) == Fact(a=2)
