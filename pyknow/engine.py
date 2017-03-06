@@ -7,7 +7,7 @@ from inspect import getmembers
 import logging
 
 from pyknow.agenda import Agenda
-from pyknow.fact import InitialFact, L
+from pyknow.fact import InitialFact
 from pyknow.factlist import FactList
 from pyknow.rule import Rule
 from pyknow.strategies import Depth
@@ -187,14 +187,7 @@ class KnowledgeEngine:
         Internal declaration method. Used for ``declare`` and ``deffacts``
         """
 
-        def _declare_facts(facts):
-            """ Declare facts """
-            for fact in facts:
-                for value in fact.values():
-                    if not isinstance(value, L):
-                        raise TypeError("Can only use ``L`` tipe on declare")
-                yield self.facts.declare(fact)
-        return list(_declare_facts(facts))
+        return [self.facts.declare(fact) for fact in facts]
 
     def declare(self, *facts):
         """
