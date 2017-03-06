@@ -59,25 +59,3 @@ def test_alpha_normalization_rule_one():
     branch = EngineWalker.normalize_branch(rule_, Rule)
 
     assert branch == rule_
-
-
-@pytest.mark.wip
-def test_alpha_network_simple():
-    from pyknow.rete.alpha import EngineWalker
-    from pyknow.rule import Rule
-    from pyknow.fact import Fact
-    from pyknow.engine import KnowledgeEngine
-
-    class SampleEngine(KnowledgeEngine):
-        @Rule(Fact(a=1))
-        def sample(self):
-            pass
-
-    engine = SampleEngine()
-    branch = EngineWalker(engine)
-    list(branch.get_network())
-    same_class_condition = branch.input_nodes[0].matcher
-    assert same_class_condition(Fact())
-    assert not same_class_condition(False)
-    print(list(branch.input_nodes[0].children)[0].callback)
-    assert False
