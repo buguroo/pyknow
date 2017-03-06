@@ -4,6 +4,7 @@ from contextlib import suppress
 
 from .abstract import AbstractNode, OneInputNode, TwoInputNode
 from .token import Token
+from pyknow.rule import Rule
 
 ChildNode = namedtuple('ChildNode', ['node', 'callback'])
 
@@ -80,3 +81,24 @@ class OrdinaryMatchNode(AnyChild, HaveMatcher, TwoInputNode):
 
     def _activate_right(self, token):
         self._activation(token, self.right_memory, self.left_memory)
+
+
+class ConflictSetNode(AnyChild, OneInputNode):
+    def __init__(self, rule):
+        try:
+            assert isinstance(rule, Rule)
+        except AssertionError as exc:
+            raise TypeError(exc) from exc
+        else:
+            self.rule = rule
+
+        self.memory = []
+
+        super().__init__()
+
+    def _activate(self, token):
+        if token.is_valid():
+            self.memory.append((token.data, token.context))
+        else:
+            with suppress(ValueError):
+                self.memory.remove((token.data, token.context))

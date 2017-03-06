@@ -29,12 +29,12 @@ class Token(namedtuple('_Token', ['tag', 'data', 'context'])):
         return self
 
     @classmethod
-    def valid(cls, data):
-        return cls(cls.TagType.VALID, data)
+    def valid(cls, data, context=None):
+        return cls(cls.TagType.VALID, data, context)
 
     @classmethod
-    def invalid(cls, data):
-        return cls(cls.TagType.INVALID, data)
+    def invalid(cls, data, context=None):
+        return cls(cls.TagType.INVALID, data, context)
 
     def is_valid(self):
         return self.tag == self.TagType.VALID
