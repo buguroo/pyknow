@@ -50,8 +50,8 @@ class FeatureTesterNode(AnyChild, HaveMatcher, OneInputNode):
 
 class OrdinaryMatchNode(AnyChild, HaveMatcher, TwoInputNode):
     def __init__(self, *args, **kwargs):
-        self.left_memory = []
-        self.right_memory = []
+        self.left_memory = list()
+        self.right_memory = list()
         super().__init__(*args, **kwargs)
 
     def _activation(self, token, branch_memory, matching_memory):
@@ -102,3 +102,42 @@ class ConflictSetNode(AnyChild, OneInputNode):
         else:
             with suppress(ValueError):
                 self.memory.remove(token.to_info())
+
+
+class NotNode(AnyChild, HaveMatcher, TwoInputNode):
+    def __init__(self, *args, **kwargs):
+        self.left_memory = dict()
+        self.right_memory = list()
+
+        super().__init__(*args, **kwargs)
+
+    def _activate_left(self, token):
+        count = 0
+        for right_data, right_context in self.right_memory:
+            if self.matcher(token.context, right_context):
+                count += 1
+        if token.is_valid():
+            self.left_memory[token.to_info()] = count
+        if count == 0:
+            for child in self.children:
+                child.callback(token)
+
+    def _activate_right(self, token):
+        if token.is_valid():
+            self.right_memory.append(token.to_info())
+            inc = 1
+        else:
+            inc = -1
+
+        for left in self.left_memory:
+            if self.matcher(left.context, token.context):
+                self.left_memory[left] += inc
+                newcount = self.left_memory[left]
+                if (newcount == 0 and inc == -1) or \
+                        (newcount == 1 and inc == 1):
+                    if inc == -1:
+                        newtoken = left.to_valid_token()
+                    else:
+                        newtoken = left.to_invalid_token()
+                    for child in self.children:
+                        child.callback(newtoken)
