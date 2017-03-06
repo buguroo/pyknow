@@ -26,7 +26,7 @@ class Callables:
         """ Returns alpha for a given key/value pair for type W """
         # pylint: disable=invalid-name
         def _has_key(fact):
-            if value:
+            if not value:
                 return fact.get(key, None) is None
             else:
                 return fact.get(key, None) is not None
@@ -41,7 +41,7 @@ class Callables:
                 return {value: fact.get(key)}
             return {}
 
-        return _get_context, THIRD
+        return _get_context
 
     @staticmethod
     def match_T(key, value):
@@ -72,14 +72,14 @@ class Callables:
         """
         Compare fact classes
         """
-        return lambda fact: isinstance(fact, parent_class.__class__)
+        return lambda fact: type(fact) is parent_class.__class__
 
     @staticmethod
     def compatible_facts(fact):
         """
         Check if fact keys is a subset of the other fact keys
         """
-        return lambda other: set(fact.keys).issubset(other.keys)
+        return lambda other: set(fact.keys()).issubset(other.keys())
 
     @staticmethod
     def get_callable(key, value):
