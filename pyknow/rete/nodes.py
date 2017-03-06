@@ -44,6 +44,9 @@ class FeatureTesterNode(AnyChild, HaveMatcher, OneInputNode):
         match = self.matcher(token)
         if match:
             if isinstance(match, Mapping):
+                for key, value in match.items():
+                    if token.context.get(key, value) != value:
+                        return False
                 token.context.update(match)
             for child in self.children:
                 child.callback(token)
