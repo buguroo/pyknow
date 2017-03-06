@@ -53,44 +53,30 @@ class OrdinaryMatchNode(AnyChild, HaveMatcher, TwoInputNode):
         self.right_memory = []
         super().__init__(*args, **kwargs)
 
-    def _activate_left(self, token):
+    def _activation(self, token, branch_memory, matching_memory):
         if token.is_valid():
-            self.left_memory.append((token.data, token.context))
+            branch_memory.append((token.data, token.context))
         else:
             with suppress(ValueError):
-                self.left_memory.remove((token.data, token.context))
+                branch_memory.remove((token.data, token.context))
 
-        for right_data, right_context in self.right_memory:
-            match = self.matcher(token.context, right_context)
+        for other_data, other_context in matching_memory:
+            match = self.matcher(token.context, other_context)
+
             if match:
                 if not isinstance(match, Mapping):
                     match = {}
 
                 match.update(token.context)
-                match.update(right_context)
+                match.update(other_context)
                 newtoken = Token(token.tag,
-                                 token.data | right_data,
+                                 token.data | other_data,
                                  match)
                 for child in self.children:
                     child.callback(newtoken)
+
+    def _activate_left(self, token):
+        self._activation(token, self.left_memory, self.right_memory)
 
     def _activate_right(self, token):
-        if token.is_valid():
-            self.right_memory.append((token.data, token.context))
-        else:
-            with suppress(ValueError):
-                self.right_memory.remove((token.data, token.context))
-
-        for left_data, left_context in self.left_memory:
-            match = self.matcher(left_context, token.context)
-            if match:
-                if not isinstance(match, Mapping):
-                    match = {}
-
-                match.update(token.context)
-                match.update(left_context)
-                newtoken = Token(token.tag,
-                                 left_data | token.data,
-                                 match)
-                for child in self.children:
-                    child.callback(newtoken)
+        self._activation(token, self.right_memory, self.left_memory)
