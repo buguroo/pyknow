@@ -89,3 +89,49 @@ def test_featuretesternode_pass_when_callable_adds_context(TestNode):
     newtoken.context['something'] = True
 
     assert tn1.added == tn2.added == [newtoken]
+
+
+@pytest.mark.wip
+def test_featuretesternode_pass_when_callable_modify_context(TestNode):
+    from pyknow.rete.nodes import FeatureTesterNode
+    from pyknow.rete.token import Token
+    from pyknow.fact import Fact
+
+    ftn = FeatureTesterNode(lambda f: {'something': True})
+    tn1 = TestNode()
+    tn2 = TestNode()
+
+    token = Token.valid(Fact(test=True), {'something': False})
+
+    ftn.add_child(tn1, tn1.activate)
+    ftn.add_child(tn2, tn2.activate)
+
+    ftn.activate(token)
+
+    newtoken = token.copy()
+    newtoken.context['something'] = True
+
+    assert tn1.added == tn2.added == []
+
+
+@pytest.mark.wip
+def test_featuretesternode_pass_when_callable_dont_modify_context(TestNode):
+    from pyknow.rete.nodes import FeatureTesterNode
+    from pyknow.rete.token import Token
+    from pyknow.fact import Fact
+
+    ftn = FeatureTesterNode(lambda f: {'something': True})
+    tn1 = TestNode()
+    tn2 = TestNode()
+
+    token = Token.valid(Fact(test=True), {'something': True})
+
+    ftn.add_child(tn1, tn1.activate)
+    ftn.add_child(tn2, tn2.activate)
+
+    ftn.activate(token)
+
+    newtoken = token.copy()
+    newtoken.context['something'] = True
+
+    assert tn1.added == tn2.added == [newtoken]
