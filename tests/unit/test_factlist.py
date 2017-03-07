@@ -75,3 +75,20 @@ def test_factlist_retract_matching():
     assert isinstance(flist.facts[0], Fact)
     assert flist.retract_matching(Fact()) == [0]
     assert not flist.facts
+
+
+def test_factlist_changes():
+    """ Test factlist changes """
+
+    from pyknow.factlist import FactList
+    from pyknow.fact import Fact
+    flist = FactList()
+
+    flist.declare(Fact(a=1))
+    assert flist.changes[0] == {Fact(a=1)}
+
+    flist.declare(Fact(b=1))
+    assert flist.changes[0] == {Fact(b=1)}
+
+    flist.retract_matching(Fact(b=1))
+    assert flist.changes[1] == {Fact(b=1)}
