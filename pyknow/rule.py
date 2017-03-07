@@ -51,6 +51,9 @@ class Rule:
     def __repr__(self):
         return "{}({})".format(self.__class__.__name__, self._conds)
 
+    def __hash__(self):
+        return hash(tuple(hash(a) for a in self._conds))
+
     def __call__(self, fst=None, *args, **kwargs):
         """
         Make method checks if it's the first call, and update wrapper.

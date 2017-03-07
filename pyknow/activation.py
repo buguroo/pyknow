@@ -38,4 +38,6 @@ class Activation:
         return self.rule == other.rule and self.facts == other.facts
 
     def __hash__(self):
-        return hash(self.facts)
+        return hash(
+            (hash(self.rule), self.facts,
+             tuple(self.context.items() if self.context else tuple())))
