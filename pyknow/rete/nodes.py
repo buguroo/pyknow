@@ -9,11 +9,11 @@ needed in this implementation.
 from collections.abc import Mapping
 from contextlib import suppress
 
+from . import mixins
 from .abstract import AbstractNode, OneInputNode, TwoInputNode
 from .token import Token
-from . import mixins
-from pyknow.rule import Rule
 from pyknow.activation import Activation
+from pyknow.rule import Rule
 
 
 class BusNode(mixins.AnyChild,
@@ -239,7 +239,7 @@ class NotNode(mixins.AnyChild,
 
         """
         count = 0
-        for right_data, right_context in self.right_memory:
+        for _, right_context in self.right_memory:
             if self.matcher(token.context, right_context):
                 count += 1
         if token.is_valid():
