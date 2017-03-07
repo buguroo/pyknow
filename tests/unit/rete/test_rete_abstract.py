@@ -15,7 +15,7 @@ def test_abstractnodes_exists():
 def test_abstractnode_interface():
     from pyknow.rete.abstract import AbstractNode
 
-    assert {'add_child'} <= AbstractNode.__abstractmethods__
+    assert {'_reset', 'add_child'} <= AbstractNode.__abstractmethods__
 
 
 @pytest.mark.wip

@@ -27,10 +27,17 @@ def test_retematcher_is_not_abstract():
     ReteMatcher(KnowledgeEngine())
 
 
-#
-# TODO (@dfrancos) walking into the engine building the network
-#
+@pytest.mark.wip
+def test_retematcher_has_root_node():
+    from pyknow.rete import ReteMatcher
+    from pyknow.engine import KnowledgeEngine
+    from pyknow.rete.nodes import BusNode
+
+    matcher = ReteMatcher(KnowledgeEngine())
+    assert hasattr(matcher, 'root_node')
+    assert isinstance(matcher.root_node, BusNode)
+
 
 #
-# TODO (@nilp0inter) RETE behaviour when `changes` is called
+# TODO (@dfrancos) walking into the engine building the network
 #
