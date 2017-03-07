@@ -7,7 +7,7 @@ def test_alpha_normalization_rule_two():
     Given an already normalized (two elements) network,
     the result should be the same
     """
-    from pyknow.rete.alpha import EngineWalker
+    from pyknow.rete.walker import EngineWalker
     from pyknow.rule import Rule
     from pyknow.fact import Fact
 
@@ -34,7 +34,7 @@ def test_alpha_normalization_rule_three():
           |-> Node2
           \-> Node1
     """
-    from pyknow.rete.alpha import EngineWalker
+    from pyknow.rete.walker import EngineWalker
     from pyknow.rule import Rule
     from pyknow.fact import Fact
 
@@ -51,7 +51,7 @@ def test_alpha_normalization_rule_one():
     Given a single node, the node should remain
     the same
     """
-    from pyknow.rete.alpha import EngineWalker
+    from pyknow.rete.walker import EngineWalker
     from pyknow.rule import Rule
     from pyknow.fact import Fact
 

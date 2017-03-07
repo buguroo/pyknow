@@ -7,21 +7,18 @@ import pytest
 
 @pytest.mark.wip
 def test_alpha_network_first_is_class_check():
-    from pyknow.rete.alpha import EngineWalker
     from pyknow.rule import Rule
     from pyknow.fact import Fact
     from pyknow.engine import KnowledgeEngine
-    from pyknow.rete.nodes import BusNode
 
     class SampleEngine(KnowledgeEngine):
-        @Rule(Fact(a=1))
+        @Rule(Fact(a=1), Fact(b=1))
         def sample(self):
             pass
 
     engine = SampleEngine()
-    branch = EngineWalker(engine, BusNode())
-    branch.build_network()
-    same_class_condition = branch.input_nodes[0].matcher
+    input_node = engine.algorithm.walker.input_nodes[0]
+    same_class_condition = input_node.matcher
     assert same_class_condition(Fact())
     assert not same_class_condition(False)
 
@@ -29,7 +26,7 @@ def test_alpha_network_first_is_class_check():
 @pytest.mark.wip
 def test_alpha_network_get_callables_L():
     from pyknow.fact import Fact
-    from pyknow.rete.alpha import EngineWalker
+    from pyknow.rete.walker import EngineWalker
     expected = ['same_class', 'compatible_facts', 'has_key', 'match_L']
     callables = EngineWalker.get_callables(Fact(a=1))
     callable_names = [a[0].__repr__().split('.')[1] for a in callables]
@@ -39,7 +36,7 @@ def test_alpha_network_get_callables_L():
 @pytest.mark.wip
 def test_alpha_network_get_callables_W():
     from pyknow.fact import Fact, W
-    from pyknow.rete.alpha import EngineWalker
+    from pyknow.rete.walker import EngineWalker
     expected = ['same_class', 'compatible_facts', 'has_key', 'match_W']
     callables = EngineWalker.get_callables(Fact(a=W(True)))
     callable_names = [a[0].__repr__().split('.')[1] for a in callables]
@@ -49,7 +46,7 @@ def test_alpha_network_get_callables_W():
 @pytest.mark.wip
 def test_alpha_network_get_callables_T():
     from pyknow.fact import Fact, T
-    from pyknow.rete.alpha import EngineWalker
+    from pyknow.rete.walker import EngineWalker
     expected = ['same_class', 'compatible_facts', 'has_key', 'match_T']
     callables = EngineWalker.get_callables(Fact(a=T(lambda x: x)))
     callable_names = [a[0].__repr__().split('.')[1] for a in callables]
@@ -59,7 +56,7 @@ def test_alpha_network_get_callables_T():
 @pytest.mark.wip
 def test_get_alpha_branch():
     from collections import namedtuple
-    from pyknow.rete.alpha import EngineWalker
+    from pyknow.rete.walker import EngineWalker
     from pyknow.rule import Rule
     from pyknow.fact import Fact
     from pyknow.engine import KnowledgeEngine
@@ -101,7 +98,7 @@ def test_get_alpha_branch():
 @pytest.mark.wip
 def test_get_beta_node():
     from unittest.mock import MagicMock
-    from pyknow.rete.alpha import EngineWalker
+    from pyknow.rete.walker import EngineWalker
     from pyknow.engine import KnowledgeEngine
     from pyknow.rete.nodes import BusNode, FeatureTesterNode
 
@@ -118,7 +115,7 @@ def test_get_beta_node():
 
 
 def test_get_node():
-    from pyknow.rete.alpha import EngineWalker
+    from pyknow.rete.walker import EngineWalker
     from pyknow.engine import KnowledgeEngine
     from pyknow.rule import Rule
     from pyknow.fact import Fact
