@@ -87,7 +87,14 @@ class FeatureTesterNode(mixins.AnyChild,
         the test pass update the token and pass to all children.
 
         """
-        match = self.matcher(token)
+        try:
+            assert len(token.data) == 1
+        except AssertionError as exc:
+            raise ValueError(exc) from exc
+        else:
+            fact = list(token.data)[0]
+
+        match = self.matcher(fact)
         if match:
             if isinstance(match, Mapping):
                 for key, value in match.items():

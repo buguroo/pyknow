@@ -135,3 +135,20 @@ def test_featuretesternode_pass_when_callable_dont_modify_context(TestNode):
     newtoken.context['something'] = True
 
     assert tn1.added == tn2.added == [newtoken]
+
+
+@pytest.mark.wip
+def test_featuretesternode_pass_fact_to_matcher():
+    from pyknow.rete.nodes import FeatureTesterNode
+    from pyknow.rete.token import Token
+    from pyknow.fact import Fact
+
+    fact = Fact(this_is_my_fact=True)
+
+    def _matcher(f):
+        nonlocal fact
+        assert f is fact
+
+    ftn = FeatureTesterNode(_matcher)
+
+    ftn.activate(Token.valid(fact))
