@@ -10,14 +10,12 @@ root node, fill the RETE network starting on the root node.
 from contextlib import suppress
 from operator import itemgetter
 
-import pyknow.engine
-
-from pyknow.fact import W, Fact
-from pyknow.rete import PRIORITIES
+from pyknow.fact import W, Fact, InitialFact
 from pyknow.rete.nodes import FeatureTesterNode, OrdinaryMatchNode
 from pyknow.rete.nodes import ConflictSetNode
 from pyknow.rule import Rule, OR, NOT
 
+PRIORITIES = [1000, 100, 10]
 FIRST, SECOND, THIRD = PRIORITIES
 
 
@@ -28,7 +26,6 @@ class EngineWalker:
     # pylint: disable=too-few-public-methods
 
     def __init__(self, engine, root_node):
-        assert isinstance(engine, pyknow.engine.KnowledgeEngine)
         self.engine = engine
         self.root_node = root_node
         self.input_nodes = []
@@ -118,7 +115,7 @@ class EngineWalker:
         # so its children will be the next node (a beta node)
         return nodes[-1]
 
-    def get_beta_node(self, left, right):
+    def get_beta_node(self, left, right, cls=OrdinaryMatchNode):
         """
         Given a two-node condition, return a beta node for it.
         If needed, resolve its children.
@@ -126,7 +123,7 @@ class EngineWalker:
         # pylint: disable=protected-access
         left_node = self.get_node(left)
         right_node = self.get_node(right)
-        beta_node = OrdinaryMatchNode(Callables.and_match)
+        beta_node = cls(Callables.and_match)
         left_node.add_child(beta_node, beta_node._activate_left)
         right_node.add_child(beta_node, beta_node._activate_right)
         return beta_node
@@ -139,9 +136,13 @@ class EngineWalker:
             # Return a match node with the two elements on the network
             # This relies on the fact that the network is normalized
             # as 2-element tuples and that a rule is iterable.
-            return self.get_beta_node(cond[0], cond[1])
+            left = next(cond)
+            right = next(cond)
+            return self.get_beta_node(left, right)
         elif isinstance(cond, NOT):
-            # yield NotNode(network(cond, cls))
+            # left = next(cond)
+            # right = next(cond)
+            # return self.get_beta_node(left, right, NotNode)
             raise NotImplementedError()
         elif isinstance(cond, OR):
             raise NotImplementedError()
@@ -172,7 +173,8 @@ class EngineWalker:
                 right_node = exit_nodes.pop()
             else:
                 # We only had one, make up a fake node
-                right_node = FeatureTesterNode(lambda x: True)
+                right_node = self.get_node(InitialFact())
+                self.root_node.add_child(right_node, right_node._activate)
 
             # Join as an AND (default Rule action)
             left_node.add_child(beta_node, beta_node._activate_left)
@@ -200,7 +202,8 @@ class Callables:
         contained in the right dictionary and all the common values
         are the same.
         """
-        return not set(left.items()) - set(right.items())
+        # return not set(left.items()) - set(right.items())
+        return True
 
     @staticmethod
     def match_W(key, value):
