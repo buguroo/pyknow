@@ -17,7 +17,7 @@ def test_alpha_network_first_is_class_check():
             pass
 
     engine = SampleEngine()
-    input_node = engine.algorithm.walker.input_nodes[0]
+    input_node = engine.matcher.walker.input_nodes[0]
     same_class_condition = input_node.matcher
     assert same_class_condition(Fact())
     assert not same_class_condition(False)
@@ -96,40 +96,43 @@ def test_get_alpha_branch():
 
 
 @pytest.mark.wip
-def test_get_beta_node():
-    from unittest.mock import MagicMock
-    from pyknow.rete.walker import EngineWalker
-    from pyknow.engine import KnowledgeEngine
-    from pyknow.rete.nodes import BusNode, FeatureTesterNode
-
-    EngineWalker.get_node = lambda s, node: FeatureTesterNode(node._activate)
-
-    left_node = MagicMock()
-    right_node = MagicMock()
-
-    walker = EngineWalker(KnowledgeEngine(), BusNode())
-    beta = walker.get_beta_node(left_node, right_node)
-
-    assert left_node.add_child.called_with(beta, beta._activate_left)
-    assert right_node.add_child.called_with(beta, beta._activate_right)
-
-
 def test_get_node():
     from pyknow.rete.walker import EngineWalker
     from pyknow.engine import KnowledgeEngine
-    from pyknow.rule import Rule
     from pyknow.fact import Fact
     from unittest.mock import patch
     from pyknow.rete.nodes import BusNode
 
-    with patch.object(EngineWalker, "get_beta_node", return_value=[]) as mock:
-        walker = EngineWalker(KnowledgeEngine(), BusNode())
-        # TODO: What happens if we pass here Fact(a=1) and not b?
-        walker.get_node(Rule(Fact(a=1), Fact(b=1)))
-        mock.assert_called()
-
     with patch.object(EngineWalker, "get_alpha_branch",
                       return_value=[]) as mock:
-        walker = EngineWalker(KnowledgeEngine())
+        walker = EngineWalker(KnowledgeEngine(), BusNode)
         walker.get_node(Fact(a=1))
         mock.assert_called()
+
+
+@pytest.mark.wip
+def test_network_generation():
+    from pyknow.engine import KnowledgeEngine
+    from pyknow.rule import Rule
+    from pyknow.fact import Fact
+    from pyknow.rete.nodes import ConflictSetNode
+
+    class FooEngine(KnowledgeEngine):
+        @Rule(Fact(a=1))
+        def foo(self):
+            pass
+
+    walker = FooEngine().matcher.walker
+
+    def _get_node(node):
+        if not isinstance(node, ConflictSetNode):
+            yield node.matcher.__repr__().split('.')[1].split(' ')[0].strip()
+        else:
+            yield "ConflictSetNode"
+        for child in node.children:
+            yield from _get_node(child.node)
+
+    expected = ['same_class', 'compatible_facts', 'has_key', 'match_L',
+                'and_match', 'ConflictSetNode']
+
+    assert list(_get_node(walker.input_nodes[0])) == expected
