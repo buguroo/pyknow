@@ -32,6 +32,7 @@ def TestNode():
         """
         def __init__(self):
             self.added = []
+            self.children = []
 
         def activate(self, token):
             self.added.append(token)
