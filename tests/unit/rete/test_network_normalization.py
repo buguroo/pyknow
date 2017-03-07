@@ -12,7 +12,7 @@ def test_alpha_normalization_rule_two():
     from pyknow.fact import Fact
 
     rule_ = Rule(Fact(a=1), Fact(a=1))
-    branch = EngineWalker.normalize_branch(rule_, Rule)
+    branch = EngineWalker.normalize_tree(rule_, Rule)
 
     assert branch == rule_
 
@@ -40,7 +40,7 @@ def test_alpha_normalization_rule_three():
 
     rule_ = Rule(Fact(a=1), Fact(a=2), Fact(a=3))
     rule_result = Rule(Fact(a=3), Rule(Fact(a=2), Fact(a=1)))
-    branch = EngineWalker.normalize_branch(rule_, Rule)
+    branch = EngineWalker.normalize_tree(rule_, Rule)
 
     assert branch == rule_result
 
@@ -56,6 +56,6 @@ def test_alpha_normalization_rule_one():
     from pyknow.fact import Fact
 
     rule_ = Rule(Fact(a=1))
-    branch = EngineWalker.normalize_branch(rule_, Rule)
+    branch = EngineWalker.normalize_tree(rule_, Rule)
 
     assert branch == rule_

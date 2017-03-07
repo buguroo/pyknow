@@ -1,5 +1,10 @@
 """
-Alpha nodes
+Engine walker
+-------------
+
+Given a ``pyknow.engine.Engine`` object and a RETE
+root node, fill the RETE network starting on the root node.
+
 """
 from contextlib import suppress
 from operator import itemgetter
@@ -17,20 +22,18 @@ FIRST, SECOND, THIRD = PRIORITIES
 
 class EngineWalker:
     """
-    EngineWalker.
-
     Walks trough an engine producing an alpha network.
     """
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, engine):
+    def __init__(self, engine, root_node):
         assert isinstance(engine, KnowledgeEngine)
         self.engine = engine
-        self.nodes = []
+        self.root_node = root_node
         self.input_nodes = []
 
     @staticmethod
-    def normalize_branch(conds, prev_class):
+    def normalize_tree(conds, prev_class):
         r"""
         Given a branch, ensure that it always has two-elements.
         If needed, anidate its children in its own class, as in:
@@ -61,7 +64,7 @@ class EngineWalker:
         elif len(conds) > 1:
             # We still need to resolve part of the tree
             return prev_class(first_cond,
-                              EngineWalker.normalize_branch(conds, prev_class))
+                              EngineWalker.normalize_tree(conds, prev_class))
 
     @staticmethod
     def get_callables(fact):
@@ -99,10 +102,12 @@ class EngineWalker:
         - Append the input node to the list of input nodes
 
         """
+
+        # Walk trough nodes by reverse order
         clbs = sorted(EngineWalker.get_callables(fact),
                       key=itemgetter(1), reverse=True)
         nodes = [alpha_cls(a[0]) for a in clbs]
-        self.nodes += nodes
+        # self.nodes += nodes
         self.input_nodes.append(nodes[0])
         for num, alpha_node in enumerate(nodes):
             with suppress(IndexError):
@@ -144,25 +149,39 @@ class EngineWalker:
         else:
             raise Exception()
 
-    def get_network(self):
-        """ Generate alpha network """
+    def build_network(self):
+        """
+        Generate alpha network and add it to the node tree started at
+        ``root_node``
+        """
         # pylint: disable=protected-access
 
         for rule in self.engine.get_rules():
             beta_node = OrdinaryMatchNode(Callables.and_match)
 
-            conds = EngineWalker.normalize_branch(rule, rule.__class__)
-            last_nodes = [self.get_node(cond) for cond in conds]
-            left_node = last_nodes.pop()
+            conds = EngineWalker.normalize_tree(rule, rule.__class__)
 
-            if last_nodes:
-                right_node = last_nodes.pop()
+            # As this has been previously normalized, only two
+            # exit nodes can exist at most.
+            exit_nodes = [self.get_node(cond) for cond in conds]
+            left_node = exit_nodes.pop()
+
+            if exit_nodes:
+                # We have TWO exit nodes.
+                right_node = exit_nodes.pop()
             else:
+                # We only had one, make up a fake node
                 right_node = FeatureTesterNode(lambda x: True)
 
+            # Join as an AND (default Rule action)
             left_node.add_child(beta_node, beta_node._activate_left)
             right_node.add_child(beta_node, beta_node._activate_right)
 
             conflict_set = ConflictSetNode(rule)
+
+            # Add the conflict_set as a children of the Rule's beta node.
+            # This is the end of the tree
             beta_node.add_child(conflict_set, conflict_set._activate)
-            yield conflict_set
+
+        for node in self.input_nodes:
+            self.root_node.add_child(node, node._activate)
