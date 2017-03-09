@@ -10,10 +10,11 @@ root node, fill the RETE network starting on the root node.
 from contextlib import suppress
 from operator import itemgetter
 
-from pyknow.fact import W, Fact, InitialFact
+from pyknow.fact import W, Fact
 from pyknow.rete.nodes import FeatureTesterNode, OrdinaryMatchNode
-from pyknow.rete.nodes import ConflictSetNode
-from pyknow.rule import Rule, OR, NOT
+from pyknow.rete.nodes import ConflictSetNode, NotNode
+from pyknow.rule import Rule, NOT, AND
+from pyknow.rete.dnf_rule import dnf
 
 PRIORITIES = [1000, 100, 10]
 FIRST, SECOND, THIRD = PRIORITIES
@@ -96,7 +97,6 @@ class EngineWalker:
         Generate an alpha branch, that is:
         - Get the necesary callables to resolve a fact
         - Chain them sorted by priority order
-        - Append the nodes to be able to reset() later
         - Append the input node to the list of input nodes
 
         """
@@ -140,12 +140,9 @@ class EngineWalker:
             right = next(cond)
             return self.get_beta_node(left, right)
         elif isinstance(cond, NOT):
-            # left = next(cond)
-            # right = next(cond)
-            # return self.get_beta_node(left, right, NotNode)
-            raise NotImplementedError()
-        elif isinstance(cond, OR):
-            raise NotImplementedError()
+            # pylint: disable=too-many-function-args
+            # pylint fails to interpret the inheritance there...
+            return NotNode(next(cond))
         elif isinstance(cond, Fact):
             return self.get_alpha_branch(FeatureTesterNode, cond)
         else:
@@ -159,32 +156,29 @@ class EngineWalker:
         # pylint: disable=protected-access
 
         for rule in self.engine.get_rules():
-            beta_node = OrdinaryMatchNode(Callables.and_match)
-
-            conds = EngineWalker.normalize_tree(rule, rule.__class__)
+            rule_ = AND(*[a for a in rule])
+            conds = dnf(rule_)
+            if isinstance(conds, Fact):
+                conds = [conds]
 
             # As this has been previously normalized, only two
             # exit nodes can exist at most.
             exit_nodes = [self.get_node(cond) for cond in conds]
-            left_node = exit_nodes.pop()
-
-            if exit_nodes:
-                # We have TWO exit nodes.
-                right_node = exit_nodes.pop()
-            else:
-                # We only had one, make up a fake node
-                right_node = self.get_node(InitialFact())
-                self.root_node.add_child(right_node, right_node._activate)
-
-            # Join as an AND (default Rule action)
-            left_node.add_child(beta_node, beta_node._activate_left)
-            right_node.add_child(beta_node, beta_node._activate_right)
-
-            conflict_set = ConflictSetNode(rule)
 
             # Add the conflict_set as a children of the Rule's beta node.
             # This is the end of the tree
-            beta_node.add_child(conflict_set, conflict_set._activate)
+            conflict_set = ConflictSetNode(rule)
+
+            if len(exit_nodes) == 2:
+                # pylint: disable=too-many-function-args
+                # pylint fails to interpret the inheritance there...
+                last_node = OrdinaryMatchNode(Callables.and_match)
+                exit_nodes[0].add_child(last_node, last_node._activate_left)
+                exit_nodes[1].add_child(last_node, last_node._activate_right)
+            else:
+                last_node = exit_nodes[0]
+
+            last_node.add_child(conflict_set, conflict_set._activate)
 
         for node in self.input_nodes:
             self.root_node.add_child(node, node._activate)
@@ -202,8 +196,7 @@ class Callables:
         contained in the right dictionary and all the common values
         are the same.
         """
-        # return not set(left.items()) - set(right.items())
-        return True
+        return not set(left) - set(right)
 
     @staticmethod
     def match_W(key, value):
