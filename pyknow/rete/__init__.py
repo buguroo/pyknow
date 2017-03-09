@@ -10,11 +10,9 @@ a more pythonic approach.
 """
 from functools import lru_cache
 
-from pyknow.abstract import AbstractMatcher
+from . import walker
 from .nodes import BusNode, ConflictSetNode
-from .token import Token
-
-PRIORITIES = [1000, 100, 10]
+from pyknow.abstract import AbstractMatcher
 
 
 class ReteMatcher(AbstractMatcher):
@@ -24,6 +22,8 @@ class ReteMatcher(AbstractMatcher):
         """Create the RETE network for `self.engine`."""
         super().__init__(*args, **kwargs)
         self.root_node = BusNode()
+        self.walker = walker.EngineWalker(self.engine, self.root_node)
+        self.walker.build_network()
 
     @lru_cache(maxsize=1)
     def _get_conflict_set_nodes(self):
