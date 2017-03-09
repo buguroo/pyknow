@@ -12,7 +12,8 @@ from pyknow.fact import InitialFact
 from pyknow.factlist import FactList
 from pyknow.rule import Rule
 from pyknow.strategies import Depth
-# from pyknow.rete import Rete
+from pyknow.rete import ReteMatcher
+from pyknow.abstract import AbstractMatcher
 
 Rete = namedtuple("object", "obj")
 
@@ -33,15 +34,16 @@ class KnowledgeEngine:
     """
 
     __strategy__ = Depth
-    __algorithm__ = Rete
+    __matcher__ = ReteMatcher
 
     def __init__(self):
         self._fixed_facts = []
         self.running = False
         self._parent = False
         self.shared_attributes = {}
-
-        self.algorithm = self.__algorithm__(self)
+        self.matcher = self.__matcher__(self)
+        if not isinstance(self.matcher, AbstractMatcher):
+            raise TypeError("Matcher must implement AbstractMatcher")
         self.facts = FactList()
         self.agenda = Agenda()
         self.strategy = self.__strategy__()
@@ -124,11 +126,7 @@ class KnowledgeEngine:
         """
         Return activations
         """
-        added, removed = self.facts.changed
-        self.algorithm.add(added)
-        self.algorithm.remove(removed)
-        self.facts.mark_read()
-        return self.algorithm.get_activations()
+        return self.matcher.changes(*self.facts.changes)
 
     def retract(self, idx):
         """
@@ -183,7 +181,8 @@ class KnowledgeEngine:
         self.facts = FactList()
         self.__declare(InitialFact())
         self.load_initial_facts()
-        self.strategy.update_agenda(self.agenda, self.get_activations())
+        activations = self.get_activations()
+        self.strategy.update_agenda(self.agenda, activations)
 
     def __declare(self, *facts):
         """
@@ -204,4 +203,5 @@ class KnowledgeEngine:
         if not self.running:
             logging.warning("Declaring fact while not run()")
         self.__declare(*facts)
-        self.strategy.update_agenda(self.agenda, self.get_activations())
+        activations = self.get_activations()
+        self.strategy.update_agenda(self.agenda, activations)
