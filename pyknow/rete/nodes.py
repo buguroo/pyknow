@@ -9,11 +9,13 @@ needed in this implementation.
 from collections.abc import Mapping
 from contextlib import suppress
 
+from pyknow.activation import Activation
+from pyknow.rule import Rule
+from pyknow.watchers import MATCH_WATCHER
+
 from . import mixins
 from .abstract import AbstractNode, OneInputNode, TwoInputNode
 from .token import Token
-from pyknow.activation import Activation
-from pyknow.rule import Rule
 
 
 class BusNode(mixins.AnyChild,
@@ -95,6 +97,11 @@ class FeatureTesterNode(mixins.AnyChild,
             fact = list(token.data)[0]
 
         match = self.matcher(fact)
+
+        MATCH_WATCHER.debug(
+            "%s matcher %s with %s returned %s", self.__class__.__name__,
+            self.matcher, token, match)
+
         if match:
             if isinstance(match, Mapping):
                 for key, value in match.items():
@@ -102,6 +109,9 @@ class FeatureTesterNode(mixins.AnyChild,
                         return False
                 token.context.update(match)
             for child in self.children:
+                MATCH_WATCHER.debug(
+                    "Invoking children callback %s with token %s",
+                    self.children, token)
                 child.callback(token)
 
 
