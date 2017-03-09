@@ -33,13 +33,33 @@ class Rule:
         if not conds:
             conds = (InitialFact(),)
         self.__fn = None
-        self._conds = conds
+        self.parent = None
+        self._conds = list(conds)
+        for cond in conds:
+            if isinstance(cond, Rule):
+                cond.parent = self
         self._curr = 0
         self.salience = salience
         RULE_WATCHER.debug("Initialized rule with conds %s", conds)
 
-    def __iter__(self):
-        return self
+    # def __iter__(self):
+    #     return self._conds
+
+    def __getitem__(self, item):
+        return self._conds[item]
+
+    def __setitem__(self, item, value):
+        self._conds[item] = value
+
+    def copy(self):
+        copy = self.__class__(self._conds, salience=self.salience)
+        copy.__fn = self.__fn
+        copy.parent = self.parent
+        copy._curr = self._curr
+        return copy
+
+    def __len__(self):
+        return len(self._conds)
 
     def __next__(self):
         self._curr += 1
@@ -49,7 +69,7 @@ class Rule:
             raise StopIteration()
 
     def __repr__(self):
-        return "{}({})".format(self.__class__.__name__, self._conds)
+        return "{}{}".format(self.__class__.__name__, tuple(self._conds))
 
     def __hash__(self):
         return hash(tuple(hash(a) for a in self._conds))
@@ -71,7 +91,8 @@ class Rule:
             RULE_WATCHER.debug("Executing %s for rule %s, activation %s",
                                self.__fn.__name__, self, activation)
             if activation.context:
-                kwargs.update(activation.context)
+                kwargs.update({k.value: v.value for k, v in
+                               activation.context.items()})
 
         return self.__fn(*tuple(obj for obj in (fst,) if obj) + args, **kwargs)
 

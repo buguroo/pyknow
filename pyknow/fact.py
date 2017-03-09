@@ -51,6 +51,10 @@ class W(FactType):
     pass
 
 
+class L(FactType):
+    pass
+
+
 class Fact(AttrDict):
     """
     Base Fact class
@@ -60,6 +64,11 @@ class Fact(AttrDict):
 
     def __hash__(self):
         return hash(tuple(set(self.items())))
+
+    def __repr__(self):
+        return "{}({})".format(
+            self.__class__.__name__,
+            ",".join(["{}={}".format(k, v) for k, v in self.items()]))
 
 
 class InitialFact(Fact):
