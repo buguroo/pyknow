@@ -5,7 +5,8 @@ Engine tests
 from hypothesis import given
 from hypothesis import strategies as st
 
-# pylint: disable=invalid-name, missing-docstring
+# pylint: disable=invalid-name, missing-docstring,
+# pylint: disable=too-few-public-methods, nonlocal-without-binding, no-self-use
 
 
 def test_KnowledgeEngine_has__facts():
@@ -158,12 +159,10 @@ def test_KnowledgeEngine_get_activations_exists():
     assert hasattr(KnowledgeEngine, 'get_activations')
 
 
-def test_KnowledgeEngine_get_activations_returns_a_generator():
+def test_KnowledgeEngine_get_activations_returns_a_list():
     from pyknow.engine import KnowledgeEngine
-    import types
-
     ke = KnowledgeEngine()
-    assert isinstance(ke.get_activations(), types.GeneratorType)
+    assert isinstance(ke.get_activations(), list)
 
 
 def test_KnowledgeEngine_get_activations_returns_activations():
@@ -173,15 +172,16 @@ def test_KnowledgeEngine_get_activations_returns_activations():
 
     class Test(KnowledgeEngine):
         # pylint: disable=too-few-public-methods
-        @Rule(Fact(a=L(1)))
+        @Rule(Fact(a=L(1)), Fact(b=L(1)))
         def test(self):
             # pylint: disable=no-self-use
             pass
 
     ke = Test()
-    ke.deffacts(Fact(a=L(1)))
-    ke.reset()
+    ke.declare(Fact(a=L(1)))
+    ke.declare(Fact(b=L(1)))
     activations = list(ke.get_activations())
+    print(ke.agenda.activations)
     assert len(activations) == 1
 
 
@@ -389,9 +389,10 @@ def test_default_is_and():
     for i in range(1, 10):
         to_declare.append(L(i))
 
+    # pylint: disable=redefined-variable-type
     to_declare = dict(enumerate(to_declare))
 
-    for k, n in to_declare.items():
+    for _, n in to_declare.items():
         ke_.deffacts(Fact(something=n))
 
     ke_.reset()
@@ -419,7 +420,7 @@ def test_or_notmatching_operator():
     class Test(KnowledgeEngine):
         """ Test KE """
         @Rule(OR(Fact(something=L(1)),
-              Fact(something=L(2))))
+                 Fact(something=L(2))))
         def rule1(self):
             """ First rule, something=1 and something=2"""
             pass
@@ -447,7 +448,7 @@ def test_or_operator():
     class Test(KnowledgeEngine):
         """ Test KE """
         @Rule(OR(Fact(something=L(1)),
-              Fact(something=L(2))))
+                 Fact(something=L(2))))
         def rule1(self):
             """ First rule, something=1 and something=2"""
             pass
@@ -553,7 +554,7 @@ def test_matching_different_number_of_arguments():
 
 def test_matching_captured_different_facts_AND():
     from pyknow.rule import Rule
-    from pyknow.fact import Fact, L, V, C
+    from pyknow.fact import Fact, L, V
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):
@@ -562,7 +563,7 @@ def test_matching_captured_different_facts_AND():
     executions = []
 
     class Person_KE(KnowledgeEngine):
-        @Rule(Person(name=C("name")), Person(surname=V('name')))
+        @Rule(Person(name=V("name")), Person(surname=V('name')))
         def same_name(self, name):
             nonlocal executions
             executions.append(name)
@@ -613,7 +614,7 @@ def test_matching_captured_same_facts_AND():
 
     """
     from pyknow.rule import Rule
-    from pyknow.fact import Fact, L, V, C
+    from pyknow.fact import Fact, L, V
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):
@@ -622,7 +623,7 @@ def test_matching_captured_same_facts_AND():
     executions = []
 
     class Person_KE(KnowledgeEngine):
-        @Rule(Person(name=C("name"), surname=V('name')))
+        @Rule(Person(name=V("name"), surname=V('name')))
         def same_name(self, name):
             nonlocal executions
             executions.append(name)
@@ -644,7 +645,7 @@ def test_matching_captured_different_facts_NOT_positive():
     NO matches (the NOT is therefore executed).
     """
     from pyknow.rule import Rule, NOT
-    from pyknow.fact import Fact, L, V, C
+    from pyknow.fact import Fact, L, V
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):
@@ -653,7 +654,7 @@ def test_matching_captured_different_facts_NOT_positive():
     executions = []
 
     class Person_KE(KnowledgeEngine):
-        @Rule(Person(name=C("name")),
+        @Rule(Person(name=V("name")),
               NOT(Person(surname=V('name'))))
         def same_name(self, name):
             nonlocal executions
@@ -675,7 +676,7 @@ def test_matching_captured_different_facts_NOT_negative():
     matches (the NOT is therefore not executed).
     """
     from pyknow.rule import Rule, NOT
-    from pyknow.fact import Fact, L, V, C
+    from pyknow.fact import Fact, L, V
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):
@@ -684,7 +685,7 @@ def test_matching_captured_different_facts_NOT_negative():
     executions = []
 
     class Person_KE(KnowledgeEngine):
-        @Rule(Person(name=C("name")),
+        @Rule(Person(name=V("name")),
               NOT(Person(surname=V('name'))))
         def same_name(self, name):
             nonlocal executions
@@ -699,8 +700,8 @@ def test_matching_captured_different_facts_NOT_negative():
 
 
 def test_and_N_positive():
-    from pyknow.rule import Rule
-    from pyknow.fact import Fact, L, N, C
+    from pyknow.rule import Rule, NOT
+    from pyknow.fact import Fact, L, V
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):
@@ -709,8 +710,8 @@ def test_and_N_positive():
     executions = []
 
     class Person_KE(KnowledgeEngine):
-        @Rule(Person(name=L("name"), age=C('age')),
-              Person(name=L("name"), age=N("age")))
+        @Rule(Person(name=L("name"), age=V('age')),
+              NOT(Person(name=L("name"), age=V('age'))))
         def same_name(self, age):
             nonlocal executions
             executions.append(age)
@@ -724,8 +725,8 @@ def test_and_N_positive():
 
 
 def test_and_N_negative():
-    from pyknow.rule import Rule
-    from pyknow.fact import Fact, L, N, C
+    from pyknow.rule import Rule, NOT
+    from pyknow.fact import Fact, L, V
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):
@@ -734,8 +735,8 @@ def test_and_N_negative():
     executions = []
 
     class Person_KE(KnowledgeEngine):
-        @Rule(Person(name=L("name"), age=C('age')),
-              Person(name=L("name"), age=N("age")))
+        @Rule(Person(name=L("name"), age=V('age')),
+              NOT(Person(name=L("name"), age=V("age"))))
         def same_name(self, age):
             nonlocal executions
             executions.append(age)
@@ -750,7 +751,7 @@ def test_and_N_negative():
 
 def test_not_aggreation():
     from pyknow.rule import Rule, NOT, AND
-    from pyknow.fact import Fact, L, N, C
+    from pyknow.fact import Fact, L, V
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):
@@ -763,8 +764,8 @@ def test_not_aggreation():
 
     class Person_KE(KnowledgeEngine):
         @Rule(NOT(ConflictResolver(resolved=L(True))),
-              AND(Person(name=L("name"), age=C('age')),
-                  Person(name=L("name"), age=N("age"))))
+              AND(Person(name=L("name"), age=V('age')),
+                  NOT(Person(name=L('name'), age=V("age")))))
         def same_name(self, age):
             nonlocal executions
             executions.append(age)

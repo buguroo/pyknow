@@ -8,11 +8,11 @@ import pytest
 @pytest.mark.wip
 def test_and_match():
     from pyknow.rete.walker import Callables
-    assert Callables.and_match({"foo": 1}, {"foo": 1})
-    assert not Callables.and_match({"foo": 1}, {"foo": 2})
-    assert Callables.and_match({}, {"foo": 1})
-    assert not Callables.and_match({"foo": 1}, {})
-    assert not Callables.and_match({"foo": 1}, {"bar": 1})
+    assert Callables.and_match(set(["foo", 1]), set(["foo", 1]))
+    assert not Callables.and_match(set(["foo", 1]), set(["foo", 2]))
+    assert Callables.and_match(set(), set(["foo", 1]))
+    assert not Callables.and_match(set(["foo", 1]), set())
+    assert not Callables.and_match(set(["foo", 1]), set(["bar", 1]))
 
 
 @pytest.mark.wip

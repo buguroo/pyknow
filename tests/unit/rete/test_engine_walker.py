@@ -133,6 +133,6 @@ def test_network_generation():
             yield from _get_node(child.node)
 
     expected = ['same_class', 'compatible_facts', 'has_key', 'match_L',
-                'and_match', 'ConflictSetNode']
+                'ConflictSetNode']
 
     assert list(_get_node(walker.input_nodes[0])) == expected
