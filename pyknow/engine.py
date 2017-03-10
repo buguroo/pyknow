@@ -6,11 +6,16 @@
 from inspect import getmembers
 import logging
 
+from collections import namedtuple
 from pyknow.agenda import Agenda
-from pyknow.fact import InitialFact, Context, L
+from pyknow.fact import InitialFact
 from pyknow.factlist import FactList
 from pyknow.rule import Rule
 from pyknow.strategies import Depth
+from pyknow.rete import ReteMatcher
+from pyknow.abstract import AbstractMatcher
+
+Rete = namedtuple("object", "obj")
 
 logging.basicConfig()
 
@@ -29,16 +34,19 @@ class KnowledgeEngine:
     """
 
     __strategy__ = Depth
+    __matcher__ = ReteMatcher
 
     def __init__(self):
-        self.context = Context()
         self._fixed_facts = []
-        self.facts = FactList()
         self.running = False
-        self.agenda = Agenda()
-        self.strategy = self.__strategy__()
         self._parent = False
         self.shared_attributes = {}
+        self.matcher = self.__matcher__(self)
+        if not isinstance(self.matcher, AbstractMatcher):
+            raise TypeError("Matcher must implement AbstractMatcher")
+        self.facts = FactList()
+        self.agenda = Agenda()
+        self.strategy = self.__strategy__()
 
     def __repr__(self):
         return "{}({})".format(self.__class__.__name__, self.shared_attributes)
@@ -72,34 +80,6 @@ class KnowledgeEngine:
 
         self._parent = parent
 
-    def declare(self, *facts):
-        """
-        Declare from inside a fact, equivalent to ``assert`` in clips.
-
-        .. note::
-
-            This updates the agenda.
-        """
-
-        if not self.running:
-            logging.warning("Declaring fact while not run()")
-        self.__declare(*facts)
-        self.strategy.update_agenda(self.agenda, self.get_activations())
-
-    def __declare(self, *facts):
-        """
-        Internal declaration method. Used for ``declare`` and ``deffacts``
-        """
-
-        def _declare_facts(facts):
-            """ Declare facts """
-            for fact in facts:
-                for value in fact.value.values():
-                    if not isinstance(value, L):
-                        raise TypeError("Can only use ``L`` tipe on declare")
-                yield self.facts.declare(fact)
-        return list(_declare_facts(facts))
-
     def deffacts(self, *facts):
         """
         Declare a Fact from OUTSIDE the engine.
@@ -111,29 +91,13 @@ class KnowledgeEngine:
 
         self._fixed_facts.extend(facts)
 
-    def retract(self, idx):
+    def load_initial_facts(self):
         """
-        Retracts a specific fact, using its index
-
-        .. note::
-            This updates the agenda
+        Declares all fixed_facts
         """
 
-        idx = self.facts.retract(idx)
-        self.agenda.remove_from_fact(idx)
-        self.strategy.update_agenda(self.agenda, self.get_activations())
-
-    def retract_matching(self, fact):
-        """
-        Retracts a specific fact, comparing against another fact
-
-        .. note::
-            This updates the agenda
-        """
-
-        for idx in self.facts.retract_matching(fact):
-            self.agenda.remove_from_fact(idx)
-        self.strategy.update_agenda(self.agenda, self.get_activations())
+        if self._fixed_facts:
+            self.__declare(*self._fixed_facts)
 
     def modify(self, fact, result_fact):
         """
@@ -160,18 +124,33 @@ class KnowledgeEngine:
 
     def get_activations(self):
         """
-        Matches the rule-base (see :func:`pyknow.engine.get_rules`)
-        with the fact-list and returns each match
+        Return activations
+        """
+        return self.matcher.changes(*self.facts.changes)
+
+    def retract(self, idx):
+        """
+        Retracts a specific fact, using its index
+
+        .. note::
+            This updates the agenda
         """
 
-        for rule in self.get_rules():
-            capturations = rule.get_capturations(self.facts)
-            for act in rule.get_activations(self.facts, capturations):
-                if act:
-                    act.rule = rule
-                    yield act
+        idx = self.facts.retract(idx)
+        self.agenda.remove_from_fact(idx)
+        self.strategy.update_agenda(self.agenda, self.get_activations())
 
-        return
+    def retract_matching(self, fact):
+        """
+        Retracts a specific fact, comparing against another fact
+
+        .. note::
+            This updates the agenda
+        """
+
+        for idx in self.facts.retract_matching(fact):
+            self.agenda.remove_from_fact(idx)
+        self.strategy.update_agenda(self.agenda, self.get_activations())
 
     def run(self, steps=None):
         """
@@ -189,14 +168,6 @@ class KnowledgeEngine:
                 activation.rule(self, activation=activation)
         self.running = False
 
-    def load_initial_facts(self):
-        """
-        Declares all fixed_facts
-        """
-
-        if self._fixed_facts:
-            self.__declare(*self._fixed_facts)
-
     def reset(self):
         """
         Performs a reset as per CLIPS behaviour (resets the
@@ -210,4 +181,27 @@ class KnowledgeEngine:
         self.facts = FactList()
         self.__declare(InitialFact())
         self.load_initial_facts()
-        self.strategy.update_agenda(self.agenda, self.get_activations())
+        activations = self.get_activations()
+        self.strategy.update_agenda(self.agenda, activations)
+
+    def __declare(self, *facts):
+        """
+        Internal declaration method. Used for ``declare`` and ``deffacts``
+        """
+
+        return [self.facts.declare(fact) for fact in facts]
+
+    def declare(self, *facts):
+        """
+        Declare from inside a fact, equivalent to ``assert`` in clips.
+
+        .. note::
+
+            This updates the agenda.
+        """
+
+        if not self.running:
+            logging.warning("Declaring fact while not run()")
+        self.__declare(*facts)
+        activations = self.get_activations()
+        self.strategy.update_agenda(self.agenda, activations)
