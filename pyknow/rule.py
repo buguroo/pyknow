@@ -7,10 +7,9 @@ Element``.
 special case implemented in :mod:`pyknow.fact`.
 
 """
-from collections import UserList
-
+from collections.abc import Callable
 from functools import update_wrapper
-from pyknow.fact import InitialFact
+
 from pyknow.watchers import RULE_WATCHER
 
 
@@ -96,3 +95,59 @@ class NOT(ConditionalElement):
     """
 
     pass
+
+
+class PatternConditionalElement(ConditionalElement):
+    def __and__(self, other):
+        return ANDPCE(self, other)
+
+    def __or__(self, other):
+        return ORPCE(self, other)
+
+    def __invert__(self):
+        return NOTPCE(self)
+
+
+class ANDPCE(PatternConditionalElement):
+    pass
+
+
+class ORPCE(PatternConditionalElement):
+    pass
+
+
+class NOTPCE(PatternConditionalElement):
+    pass
+
+
+class LiteralPCE(PatternConditionalElement):
+    def __new__(cls, *args):
+        if len(args) != 1:
+            raise ValueError("LiteralPCE must contain only one element.")
+        else:
+            return super(LiteralPCE, cls).__new__(cls, *args)
+
+    def __repr__(self):
+        return repr(self[0])
+
+
+class WildcardPCE(PatternConditionalElement):
+    def __new__(cls, *args, bind_to=None):
+        if len(args) != 0:
+            raise ValueError("WildcardPCE cannot contain any element.")
+        else:
+            obj = super(WildcardPCE, cls).__new__(cls, *args)
+            obj.bind_to = bind_to
+            return obj
+
+
+class PredicatePCE(PatternConditionalElement):
+    def __new__(cls, *args, bind_to=None):
+        if len(args) != 1:
+            raise ValueError("PredicatePCE must contain only one element.")
+        elif not isinstance(args[0], Callable):
+            raise TypeError("PredicatePCE needs a callable.")
+        else:
+            obj = super(PredicatePCE, cls).__new__(cls, *args)
+            obj.bind_to = bind_to
+            return obj
