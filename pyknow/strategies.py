@@ -1,35 +1,13 @@
-from abc import ABCMeta, abstractmethod
-from collections import deque
 from collections import defaultdict
+from collections import deque
 from itertools import chain
-from pyknow.watchers import AGENDA_WATCHER
+
+from pyknow.abstract import Strategy
 
 
 def listdict():
     """ Defaultdict of a list """
     return defaultdict(list)
-
-
-class Strategy(metaclass=ABCMeta):
-    @abstractmethod
-    def _update_agenda(self, agenda, acts):
-        pass
-
-    def update_agenda(self, agenda, acts):
-        acts_set = set(acts)
-
-        # Remove executed activations from the activation list
-        nonexecuted = acts_set - agenda.executed
-
-        # Resolve conflicts using the appropiate strategy.
-        res = self._update_agenda(agenda, nonexecuted)
-
-        # Update executed set removing activations not found in the
-        # current set.
-        agenda.executed = acts_set & agenda.executed
-
-        AGENDA_WATCHER.debug("Agenda updated: %s", agenda)
-        return res
 
 
 class Depth(Strategy):
