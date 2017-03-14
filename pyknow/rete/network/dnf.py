@@ -1,96 +1,123 @@
 """
 Rewrite engine to get disjuntive normal form of the rules
 """
-
+from collections import OrderedDict
+from functools import singledispatch
 from itertools import chain, product
+
+from pyknow.rule import AND, OR, NOT, Rule, ORPCE, NOTPCE, ANDPCE
 from pyknow.fact import Fact
-from pyknow.rule import OR, NOT, AND
 
 
-def _dnf_and(and_children):
-    """
-      - if node is AND:
-        - combine AND children (conjunctions)
-        - Combine OR children (disjunctions)
-        - If we found disjunctions:
-          - Consider the cartesian product of conjunctions and disjunctions
-            a list of conjunctions, then return an OR node with the
+def unpack_exp(exp, op):
+    for x in exp:
+        if isinstance(x, op):
+            yield from x
+        else:
+            yield x
 
-          Return an OR node with the cartesian product of
-          conjunctions and disjunctions
-        - If we found no disjunctions:
-          - Return the combined conjunctions
-        - Return a OR node with the cartesian product of
-          AND children and OR children
-          - The cartesian product of AND and OR children should
-            result in a list of ANDS if there are any conjunctions.
-            Otherwise just return the combined OR.
-    """
-    # pylint: disable=protected-access
-    dis = list(chain(*(list(a) for a in and_children if isinstance(a, OR))))
-    ands = list(chain(*(list(a) for a in and_children if isinstance(a, AND))))
-    facts = list((a for a in and_children if isinstance(a, Fact)))
-    con = facts + ands
-    if not dis:
-        return AND(*con)
+
+@singledispatch
+def dnf(exp):
+    return exp
+
+
+@dnf.register(Rule)
+def _(exp):
+    last, current = None, Rule(*[dnf(e) for e in exp])
+
+    while last != current:
+        last, current = current, Rule(*[dnf(e) for e in current])
+
+    return Rule(*unpack_exp(current, AND))
+
+
+@dnf.register(NOT)
+def _(exp):
+    if isinstance(exp[0], NOT):  # Double negation
+        return dnf(exp[0][0])
+    elif isinstance(exp[0], OR):  # De Morgan's law (OR)
+        return AND(*[NOT(dnf(x)) for x in exp[0]])
+    elif isinstance(exp[0], AND):  # De Morgan's law (AND)
+        return OR(*[NOT(dnf(x)) for x in exp[0]])
+    else:  # `exp` is already dnf. We have nothing to do.
+        return exp
+
+
+@dnf.register(OR)
+def _(exp):
+    if len(exp) == 1:
+        return dnf(exp[0])
     else:
-        return OR(*(AND(*a) for a in product(con, dis)))
+        return OR(*[dnf(x) for x in unpack_exp(exp, OR)])
 
 
-def _dnf_not(not_child):
-    """
-    - De morgan's law to push negation nodes to the leaves.
-      That is, if we've got a NOT(AND(a=1, b=1)) we should
-      convert it to an AND(NOT(a=1), NOT(b=1))
-      - Given:
-        + The child is a NOT()
-          - Return the child (NOT(NOT(a=1))) is equivalent to (a=1)
-        + The child is AND():
-          - Return OR() with (NOT() for each child)
-        + The child is OR():
-          - Return AND() with (NOT() for each child)
-    """
-    if isinstance(not_child, OR):
-        return OR(*(NOT(cond) for cond in not_child))
-    elif isinstance(not_child, AND):
-        return AND(*(NOT(cond) for cond in not_child))
-    elif isinstance(not_child, NOT):
-        if len(not_child) != 1:
-            raise Exception("Found a not with multiple child")
-        return not_child[0]
+@dnf.register(AND)
+def _(exp):
+    if len(exp) == 1:
+        return dnf(exp[0])
+    elif any(isinstance(e, OR) for e in exp):  # Distributive property
+        and_part = []
+        or_part = []
+        for e in exp:
+            if isinstance(e, OR):
+                or_part.extend(e)
+            else:
+                and_part.append(e)
+        return OR(*[dnf(AND(*(and_part + [dnf(e)]))) for e in or_part])
+    else:
+        return AND(*[dnf(x) for x in unpack_exp(exp, AND)])
 
 
-def _dnf_or(cond):
-    """
-    Merge ORs, return the rest untouched.
-    """
-    dis = chain(*(list(a) for a in cond if isinstance(a, OR)))
-    rest = (a for a in cond if not isinstance(a, OR))
-    return OR(*list(rest) + list(dis))
+@dnf.register(Fact)
+def _(exp):
+    fact_class = exp.__class__
+    if any(isinstance(v, ORPCE) for v in exp.values()):
+        and_part = OrderedDict()
+        or_part = OrderedDict()
+        for k, v in exp.items():
+            if isinstance(v, ORPCE):
+                or_part[k] = v
+                and_part[k] = None
+            else:
+                and_part[k] = v
+
+        facts = []
+        for p in product(*or_part.values()):
+            current_or = OrderedDict(zip(or_part.keys(), p))
+            ces = [(k, dnf(v)) if v is not None else (k, dnf(current_or[k]))
+                   for k, v in and_part.items()]
+            facts.append(fact_class.from_iter(ces))
+
+        return OR(*facts)
+    else:
+        return fact_class.from_iter(((k, dnf(v)) for k, v in exp.items()))
 
 
-def _dnf_single(cond):
-    """
-    If we have only one child, we can dispose of its container.
-    """
-    return cond[0]
+@dnf.register(NOTPCE)
+def _(exp):
+    if isinstance(exp[0], NOTPCE):  # Double negation
+        return dnf(exp[0][0])
+    elif isinstance(exp[0], ORPCE):  # De Morgan's law (ORPCE)
+        return ANDPCE(*[NOTPCE(dnf(x)) for x in exp[0]])
+    elif isinstance(exp[0], ANDPCE):  # De Morgan's law (ANDPCE)
+        return ORPCE(*[NOTPCE(dnf(x)) for x in exp[0]])
+    else:  # `exp` is already dnf. We have nothing to do.
+        return exp
 
 
-def dnf(cond):
-    """
-    Get the disjunctive normal form of a Rule
-    """
-
-    if isinstance(cond, OR) or isinstance(cond, AND):
-        if len(cond) == 1:
-            return _dnf_single(cond)
-    if isinstance(cond, AND):
-        return _dnf_and([dnf(a) for a in cond])
-    elif isinstance(cond, NOT):
-        if len(cond) != 1:
-            raise Exception("Found a not with multiple children")
-        return _dnf_not(dnf(list(cond)[0]))
-    elif isinstance(cond, OR):
-        return _dnf_or([dnf(a) for a in cond])
-    elif isinstance(cond, Fact):
-        return cond
+@dnf.register(ANDPCE)
+def _(exp):
+    if len(exp) == 1:
+        return dnf(exp[0])
+    elif any(isinstance(e, ORPCE) for e in exp):  # Distributive property
+        and_part = []
+        or_part = []
+        for e in exp:
+            if isinstance(e, ORPCE):
+                or_part.extend(e)
+            else:
+                and_part.append(e)
+        return ORPCE(*[dnf(ANDPCE(*(and_part + [dnf(e)]))) for e in or_part])
+    else:
+        return ANDPCE(*[dnf(x) for x in unpack_exp(exp, ANDPCE)])
