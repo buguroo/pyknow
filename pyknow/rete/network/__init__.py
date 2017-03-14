@@ -10,7 +10,7 @@ root node, fill the RETE network starting on the root node.
 from contextlib import suppress
 from operator import itemgetter
 
-from pyknow.fact import W, Fact
+from pyknow.fact import Fact
 from pyknow.rete.nodes import FeatureTesterNode, OrdinaryMatchNode
 from pyknow.rete.nodes import ConflictSetNode, NotNode
 from pyknow.rule import Rule, NOT, AND
