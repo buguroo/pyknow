@@ -104,3 +104,20 @@ def _(exp):
         return ORPCE(*[NOTPCE(dnf(x)) for x in exp[0]])
     else:  # `exp` is already dnf. We have nothing to do.
         return exp
+
+
+@dnf.register(ANDPCE)
+def _(exp):
+    if len(exp) == 1:
+        return dnf(exp[0])
+    elif any(isinstance(e, ORPCE) for e in exp):  # Distributive property
+        and_part = []
+        or_part = []
+        for e in exp:
+            if isinstance(e, ORPCE):
+                or_part.extend(e)
+            else:
+                and_part.append(e)
+        return ORPCE(*[dnf(ANDPCE(*(and_part + [dnf(e)]))) for e in or_part])
+    else:
+        return ANDPCE(*[dnf(x) for x in unpack_exp(exp, ANDPCE)])
