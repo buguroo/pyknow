@@ -12,10 +12,10 @@ from functools import lru_cache
 
 from pyknow.rete.network import EngineWalker
 from .nodes import BusNode, ConflictSetNode
-from pyknow.abstract import AbstractMatcher
+from pyknow.abstract import Matcher
 
 
-class ReteMatcher(AbstractMatcher):
+class ReteMatcher(Matcher):
     """RETE algorithm with `pyknow` matcher interface."""
 
     def __init__(self, *args, **kwargs):

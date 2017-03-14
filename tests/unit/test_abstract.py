@@ -4,13 +4,13 @@ import pytest
 @pytest.mark.wip
 def test_matcher_exists():
     try:
-        from pyknow.abstract import AbstractMatcher
+        from pyknow.abstract import Matcher
     except ImportError as exc:
         assert False, exc
 
 
 @pytest.mark.wip
 def test_matcher_interface():
-    from pyknow.abstract import AbstractMatcher
+    from pyknow.abstract import Matcher
 
-    assert AbstractMatcher.__abstractmethods__ == {'changes'}
+    assert Matcher.__abstractmethods__ == {'changes'}

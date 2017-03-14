@@ -10,7 +10,7 @@ def listdict():
     return defaultdict(list)
 
 
-class Depth(Strategy):
+class DepthStrategy(Strategy):
     def _update_agenda(self, agenda, acts):
         old = listdict()
         for a in agenda.activations:

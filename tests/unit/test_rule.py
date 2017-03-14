@@ -7,7 +7,7 @@ import pytest
 
 
 def test_Rule_can_decorate_function():
-    from pyknow.rule import Rule
+    from pyknow import Rule
 
     called = False
 
@@ -22,7 +22,7 @@ def test_Rule_can_decorate_function():
 
 
 def test_Rule_can_decorate_function_with_one_parameter():
-    from pyknow.rule import Rule
+    from pyknow import Rule
 
     called = False
 
@@ -37,7 +37,7 @@ def test_Rule_can_decorate_function_with_one_parameter():
 
 
 def test_Rule_can_decorate_function_with_multiple_positional_args():
-    from pyknow.rule import Rule
+    from pyknow import Rule
 
     called = False
 
@@ -54,7 +54,7 @@ def test_Rule_can_decorate_function_with_multiple_positional_args():
 
 
 def test_Rule_can_decorate_function_with_mixed_args():
-    from pyknow.rule import Rule
+    from pyknow import Rule
 
     called = False
 
@@ -73,7 +73,7 @@ def test_Rule_can_decorate_function_with_mixed_args():
 
 
 def test_Rule_decorated_function_raise_TypeError_on_bad_arguments():
-    from pyknow.rule import Rule
+    from pyknow import Rule
     # pylint: disable=unused-argument, no-value-for-parameter
 
     called = False
@@ -90,14 +90,14 @@ def test_Rule_decorated_function_raise_TypeError_on_bad_arguments():
 
 
 def test_Rule_decorator_raise_AttributeError_if_called_without_function():
-    from pyknow.rule import Rule
+    from pyknow import Rule
 
     with pytest.raises(AttributeError):
         Rule()()
 
 
 def test_Rule_decorated_function_is_instance_of_Rule():
-    from pyknow.rule import Rule
+    from pyknow import Rule
 
     @Rule()
     def myfunction():
@@ -107,7 +107,7 @@ def test_Rule_decorated_function_is_instance_of_Rule():
 
 
 def test_Rule_decorator_store_salience():
-    from pyknow.rule import Rule
+    from pyknow import Rule
 
     @Rule(salience=10)
     def myfunction():
@@ -118,8 +118,8 @@ def test_Rule_decorator_store_salience():
 
 @pytest.mark.wip
 def test_rule_is_iterable():
-    from pyknow.rule import Rule
-    from pyknow.fact import Fact
+    from pyknow import Rule
+    from pyknow import Fact
 
     rule_ = Rule(Fact(a=1), Fact(a=2))
     assert next(rule_) == Fact(a=1)

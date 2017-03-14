@@ -31,7 +31,7 @@ def test_KnowledgeEngine_has_declare():
 
 def test_KnowledgeEngine_declare_define_fact():
     from pyknow.engine import KnowledgeEngine
-    from pyknow.fact import Fact
+    from pyknow import Fact
     from unittest.mock import patch
 
     ke = KnowledgeEngine()
@@ -133,8 +133,8 @@ def test_KnowledgeEngine_get_rules_return_empty_list():
 
 def test_KnowledgeEngine_get_rules_returns_the_list_of_rules():
     from pyknow.engine import KnowledgeEngine
-    from pyknow.rule import Rule
-    from pyknow.fact import InitialFact
+    from pyknow import Rule
+    from pyknow import InitialFact
 
     class Test(KnowledgeEngine):
         @Rule(InitialFact())
@@ -167,8 +167,8 @@ def test_KnowledgeEngine_get_activations_returns_a_list():
 
 def test_KnowledgeEngine_get_activations_returns_activations():
     from pyknow.engine import KnowledgeEngine
-    from pyknow.rule import Rule
-    from pyknow.fact import Fact, L
+    from pyknow import Rule
+    from pyknow import Fact, L
 
     class Test(KnowledgeEngine):
         # pylint: disable=too-few-public-methods
@@ -215,7 +215,7 @@ def test_KnowledgeEngine_reset_resets_facts():
 
 def test_KnowledgeEngine_run_1_fires_activation():
     from pyknow.engine import KnowledgeEngine
-    from pyknow.rule import Rule
+    from pyknow import Rule
 
     executed = False
 
@@ -238,7 +238,7 @@ def test_KnowledgeEngine_run_1_fires_activation():
 
 def test_KnowledgeEngine_run_fires_all_activation():
     from pyknow.engine import KnowledgeEngine
-    from pyknow.rule import Rule
+    from pyknow import Rule
 
     executed = 0
 
@@ -294,7 +294,7 @@ def test_KnowledgeEngine_reset():
     """
 
     from pyknow.engine import KnowledgeEngine
-    from pyknow.fact import Fact, L
+    from pyknow import Fact, L
 
     ke = KnowledgeEngine()
     ke.deffacts(Fact(foo=L(1)))
@@ -323,8 +323,8 @@ def test_KnowledgeEngine_reset():
 def test_rules_are_executed_once(to_declare_random):
     from random import shuffle
     from pyknow.engine import KnowledgeEngine
-    from pyknow.rule import Rule
-    from pyknow.fact import Fact, L
+    from pyknow import Rule
+    from pyknow import Fact, L
 
     executions = []
 
@@ -362,8 +362,8 @@ def test_default_is_and():
     """
     from collections import defaultdict
     from pyknow.engine import KnowledgeEngine
-    from pyknow.rule import Rule
-    from pyknow.fact import Fact, L
+    from pyknow import Rule
+    from pyknow import Fact, L
 
     executions = []
 
@@ -414,8 +414,8 @@ def test_or_notmatching_operator():
         Test OR operator
     """
     from pyknow.engine import KnowledgeEngine
-    from pyknow.rule import Rule, OR
-    from pyknow.fact import Fact, L
+    from pyknow import Rule, OR
+    from pyknow import Fact, L
 
     class Test(KnowledgeEngine):
         """ Test KE """
@@ -442,8 +442,8 @@ def test_or_operator():
     Test OR operator
     """
     from pyknow.engine import KnowledgeEngine
-    from pyknow.rule import Rule, OR
-    from pyknow.fact import Fact, L
+    from pyknow import Rule, OR
+    from pyknow import Fact, L
 
     class Test(KnowledgeEngine):
         """ Test KE """
@@ -470,8 +470,8 @@ def test_or_operator():
 
 
 def test_ke_inheritance():
-    from pyknow.rule import Rule
-    from pyknow.fact import Fact, L
+    from pyknow import Rule
+    from pyknow import Fact, L
     from pyknow.engine import KnowledgeEngine
 
     executed = False
@@ -499,8 +499,8 @@ def test_ke_inheritance():
 
 
 def test_nested_declarations():
-    from pyknow.rule import Rule
-    from pyknow.fact import Fact, L
+    from pyknow import Rule
+    from pyknow import Fact, L
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):
@@ -526,8 +526,8 @@ def test_nested_declarations():
 
 
 def test_matching_different_number_of_arguments():
-    from pyknow.rule import Rule
-    from pyknow.fact import Fact, L
+    from pyknow import Rule
+    from pyknow import Fact, L
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):
@@ -553,8 +553,8 @@ def test_matching_different_number_of_arguments():
 
 
 def test_matching_captured_different_facts_AND():
-    from pyknow.rule import Rule
-    from pyknow.fact import Fact, L, V
+    from pyknow import Rule
+    from pyknow import Fact, L, V
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):
@@ -613,8 +613,8 @@ def test_matching_captured_same_facts_AND():
         FIRE    2 test_clips: f-1,f-1
 
     """
-    from pyknow.rule import Rule
-    from pyknow.fact import Fact, L, V
+    from pyknow import Rule
+    from pyknow import Fact, L, V
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):
@@ -644,8 +644,8 @@ def test_matching_captured_different_facts_NOT_positive():
     Positive test (returning activation because there were
     NO matches (the NOT is therefore executed).
     """
-    from pyknow.rule import Rule, NOT
-    from pyknow.fact import Fact, L, V
+    from pyknow import Rule, NOT
+    from pyknow import Fact, L, V
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):
@@ -675,8 +675,8 @@ def test_matching_captured_different_facts_NOT_negative():
     Negative test (returning no activation because there were
     matches (the NOT is therefore not executed).
     """
-    from pyknow.rule import Rule, NOT
-    from pyknow.fact import Fact, L, V
+    from pyknow import Rule, NOT
+    from pyknow import Fact, L, V
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):
@@ -700,8 +700,8 @@ def test_matching_captured_different_facts_NOT_negative():
 
 
 def test_and_N_positive():
-    from pyknow.rule import Rule, NOT
-    from pyknow.fact import Fact, L, V
+    from pyknow import Rule, NOT
+    from pyknow import Fact, L, V
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):
@@ -725,8 +725,8 @@ def test_and_N_positive():
 
 
 def test_and_N_negative():
-    from pyknow.rule import Rule, NOT
-    from pyknow.fact import Fact, L, V
+    from pyknow import Rule, NOT
+    from pyknow import Fact, L, V
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):
@@ -750,8 +750,8 @@ def test_and_N_negative():
 
 
 def test_not_aggreation():
-    from pyknow.rule import Rule, NOT, AND
-    from pyknow.fact import Fact, L, V
+    from pyknow import Rule, NOT, AND
+    from pyknow import Fact, L, V
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):

@@ -6,20 +6,17 @@
 from inspect import getmembers
 import logging
 
-from collections import namedtuple
+from pyknow import abstract
+
 from pyknow.agenda import Agenda
 from pyknow.fact import InitialFact
 from pyknow.factlist import FactList
 from pyknow.rule import Rule
-from pyknow.strategies import Depth
-from pyknow.rete import ReteMatcher
-from pyknow.abstract import AbstractMatcher
 
-Rete = namedtuple("object", "obj")
+from pyknow.strategies import DepthStrategy
+from pyknow.rete import ReteMatcher
 
 logging.basicConfig()
-
-# pylint: disable=too-many-instance-attributes
 
 
 class KnowledgeEngine:
@@ -32,53 +29,24 @@ class KnowledgeEngine:
     This could be considered, when inherited from, as the
     ``knowlege-base``.
     """
-
-    __strategy__ = Depth
-    __matcher__ = ReteMatcher
+    from pyknow.matchers import ReteMatcher as __matcher__
+    from pyknow.strategies import DepthStrategy as __strategy__
 
     def __init__(self):
         self._fixed_facts = []
         self.running = False
-        self._parent = False
-        self.shared_attributes = {}
-        self.matcher = self.__matcher__(self)
-        if not isinstance(self.matcher, AbstractMatcher):
-            raise TypeError("Matcher must implement AbstractMatcher")
         self.facts = FactList()
         self.agenda = Agenda()
-        self.strategy = self.__strategy__()
 
-    def __repr__(self):
-        return "{}({})".format(self.__class__.__name__, self.shared_attributes)
+        if not isinstance(self.__matcher__, abstract.Matcher):
+            raise TypeError("__matcher__ must be a subclass of Matcher")
+        else:
+            self.matcher = self.__matcher__(self)
 
-    def set_shared_attributes(self, **shared_attributes):
-        """
-        Stablises a dict with shared attributes to be used
-        by this KE's childs on a tree
-        """
-
-        self.shared_attributes.update(shared_attributes)
-
-    @property
-    def parent(self):
-        """
-        Parent Knowledge Engine. Used in tree-like KEs.
-        :return: KnowledgeEngine
-        """
-
-        return self._parent
-
-    @parent.setter
-    def parent(self, parent):
-        """
-        Set a parent for later use.
-        It must inherit from ``pyknow.engine.KnowledgeEngine``
-        """
-
-        if not isinstance(parent, KnowledgeEngine):
-            raise ValueError("Parent must descend from KnowledgeEngine")
-
-        self._parent = parent
+        if not isinstance(self.__strategy__, abstract.Strategy):
+            raise TypeError("__strategy__ must be a subclass of Strategy")
+        else:
+            self.strategy = self.__strategy__()
 
     def deffacts(self, *facts):
         """

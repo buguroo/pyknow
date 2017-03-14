@@ -61,7 +61,7 @@ def test_Depth_update_agenda_no_facts_returns_empty_agenda():
 def test_Depth_update_agenda_activations_to_agenda():
     from pyknow.strategies import Depth
     from pyknow.activation import Activation
-    from pyknow.rule import Rule
+    from pyknow import Rule
     from pyknow.agenda import Agenda
 
     act1 = Activation(rule=Rule(), facts=(1, ))
@@ -79,7 +79,7 @@ def test_Depth_update_agenda_activations_to_agenda():
 def test_Depth_update_agenda_asertion_order_affects_agenda_order_1():
     from pyknow.strategies import Depth
     from pyknow.activation import Activation
-    from pyknow.rule import Rule
+    from pyknow import Rule
     from pyknow.agenda import Agenda
 
     act1 = Activation(rule=Rule(), facts=(1, ))
@@ -106,7 +106,7 @@ def test_Depth_update_agenda_asertion_order_affects_agenda_order_1():
 def test_Depth_update_agenda_asertion_order_affects_agenda_order_2():
     from pyknow.strategies import Depth
     from pyknow.activation import Activation
-    from pyknow.rule import Rule
+    from pyknow import Rule
     from pyknow.agenda import Agenda
 
     act1 = Activation(rule=Rule(), facts=(1, ))
@@ -135,7 +135,7 @@ def test_Depth_update_agenda_different_salience():
 
     from pyknow.strategies import Depth
     from pyknow.activation import Activation
-    from pyknow.rule import Rule
+    from pyknow import Rule
     from pyknow.agenda import Agenda
 
     act1 = Activation(rule=Rule(salience=1), facts=(1, ))
@@ -161,7 +161,7 @@ def test_Depth_update_agenda_different_salience():
 def test_Strategy_update_agenda_doesnt_add_executed_activations(strategy):
     from pyknow import strategies
     from pyknow.activation import Activation
-    from pyknow.rule import Rule
+    from pyknow import Rule
     from pyknow.agenda import Agenda
 
     act1 = Activation(rule=Rule(), facts=(1, ))
@@ -183,7 +183,7 @@ def test_Strategy_update_agenda_doesnt_add_executed_activations(strategy):
 def test_Strategy_update_agenda_update_executed(strategy):
     from pyknow import strategies
     from pyknow.activation import Activation
-    from pyknow.rule import Rule
+    from pyknow import Rule
     from pyknow.agenda import Agenda
 
     act1 = Activation(rule=Rule(), facts=(1, ))

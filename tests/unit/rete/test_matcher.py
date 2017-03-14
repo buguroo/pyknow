@@ -1,6 +1,6 @@
 import pytest
 
-from pyknow.abstract import AbstractMatcher
+from pyknow import abstract
 
 
 @pytest.mark.wip
@@ -15,7 +15,7 @@ def test_retematcher_exists():
 def test_retematcher_is_matcher():
     from pyknow.rete import ReteMatcher
 
-    assert issubclass(ReteMatcher, AbstractMatcher)
+    assert issubclass(ReteMatcher, abstract.Matcher)
 
 
 @pytest.mark.wip

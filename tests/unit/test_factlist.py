@@ -38,7 +38,7 @@ def test_factlist_declare_raises_valueError():
 def test_factlist_declare():
     """ Test declare method adds to factlist and updates index """
     from pyknow.factlist import FactList
-    from pyknow.fact import Fact
+    from pyknow import Fact
     flist = FactList()
     assert getattr(flist, "_fidx") == 0
     assert not flist.facts
@@ -51,7 +51,7 @@ def test_factlist_retract():
     """ Test retract method """
 
     from pyknow.factlist import FactList
-    from pyknow.fact import Fact
+    from pyknow import Fact
     flist = FactList()
     assert getattr(flist, "_fidx") == 0
     assert not flist.facts
@@ -66,7 +66,7 @@ def test_factlist_retract_matching():
     """ Test retract_matching method """
 
     from pyknow.factlist import FactList
-    from pyknow.fact import Fact
+    from pyknow import Fact
     flist = FactList()
     assert getattr(flist, "_fidx") == 0
     assert not flist.facts
@@ -81,7 +81,7 @@ def test_factlist_changes():
     """ Test factlist changes """
 
     from pyknow.factlist import FactList
-    from pyknow.fact import Fact
+    from pyknow import Fact
     flist = FactList()
 
     flist.declare(Fact(a=1))
