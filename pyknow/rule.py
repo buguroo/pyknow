@@ -9,6 +9,7 @@ special case implemented in :mod:`pyknow.fact`.
 """
 from collections.abc import Callable
 from functools import update_wrapper
+from itertools import chain
 
 from pyknow.watchers import RULE_WATCHER
 
@@ -65,8 +66,36 @@ class Rule(ConditionalElement):
 
             return self.__fn(self, **kwargs)
 
+    def __repr__(self):
+        return "%s => %r" % (super().__repr__(), self.__fn)
 
-class AND(ConditionalElement):
+
+class ComposableCE:
+    def __and__(self, other):
+        if isinstance(self, AND) and isinstance(other, AND):
+            return AND(*[x for x in chain(self, other)])
+        elif isinstance(self, AND):
+            return AND(*[x for x in self]+[other])
+        elif isinstance(other, AND):
+            return AND(*[self]+[x for x in other])
+        else:
+            return AND(self, other)
+
+    def __or__(self, other):
+        if isinstance(self, OR) and isinstance(other, OR):
+            return OR(*[x for x in chain(self, other)])
+        elif isinstance(self, OR):
+            return OR(*[x for x in self]+[other])
+        elif isinstance(other, OR):
+            return OR(*[self]+[x for x in other])
+        else:
+            return OR(self, other)
+
+    def __invert__(self):
+        return NOT(self)
+
+
+class AND(ComposableCE, ConditionalElement):
     """
     ``AND CE``
     ----------
@@ -77,7 +106,7 @@ class AND(ConditionalElement):
     pass
 
 
-class OR(ConditionalElement):
+class OR(ComposableCE, ConditionalElement):
     """
     ``Or CE``
     ---------
@@ -87,7 +116,7 @@ class OR(ConditionalElement):
     pass
 
 
-class NOT(ConditionalElement):
+class NOT(ComposableCE, ConditionalElement):
     """
     ``NOT CE``
     ----------
@@ -97,15 +126,33 @@ class NOT(ConditionalElement):
     pass
 
 
-class PatternConditionalElement(ConditionalElement):
+class ComposablePCE:
     def __and__(self, other):
-        return ANDPCE(self, other)
+        if isinstance(self, ANDPCE) and isinstance(other, ANDPCE):
+            return ANDPCE(*[x for x in chain(self, other)])
+        elif isinstance(self, ANDPCE):
+            return ANDPCE(*[x for x in self]+[other])
+        elif isinstance(other, ANDPCE):
+            return ANDPCE(*[self]+[x for x in other])
+        else:
+            return ANDPCE(self, other)
 
     def __or__(self, other):
-        return ORPCE(self, other)
+        if isinstance(self, ORPCE) and isinstance(other, ORPCE):
+            return ORPCE(*[x for x in chain(self, other)])
+        elif isinstance(self, ORPCE):
+            return ORPCE(*[x for x in self]+[other])
+        elif isinstance(other, ORPCE):
+            return ORPCE(*[self]+[x for x in other])
+        else:
+            return ORPCE(self, other)
 
     def __invert__(self):
         return NOTPCE(self)
+
+
+class PatternConditionalElement(ComposablePCE, ConditionalElement):
+    pass
 
 
 class ANDPCE(PatternConditionalElement):

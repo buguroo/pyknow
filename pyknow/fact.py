@@ -8,9 +8,10 @@ from collections import OrderedDict
 import operator as op
 
 from pyknow.rule import PatternConditionalElement, LiteralPCE
+from pyknow.rule import AND, OR, NOT, ComposableCE
 
 
-class Fact(OrderedDict):
+class Fact(ComposableCE, OrderedDict):
     """
     Base Fact class
 
