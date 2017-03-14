@@ -1,74 +1,63 @@
 """
-
 Definitions of clips' ``Pattern Conditional Element``.
 
 See :ref:conditional_elements
 
 """
-# pylint: disable=invalid-name, unnecessary-lambda
-# pylint: disable=no-self-use
+from collections import OrderedDict
+import operator as op
 
-from collections import namedtuple
-from attrdict import AttrDict
-
-
-FactType = namedtuple("FactType", "value")
+from pyknow.rule import PatternConditionalElement, LiteralPCE
 
 
-class T(FactType):
-    """
-    Test (``T`` FactType).
-
-    Evaluates against a callable.
-
-    That is:
-
-    T(lambda x: "foo") == L("foo")
-    T(lambda x: x.startswith("asdf") == L("asdffoo")
-    """
-    pass
-
-
-class V(FactType):
-    """
-    Captured values ``FactType``
-    Grabs a context to be evaluated later
-    """
-    pass
-
-
-class W(FactType):
-    """
-    Wildcard ``FactType``
-
-    If its value is True, returns True whenever the key is
-    found in the other fact.
-
-    If value is False, returns false whenever the key is found
-    in the other fact.
-    """
-
-    pass
-
-
-class L(FactType):
-    pass
-
-
-class Fact(AttrDict):
+class Fact(OrderedDict):
     """
     Base Fact class
+
     """
+    @staticmethod
+    def arg_to_ce(arg):
+        if not isinstance(arg, PatternConditionalElement):
+            return LiteralPCE(arg)
+        else:
+            return arg
 
-    # pylint: disable=too-few-public-methods
+    def __init__(self, *args, **kwargs):
+        super(Fact, self).__init__()
 
-    def __hash__(self):
-        return hash(tuple(set(self.items())))
+        for idx, arg in enumerate(args):
+            self[idx] = self.arg_to_ce(arg)
+
+        for key, value in sorted(kwargs.items(), key=op.itemgetter(0)):
+            if key.isidentifier():
+                self[key] = self.arg_to_ce(value)
+            else:
+                raise ValueError("{!r} is not a valid identifier.".format(key))
+
+    @classmethod
+    def from_iter(cls, pairs):
+        obj = cls()
+
+        for k, v in pairs:
+            obj[k] = v
+
+        return obj
 
     def __repr__(self):
         return "{}({})".format(
             self.__class__.__name__,
-            ",".join(["{}={}".format(k, v) for k, v in self.items()]))
+            ", ".join(
+                (repr(v) if isinstance(k, int) else "{}={!r}".format(k, v)
+                 for k, v in self.items())))
+
+    def __hash__(self):
+        return hash(frozenset(self.items()))
+
+    def __eq__(self, other):
+        if type(self) == type(other):
+            return hash(self) == hash(other)
+        else:
+            return False
 
 
 class InitialFact(Fact):
