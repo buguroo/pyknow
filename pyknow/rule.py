@@ -32,7 +32,7 @@ class Rule(ConditionalElement):
     to be called twice:
 
     #. The first call is when the decorator is been created. At this
-       point we assign the function decorated to ``self.__fn`` and
+       point we assign the function decorated to ``self._wrapped`` and
        return ``self`` to be called the second time.
 
     #. The second call is to execute the decorated function, se we
@@ -42,7 +42,7 @@ class Rule(ConditionalElement):
     def __new__(cls, *args, salience=0):
         obj = super(Rule, cls).__new__(cls, *args)
 
-        obj.__fn = None
+        obj._wrapped = None
         obj.salience = salience
 
         RULE_WATCHER.debug("Initialized rule : %r", obj)
@@ -54,20 +54,20 @@ class Rule(ConditionalElement):
         Make method checks if it's the first call, and update wrapper.
         Othersise execute the RHS.
         """
-        if self.__fn is None and fst is None:
+        if self._wrapped is None and fst is None:
             raise AttributeError("Mandatory function not provided.")
 
-        if self.__fn is None and fst is not None:
-            self.__fn = fst
-            return update_wrapper(self, self.__fn)
+        if self._wrapped is None and fst is not None:
+            self._wrapped = fst
+            return update_wrapper(self, self._wrapped)
         else:
             RULE_WATCHER.debug("Executing %s for rule %s, with context %s",
-                               self.__fn.__name__, self, kwargs)
+                               self._wrapped.__name__, self, kwargs)
 
-            return self.__fn(self, **kwargs)
+            return self._wrapped(self, **kwargs)
 
     def __repr__(self):
-        return "%s => %r" % (super().__repr__(), self.__fn)
+        return "%s => %r" % (super().__repr__(), self._wrapped)
 
 
 class ComposableCE:
@@ -186,6 +186,15 @@ class WildcardPCE(PatternConditionalElement):
             obj = super(WildcardPCE, cls).__new__(cls, *args)
             obj.bind_to = bind_to
             return obj
+
+    def __hash__(self):
+        return hash(self.bind_to)
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.bind_to == other.bind_to
+
+    def __repr__(self):
+        return "W()" if self.bind_to is None else "W(bind_to=%r)" % self.bind_to
 
 
 class PredicatePCE(PatternConditionalElement):

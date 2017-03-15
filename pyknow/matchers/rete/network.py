@@ -17,19 +17,6 @@ from .dnf import dnf
 from pyknow.fact import Fact
 from pyknow.rule import Rule, NOT, AND
 
-PRIORITIES = [1000, 100, 10]
-FIRST, SECOND, THIRD = PRIORITIES
-
-
-def get_callable(key, value):
-    """
-    Return compare method for specific class, defaults to literal
-    comparision
-    """
-    name = value.__class__.__name__
-    getter = getattr(callables, "match_{}".format(name), callables.match_L)
-    return getter(key, value)
-
 
 class EngineWalker:
     """

@@ -24,12 +24,13 @@ def dnf(exp):
 
 @dnf.register(Rule)
 def _(exp):
-    last, current = None, Rule(*[dnf(e) for e in exp])
+    last, current = None, Rule(*[dnf(e) for e in exp])(exp._wrapped)
 
     while last != current:
-        last, current = current, Rule(*[dnf(e) for e in current])
+        last, current = (current,
+                         Rule(*[dnf(e) for e in current])(current._wrapped))
 
-    return Rule(*unpack_exp(current, AND))
+    return Rule(*unpack_exp(current, AND))(current._wrapped)
 
 
 @dnf.register(NOT)
