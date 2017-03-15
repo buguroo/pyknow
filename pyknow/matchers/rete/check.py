@@ -5,10 +5,14 @@ import dis
 from pyknow.rule import PatternConditionalElement
 from pyknow.rule import LiteralPCE, PredicatePCE, WildcardPCE
 from pyknow.rule import ANDPCE, ORPCE, NOTPCE
+from .abstract import Check
 
 
-class TypeCheck(namedtuple('_TypeCheck', ['fact_type'])):
+class TypeCheck(Check,
+                namedtuple('_TypeCheck', ['fact_type'])):
+
     _instances = dict()
+
     def __new__(cls, fact_type):
         if not fact_type in cls._instances:
             cls._instances[fact_type] = super().__new__(cls, fact_type)
@@ -18,8 +22,11 @@ class TypeCheck(namedtuple('_TypeCheck', ['fact_type'])):
         return type(fact) == self.fact_type
 
 
-class Check(namedtuple('_Check', ['what', 'how', 'check', 'lhs'])):
+class FeatureCheck(Check,
+                   namedtuple('_Check', ['what', 'how', 'check', 'lhs'])):
+
     _instances = dict()
+
     def __new__(cls, what, how):
         if not isinstance(how, PatternConditionalElement):
             raise TypeError(

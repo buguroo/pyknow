@@ -2,9 +2,9 @@ import pytest
 
 
 @pytest.mark.wip
-def test_abstractnodes_exists():
+def test_node_exists():
     try:
-        from pyknow.matchers.rete.abstract import AbstractNode
+        from pyknow.matchers.rete.abstract import Node
         from pyknow.matchers.rete.abstract import OneInputNode
         from pyknow.matchers.rete.abstract import TwoInputNode
     except ImportError as exc:
@@ -12,10 +12,10 @@ def test_abstractnodes_exists():
 
 
 @pytest.mark.wip
-def test_abstractnode_interface():
-    from pyknow.matchers.rete.abstract import AbstractNode
+def test_node_interface():
+    from pyknow.matchers.rete.abstract import Node
 
-    assert {'_reset', 'add_child'} <= AbstractNode.__abstractmethods__
+    assert {'_reset', 'add_child'} <= Node.__abstractmethods__
 
 
 @pytest.mark.wip

@@ -14,13 +14,13 @@ from pyknow.rule import Rule
 from pyknow.watchers import MATCH_WATCHER
 
 from . import mixins
-from .abstract import AbstractNode, OneInputNode, TwoInputNode
+from .abstract import Node, OneInputNode, TwoInputNode
 from .token import Token
 
 
 class BusNode(mixins.AnyChild,
               mixins.NoMemory,
-              AbstractNode):
+              Node):
     """
     The Bus Node.
 

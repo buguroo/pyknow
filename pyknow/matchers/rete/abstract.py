@@ -2,7 +2,7 @@
 import abc
 
 
-class AbstractNode(metaclass=abc.ABCMeta):
+class Node(metaclass=abc.ABCMeta):
     """Node interface."""
 
     def __init__(self):
@@ -27,7 +27,7 @@ class AbstractNode(metaclass=abc.ABCMeta):
         pass
 
 
-class OneInputNode(AbstractNode):
+class OneInputNode(Node):
     """Nodes which only have one input port."""
 
     def activate(self, token):
@@ -40,7 +40,7 @@ class OneInputNode(AbstractNode):
         pass
 
 
-class TwoInputNode(AbstractNode):
+class TwoInputNode(Node):
     """Nodes which have two input ports: left and right."""
 
     def activate_left(self, token):
@@ -59,4 +59,19 @@ class TwoInputNode(AbstractNode):
     @abc.abstractproperty
     def _activate_right(self, token):
         """Node right activation routine."""
+        pass
+
+
+class Check(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def __call__(self, fact):
+        """
+        Given a `Fact` or a subclass of `Fact`, return:
+
+            * `True` if the check matched.
+            * `False` if the check didn't match.
+            * A non empty `Mapping` meaning the check matched and yield
+              some context.
+
+        """
         pass

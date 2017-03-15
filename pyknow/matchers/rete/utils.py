@@ -1,6 +1,6 @@
 from functools import singledispatch
 from .dnf import dnf
-from .checks import Check, TypeCheck
+from .check import FeatureCheck, TypeCheck
 from .nodes import ConflictSetNode, NotNode, OrdinaryMatchNode
 from pyknow import Rule, InitialFact, NOT, OR, Fact, AND
 from pyknow.rule import ConditionalElement
@@ -77,7 +77,7 @@ def generate_checks(fact):
     """Given a fact, generate a list of Check objects for checking it."""
     yield TypeCheck(type(fact))
     for key, value in fact.items():
-        yield Check(key, value)
+        yield FeatureCheck(key, value)
 
 
 def wire_rule(rule, alpha_terminals, lhs=None):
