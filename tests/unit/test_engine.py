@@ -2,6 +2,8 @@
 Engine tests
 """
 
+import pytest
+
 from hypothesis import given
 from hypothesis import strategies as st
 
@@ -105,16 +107,16 @@ def test_KnowledgeEngine_agenda_is_Agenda():
 
 def test_KnowledgeEngine_default_strategy_is_Depth():
     from pyknow.engine import KnowledgeEngine
-    from pyknow.strategies import Depth
+    from pyknow.strategies import DepthStrategy
 
-    assert KnowledgeEngine.__strategy__ is Depth
+    assert KnowledgeEngine.__strategy__ is DepthStrategy
 
 
 def test_KnowledgeEngine_default_strategy_is_Depth_instance():
     from pyknow.engine import KnowledgeEngine
-    from pyknow.strategies import Depth
+    from pyknow.strategies import DepthStrategy
 
-    assert isinstance(KnowledgeEngine().strategy, Depth)
+    assert isinstance(KnowledgeEngine().strategy, DepthStrategy)
 
 
 def test_KnowledgeEngine_has_get_rules_property():
@@ -165,6 +167,7 @@ def test_KnowledgeEngine_get_activations_returns_a_list():
     assert isinstance(ke.get_activations(), list)
 
 
+@pytest.mark.wip
 def test_KnowledgeEngine_get_activations_returns_activations():
     from pyknow.engine import KnowledgeEngine
     from pyknow import Rule
@@ -178,10 +181,11 @@ def test_KnowledgeEngine_get_activations_returns_activations():
             pass
 
     ke = Test()
+    ke.reset()
+    ke.run()
     ke.declare(Fact(a=L(1)))
     ke.declare(Fact(b=L(1)))
     activations = list(ke.get_activations())
-    print(ke.agenda.activations)
     assert len(activations) == 1
 
 

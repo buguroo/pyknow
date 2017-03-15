@@ -13,9 +13,6 @@ from pyknow.fact import InitialFact
 from pyknow.factlist import FactList
 from pyknow.rule import Rule
 
-from pyknow.strategies import DepthStrategy
-from pyknow.rete import ReteMatcher
-
 logging.basicConfig()
 
 
@@ -38,12 +35,12 @@ class KnowledgeEngine:
         self.facts = FactList()
         self.agenda = Agenda()
 
-        if not isinstance(self.__matcher__, abstract.Matcher):
+        if not issubclass(self.__matcher__, abstract.Matcher):
             raise TypeError("__matcher__ must be a subclass of Matcher")
         else:
             self.matcher = self.__matcher__(self)
 
-        if not isinstance(self.__strategy__, abstract.Strategy):
+        if not issubclass(self.__strategy__, abstract.Strategy):
             raise TypeError("__strategy__ must be a subclass of Strategy")
         else:
             self.strategy = self.__strategy__()
@@ -120,21 +117,20 @@ class KnowledgeEngine:
             self.agenda.remove_from_fact(idx)
         self.strategy.update_agenda(self.agenda, self.get_activations())
 
-    def run(self, steps=None):
+    def run(self, steps=float('inf')):
         """
         Execute agenda activations
         """
 
         self.running = True
-        while steps is None or steps > 0:
+        while steps > 0:
             activation = self.agenda.get_next()
+            print(activation)
             if activation is None:
                 break
             else:
-                if steps is not None:
-                    steps -= 1
-                activation.rule(self, activation=activation)
-        self.running = False
+                steps -= 1
+                activation.rule(self, **activation.context)
 
     def reset(self):
         """
@@ -151,6 +147,7 @@ class KnowledgeEngine:
         self.load_initial_facts()
         activations = self.get_activations()
         self.strategy.update_agenda(self.agenda, activations)
+        self.running = False
 
     def __declare(self, *facts):
         """

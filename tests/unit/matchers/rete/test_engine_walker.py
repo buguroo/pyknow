@@ -30,7 +30,7 @@ def test_alpha_network_first_is_class_check():
 @pytest.mark.wip
 def test_alpha_network_get_callables_L():
     from pyknow.fact import Fact
-    from pyknow.rete.network import EngineWalker
+    from pyknow.matchers.rete import EngineWalker
     expected = ['same_class', 'compatible_facts', 'has_key', 'match_L']
     callables = EngineWalker.get_callables(Fact(a=1))
     callable_names = [get_func_name(a) for a in callables]
@@ -40,7 +40,7 @@ def test_alpha_network_get_callables_L():
 @pytest.mark.wip
 def test_alpha_network_get_callables_W():
     from pyknow.fact import Fact, W
-    from pyknow.rete.network import EngineWalker
+    from pyknow.matchers.rete import EngineWalker
     expected = ['same_class', 'compatible_facts', 'has_key', 'match_W']
     callables = EngineWalker.get_callables(Fact(a=W(True)))
     callable_names = [get_func_name(a) for a in callables]
@@ -50,7 +50,7 @@ def test_alpha_network_get_callables_W():
 @pytest.mark.wip
 def test_alpha_network_get_callables_T():
     from pyknow.fact import Fact, T
-    from pyknow.rete.network import EngineWalker
+    from pyknow.matchers.rete import EngineWalker
     expected = ['same_class', 'compatible_facts', 'has_key', 'match_T']
     callables = EngineWalker.get_callables(Fact(a=T(lambda x: x)))
     callable_names = [get_func_name(a) for a in callables]
@@ -60,11 +60,11 @@ def test_alpha_network_get_callables_T():
 @pytest.mark.wip
 def test_get_alpha_branch():
     from collections import namedtuple
-    from pyknow.rete.network import EngineWalker
+    from pyknow.matchers.rete import EngineWalker
     from pyknow.rule import Rule
     from pyknow.fact import Fact
     from pyknow.engine import KnowledgeEngine
-    from pyknow.rete.nodes import BusNode
+    from pyknow.matchers.rete.nodes import BusNode
 
     executions = []
 
@@ -101,11 +101,11 @@ def test_get_alpha_branch():
 
 @pytest.mark.wip
 def test_get_node():
-    from pyknow.rete.network import EngineWalker
+    from pyknow.matchers.rete import EngineWalker
     from pyknow.engine import KnowledgeEngine
     from pyknow.fact import Fact
     from unittest.mock import patch
-    from pyknow.rete.nodes import BusNode
+    from pyknow.matchers.rete.nodes import BusNode
 
     with patch.object(EngineWalker, "get_alpha_branch",
                       return_value=[]) as mock:
@@ -119,7 +119,7 @@ def test_network_generation():
     from pyknow.engine import KnowledgeEngine
     from pyknow.rule import Rule
     from pyknow.fact import Fact
-    from pyknow.rete.nodes import ConflictSetNode
+    from pyknow.matchers.rete.nodes import ConflictSetNode
 
     class FooEngine(KnowledgeEngine):
         @Rule(Fact(a=1))

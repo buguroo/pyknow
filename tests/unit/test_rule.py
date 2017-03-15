@@ -116,11 +116,12 @@ def test_Rule_decorator_store_salience():
     assert myfunction.salience == 10
 
 
-@pytest.mark.wip
 def test_rule_is_iterable():
     from pyknow import Rule
     from pyknow import Fact
 
-    rule_ = Rule(Fact(a=1), Fact(a=2))
+    rule_ = iter(Rule(Fact(a=1), Fact(a=2)))
     assert next(rule_) == Fact(a=1)
     assert next(rule_) == Fact(a=2)
+    with pytest.raises(StopIteration):
+        assert next(rule_)

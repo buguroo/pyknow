@@ -10,12 +10,12 @@ root node, fill the RETE network starting on the root node.
 from contextlib import suppress
 from operator import itemgetter
 
+from . import callables
+from .nodes import ConflictSetNode, NotNode
+from .nodes import FeatureTesterNode, OrdinaryMatchNode
+from .dnf import dnf
 from pyknow.fact import Fact
-from pyknow.rete.nodes import FeatureTesterNode, OrdinaryMatchNode
-from pyknow.rete.nodes import ConflictSetNode, NotNode
 from pyknow.rule import Rule, NOT, AND
-from pyknow.rete.network.dnf import dnf
-from pyknow.rete.network import callables
 
 PRIORITIES = [1000, 100, 10]
 FIRST, SECOND, THIRD = PRIORITIES
@@ -49,23 +49,20 @@ class EngineWalker:
         - Same fact class
         - Its keys are a subset of the other fact's keys
           Only if it does not contain any wildcard.
-        - Has its key (if not W mode)
         - Specific condition depending on the fact content.
           - T -> Calls a given callable
           - None (Default) -> Direct value comparision
-          - W -> W(True), the key should be in the fact,
-                 W(False) the key should not be in the fact.
           - C -> Context comparision
         """
 
         yield callables.same_class(fact), FIRST
 
-        if not any(isinstance(v.__class__, W) for v in fact.values()):
-            yield callables.compatible_facts(fact), SECOND
+        # if not any(isinstance(v.__class__, W) for v in fact.values()):
+        #     yield callables.compatible_facts(fact), SECOND
 
         for key, value in fact.items():
-            if not isinstance(value.__class__, W):
-                yield callables.has_key(key), SECOND  # NOQA
+            # if not isinstance(value.__class__, W):
+            #     yield callables.has_key(key), SECOND  # NOQA
             yield get_callable(key, value), THIRD
 
     def get_alpha_branch(self, alpha_cls, fact):

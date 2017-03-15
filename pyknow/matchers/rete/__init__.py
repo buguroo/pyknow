@@ -10,7 +10,7 @@ a more pythonic approach.
 """
 from functools import lru_cache
 
-from pyknow.rete.network import EngineWalker
+from .network import EngineWalker
 from .nodes import BusNode, ConflictSetNode
 from pyknow.abstract import Matcher
 

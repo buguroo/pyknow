@@ -4,22 +4,22 @@ import pytest
 @pytest.mark.wip
 def test_featuretesternode_exists():
     try:
-        from pyknow.rete.nodes import FeatureTesterNode
+        from pyknow.matchers.rete.nodes import FeatureTesterNode
     except ImportError as exc:
         assert False, exc
 
 
 @pytest.mark.wip
 def test_featuretesternode_is_oneinputnode():
-    from pyknow.rete.nodes import FeatureTesterNode
-    from pyknow.rete.abstract import OneInputNode
+    from pyknow.matchers.rete.nodes import FeatureTesterNode
+    from pyknow.matchers.rete.abstract import OneInputNode
 
     assert issubclass(FeatureTesterNode, OneInputNode)
 
 
 @pytest.mark.wip
 def test_featuretesternode_accepts_callable():
-    from pyknow.rete.nodes import FeatureTesterNode
+    from pyknow.matchers.rete.nodes import FeatureTesterNode
 
     # MUST NOT RAISE
     FeatureTesterNode(lambda x: True)
@@ -30,8 +30,8 @@ def test_featuretesternode_accepts_callable():
 
 @pytest.mark.wip
 def test_featuretesternode_pass_when_callable_succeed(TestNode):
-    from pyknow.rete.nodes import FeatureTesterNode
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete.nodes import FeatureTesterNode
+    from pyknow.matchers.rete.token import Token
     from pyknow.fact import Fact
 
     ftn = FeatureTesterNode(lambda f: True)
@@ -50,8 +50,8 @@ def test_featuretesternode_pass_when_callable_succeed(TestNode):
 
 @pytest.mark.wip
 def test_featuretesternode_pass_when_callable_fail(TestNode):
-    from pyknow.rete.nodes import FeatureTesterNode
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete.nodes import FeatureTesterNode
+    from pyknow.matchers.rete.token import Token
     from pyknow.fact import Fact
 
     ftn = FeatureTesterNode(lambda f: False)
@@ -70,8 +70,8 @@ def test_featuretesternode_pass_when_callable_fail(TestNode):
 
 @pytest.mark.wip
 def test_featuretesternode_pass_when_callable_adds_context(TestNode):
-    from pyknow.rete.nodes import FeatureTesterNode
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete.nodes import FeatureTesterNode
+    from pyknow.matchers.rete.token import Token
     from pyknow.fact import Fact
 
     ftn = FeatureTesterNode(lambda f: {'something': True})
@@ -93,8 +93,8 @@ def test_featuretesternode_pass_when_callable_adds_context(TestNode):
 
 @pytest.mark.wip
 def test_featuretesternode_pass_when_callable_modify_context(TestNode):
-    from pyknow.rete.nodes import FeatureTesterNode
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete.nodes import FeatureTesterNode
+    from pyknow.matchers.rete.token import Token
     from pyknow.fact import Fact
 
     ftn = FeatureTesterNode(lambda f: {'something': True})
@@ -116,8 +116,8 @@ def test_featuretesternode_pass_when_callable_modify_context(TestNode):
 
 @pytest.mark.wip
 def test_featuretesternode_pass_when_callable_dont_modify_context(TestNode):
-    from pyknow.rete.nodes import FeatureTesterNode
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete.nodes import FeatureTesterNode
+    from pyknow.matchers.rete.token import Token
     from pyknow.fact import Fact
 
     ftn = FeatureTesterNode(lambda f: {'something': True})
@@ -139,8 +139,8 @@ def test_featuretesternode_pass_when_callable_dont_modify_context(TestNode):
 
 @pytest.mark.wip
 def test_featuretesternode_pass_fact_to_matcher():
-    from pyknow.rete.nodes import FeatureTesterNode
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete.nodes import FeatureTesterNode
+    from pyknow.matchers.rete.token import Token
     from pyknow.fact import Fact
 
     fact = Fact(this_is_my_fact=True)

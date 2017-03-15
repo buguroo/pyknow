@@ -6,21 +6,21 @@ from pyknow import abstract
 @pytest.mark.wip
 def test_retematcher_exists():
     try:
-        from pyknow.rete import ReteMatcher
+        from pyknow.matchers.rete import ReteMatcher
     except ImportError as exc:
         assert False, exc
 
 
 @pytest.mark.wip
 def test_retematcher_is_matcher():
-    from pyknow.rete import ReteMatcher
+    from pyknow.matchers.rete import ReteMatcher
 
     assert issubclass(ReteMatcher, abstract.Matcher)
 
 
 @pytest.mark.wip
 def test_retematcher_is_not_abstract():
-    from pyknow.rete import ReteMatcher
+    from pyknow.matchers.rete import ReteMatcher
     from pyknow.engine import KnowledgeEngine
 
     # MUST NOT RAISE
@@ -29,9 +29,9 @@ def test_retematcher_is_not_abstract():
 
 @pytest.mark.wip
 def test_retematcher_has_root_node():
-    from pyknow.rete import ReteMatcher
+    from pyknow.matchers.rete import ReteMatcher
     from pyknow.engine import KnowledgeEngine
-    from pyknow.rete.nodes import BusNode
+    from pyknow.matchers.rete.nodes import BusNode
 
     matcher = ReteMatcher(KnowledgeEngine())
     assert hasattr(matcher, 'root_node')
@@ -42,8 +42,8 @@ def test_retematcher_has_root_node():
 def test_retematcher_changes_are_propagated(TestNode):
     from pyknow.engine import KnowledgeEngine
     from pyknow.fact import Fact
-    from pyknow.rete import ReteMatcher
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete import ReteMatcher
+    from pyknow.matchers.rete.token import Token
 
     matcher = ReteMatcher(KnowledgeEngine())
     tn1 = TestNode()
@@ -76,8 +76,8 @@ def test_retematcher_changes_return_activations_if_csn():
     from pyknow.fact import Fact
     from pyknow.rule import Rule
     from pyknow.activation import Activation
-    from pyknow.rete.nodes import ConflictSetNode
-    from pyknow.rete import ReteMatcher
+    from pyknow.matchers.rete.nodes import ConflictSetNode
+    from pyknow.matchers.rete import ReteMatcher
 
     matcher = ReteMatcher(KnowledgeEngine())
     rule = Rule()

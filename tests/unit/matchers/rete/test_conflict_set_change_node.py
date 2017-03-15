@@ -4,29 +4,29 @@ import pytest
 @pytest.mark.wip
 def test_conflictsetchange_exists():
     try:
-        from pyknow.rete.nodes import ConflictSetNode
+        from pyknow.matchers.rete.nodes import ConflictSetNode
     except ImportError as exc:
         assert False, exc
 
 
 @pytest.mark.wip
 def test_conflictsetchange_is_abstractnode():
-    from pyknow.rete.nodes import ConflictSetNode
-    from pyknow.rete.abstract import OneInputNode
+    from pyknow.matchers.rete.nodes import ConflictSetNode
+    from pyknow.matchers.rete.abstract import OneInputNode
 
     assert issubclass(ConflictSetNode, OneInputNode)
 
 
 @pytest.mark.wip
 def test_conflictsetchange_interface():
-    from pyknow.rete.nodes import ConflictSetNode
+    from pyknow.matchers.rete.nodes import ConflictSetNode
 
     assert hasattr(ConflictSetNode, 'get_activations')
 
 
 @pytest.mark.wip
 def test_conflictsetchange_accepts_rule():
-    from pyknow.rete.nodes import ConflictSetNode
+    from pyknow.matchers.rete.nodes import ConflictSetNode
     from pyknow.rule import Rule
 
     # MUST NOT RAISE
@@ -39,8 +39,8 @@ def test_conflictsetchange_accepts_rule():
 @pytest.mark.wip
 def test_conflictsetchange_valid_adds_to_memory():
     from pyknow.fact import Fact
-    from pyknow.rete.nodes import ConflictSetNode
-    from pyknow.rete.token import Token, TokenInfo
+    from pyknow.matchers.rete.nodes import ConflictSetNode
+    from pyknow.matchers.rete.token import Token, TokenInfo
     from pyknow.rule import Rule
 
     csn = ConflictSetNode(Rule())
@@ -55,8 +55,8 @@ def test_conflictsetchange_valid_adds_to_memory():
 @pytest.mark.wip
 def test_conflictsetchange_invalid_removes_from_memory():
     from pyknow.fact import Fact
-    from pyknow.rete.nodes import ConflictSetNode
-    from pyknow.rete.token import Token, TokenInfo
+    from pyknow.matchers.rete.nodes import ConflictSetNode
+    from pyknow.matchers.rete.token import Token, TokenInfo
     from pyknow.rule import Rule
 
     csn = ConflictSetNode(Rule())
@@ -71,8 +71,8 @@ def test_conflictsetchange_invalid_removes_from_memory():
 
 @pytest.mark.wip
 def test_conflictsetchange_get_activations_data():
-    from pyknow.rete.nodes import ConflictSetNode
-    from pyknow.rete.token import TokenInfo
+    from pyknow.matchers.rete.nodes import ConflictSetNode
+    from pyknow.matchers.rete.token import TokenInfo
     from pyknow.rule import Rule
     from pyknow.fact import Fact
     from pyknow.activation import Activation

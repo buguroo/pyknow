@@ -4,22 +4,22 @@ import pytest
 @pytest.mark.wip
 def test_notnode_exists():
     try:
-        from pyknow.rete.nodes import NotNode
+        from pyknow.matchers.rete.nodes import NotNode
     except ImportError as exc:
         assert False, exc
 
 
 @pytest.mark.wip
 def test_notnode_is_abstractnode():
-    from pyknow.rete.nodes import NotNode
-    from pyknow.rete.abstract import TwoInputNode
+    from pyknow.matchers.rete.nodes import NotNode
+    from pyknow.matchers.rete.abstract import TwoInputNode
 
     assert issubclass(NotNode, TwoInputNode)
 
 
 @pytest.mark.wip
 def test_notnode_accepts_callable():
-    from pyknow.rete.nodes import NotNode
+    from pyknow.matchers.rete.nodes import NotNode
 
     # MUST NOT RAISE
     NotNode(lambda l, r: True)
@@ -30,8 +30,8 @@ def test_notnode_accepts_callable():
 
 @pytest.mark.wip
 def test_notnode_left_activate_valid_empty_right(TestNode):
-    from pyknow.rete.nodes import NotNode
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete.nodes import NotNode
+    from pyknow.matchers.rete.token import Token
     from pyknow.fact import Fact
 
     nn = NotNode(lambda l, r: True)
@@ -51,8 +51,8 @@ def test_notnode_left_activate_valid_empty_right(TestNode):
 
 @pytest.mark.wip
 def test_notnode_left_activate_valid_non_matching(TestNode):
-    from pyknow.rete.nodes import NotNode
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete.nodes import NotNode
+    from pyknow.matchers.rete.token import Token
     from pyknow.fact import Fact
 
     nn = NotNode(lambda l, r: False)
@@ -75,8 +75,8 @@ def test_notnode_left_activate_valid_non_matching(TestNode):
 
 @pytest.mark.wip
 def test_notnode_left_activate_valid_matching(TestNode):
-    from pyknow.rete.nodes import NotNode
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete.nodes import NotNode
+    from pyknow.matchers.rete.token import Token
     from pyknow.fact import Fact
 
     nn = NotNode(lambda l, r: True)
@@ -98,8 +98,8 @@ def test_notnode_left_activate_valid_matching(TestNode):
 
 @pytest.mark.wip
 def test_notnode_right_activate_valid_empty(TestNode):
-    from pyknow.rete.nodes import NotNode
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete.nodes import NotNode
+    from pyknow.matchers.rete.token import Token
     from pyknow.fact import Fact
 
     nn = NotNode(lambda l, r: True)
@@ -119,8 +119,8 @@ def test_notnode_right_activate_valid_empty(TestNode):
 
 @pytest.mark.wip
 def test_notnode_right_activate_invalid_match_more_than_one(TestNode):
-    from pyknow.rete.nodes import NotNode
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete.nodes import NotNode
+    from pyknow.matchers.rete.token import Token
     from pyknow.fact import Fact
 
     nn = NotNode(lambda l, r: True)
@@ -143,8 +143,8 @@ def test_notnode_right_activate_invalid_match_more_than_one(TestNode):
 
 @pytest.mark.wip
 def test_notnode_right_activate_invalid_match_just_one(TestNode):
-    from pyknow.rete.nodes import NotNode
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete.nodes import NotNode
+    from pyknow.matchers.rete.token import Token
     from pyknow.fact import Fact
 
     nn = NotNode(lambda l, r: True)
@@ -167,8 +167,8 @@ def test_notnode_right_activate_invalid_match_just_one(TestNode):
 
 @pytest.mark.wip
 def test_notnode_right_activate_valid_match_more_than_one(TestNode):
-    from pyknow.rete.nodes import NotNode
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete.nodes import NotNode
+    from pyknow.matchers.rete.token import Token
     from pyknow.fact import Fact
 
     nn = NotNode(lambda l, r: True)
@@ -191,8 +191,8 @@ def test_notnode_right_activate_valid_match_more_than_one(TestNode):
 
 @pytest.mark.wip
 def test_notnode_right_activate_valid_match_just_one(TestNode):
-    from pyknow.rete.nodes import NotNode
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete.nodes import NotNode
+    from pyknow.matchers.rete.token import Token
     from pyknow.fact import Fact
 
     nn = NotNode(lambda l, r: True)

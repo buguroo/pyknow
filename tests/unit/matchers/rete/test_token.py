@@ -5,7 +5,7 @@ import pytest
 
 @pytest.mark.wip
 def test_token_is_namedtuple():
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete.token import Token
 
     assert issubclass(Token, tuple)
     assert 'tag' in Token._fields
@@ -15,7 +15,7 @@ def test_token_is_namedtuple():
 
 @pytest.mark.wip
 def test_token_tagtype():
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete.token import Token
 
     assert issubclass(Token.TagType, Enum)
     assert hasattr(Token.TagType, 'VALID')
@@ -31,7 +31,7 @@ def test_token_initialization_types():
         - An interable of Facts
 
     """
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete.token import Token
     from pyknow.fact import Fact
 
     with pytest.raises(TypeError):
@@ -59,7 +59,7 @@ def test_token_initialization_conversions():
         - An interable of Facts: Converter to a set of Facts.
 
     """
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete.token import Token
     from pyknow.fact import Fact
 
     t1 = Token(Token.TagType.VALID, Fact())
@@ -71,21 +71,21 @@ def test_token_initialization_conversions():
 
 @pytest.mark.wip
 def test_token_shortcut_valid():
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete.token import Token
 
     assert Token.valid([]) == Token(Token.TagType.VALID, [])
 
 
 @pytest.mark.wip
 def test_token_shortcut_invalid():
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete.token import Token
 
     assert Token.invalid([]) == Token(Token.TagType.INVALID, [])
 
 
 @pytest.mark.wip
 def test_token_copy_mutable():
-    from pyknow.rete.token import Token
+    from pyknow.matchers.rete.token import Token
 
     a = Token.valid([])
     b = a.copy()
