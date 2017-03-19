@@ -50,6 +50,22 @@ class Rule(ConditionalElement):
 
         return obj
 
+    def __hash__(self):
+        return hash(tuple(self) \
+                    + (self._wrapped, self._wrapped_self, self.salience))
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            self_data = tuple(self) + (self._wrapped,
+                                       self._wrapped_self,
+                                       self.salience)
+            other_data = tuple(other) + (other._wrapped,
+                                         other._wrapped_self,
+                                         other.salience)
+            return self_data == other_data
+        else:
+            return False
+
     def __call__(self, *args, **kwargs):
         """
         Make method checks if it's the first call, and update wrapper.

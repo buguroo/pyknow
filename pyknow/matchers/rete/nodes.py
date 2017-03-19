@@ -114,6 +114,9 @@ class FeatureTesterNode(mixins.AnyChild,
                     self.children, token)
                 child.callback(token)
 
+    def __repr__(self):
+        return repr(self.matcher)
+
 
 class OrdinaryMatchNode(mixins.AnyChild,
                         mixins.HasMatcher,
@@ -222,6 +225,9 @@ class ConflictSetNode(mixins.AnyChild,
                            tuple(info.data),
                            dict(info.context))
                 for info in self.memory]
+
+    def __repr__(self):
+        return repr(self.rule)
 
 
 class NotNode(mixins.AnyChild,

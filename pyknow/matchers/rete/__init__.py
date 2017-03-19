@@ -35,7 +35,7 @@ class ReteMatcher(Matcher):
             for child in node.children:
                 yield from _get_csn(child.node)
 
-        return list(_get_csn(self.root_node))
+        return set(_get_csn(self.root_node))
 
     def changes(self, adding=None, deleting=None):
         """Pass the given changes to the root_node."""
@@ -92,7 +92,7 @@ class ReteMatcher(Matcher):
                     total += check_rank[check]
             return total / len(rule_facts[rule])
 
-        sorted_rules = sorted(ruleset, key=weighted_check_sort)
+        sorted_rules = sorted(ruleset, key=weighted_check_sort, reverse=True)
 
         # For rule in rank order and for each rule fact also in rank
         # order, build the alpha brank looking for an existing node
@@ -103,7 +103,8 @@ class ReteMatcher(Matcher):
                 current_node = root_node
                 fact_sorted_checks = sorted(
                     fact_checks[fact],
-                    key=lambda c: check_rank[c])
+                    key=lambda c: check_rank[c],
+                    reverse=True)
 
                 for check in fact_sorted_checks:
                     # Look for a child node with the given check in the
@@ -138,3 +139,19 @@ class ReteMatcher(Matcher):
                     wire_rule(rule, alpha_terminals, lhs=subrule)
             else:
                 wire_rule(rule, alpha_terminals, lhs=rule)
+
+    def print_network(self):
+        """
+        Generate a graphviz compatible graph.
+
+        """
+        def gen_edges(node):
+            name = str(id(node))
+            yield name + '[label="%s: %s"];' % (node.__class__.__name__,
+                                                repr(node))
+            for child in node.children:
+                yield name + " -> " + str(id(child.node)) + ";"
+                yield from gen_edges(child.node)
+
+        return "digraph {\n %s \n}" % ("\n".join(
+            set(gen_edges(self.root_node))))

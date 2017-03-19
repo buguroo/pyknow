@@ -1,7 +1,6 @@
 import pytest
 
 
-@pytest.mark.wip
 def test_node_exists():
     try:
         from pyknow.matchers.rete.abstract import Node
@@ -11,21 +10,18 @@ def test_node_exists():
         assert False, exc
 
 
-@pytest.mark.wip
 def test_node_interface():
     from pyknow.matchers.rete.abstract import Node
 
     assert {'_reset', 'add_child'} <= Node.__abstractmethods__
 
 
-@pytest.mark.wip
 def test_oneinputnode_interface():
     from pyknow.matchers.rete.abstract import OneInputNode
 
     assert {'_activate'} <= OneInputNode.__abstractmethods__
 
 
-@pytest.mark.wip
 def test_twoinputnode_interface():
     from pyknow.matchers.rete.abstract import TwoInputNode
 

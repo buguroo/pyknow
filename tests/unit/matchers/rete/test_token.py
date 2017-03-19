@@ -3,7 +3,6 @@ from enum import Enum
 import pytest
 
 
-@pytest.mark.wip
 def test_token_is_namedtuple():
     from pyknow.matchers.rete.token import Token
 
@@ -13,7 +12,6 @@ def test_token_is_namedtuple():
     assert 'context' in Token._fields
 
 
-@pytest.mark.wip
 def test_token_tagtype():
     from pyknow.matchers.rete.token import Token
 
@@ -22,7 +20,6 @@ def test_token_tagtype():
     assert hasattr(Token.TagType, 'INVALID')
 
 
-@pytest.mark.wip
 def test_token_initialization_types():
     """
     Token.tag must be a Tag
@@ -51,7 +48,6 @@ def test_token_initialization_types():
     Token(Token.TagType.VALID, [Fact(), Fact()], {})
 
 
-@pytest.mark.wip
 def test_token_initialization_conversions():
     """
     Token.data is modified in this way:
@@ -69,21 +65,18 @@ def test_token_initialization_conversions():
     assert t2.data == {Fact(a=1), Fact(b=2)}
 
 
-@pytest.mark.wip
 def test_token_shortcut_valid():
     from pyknow.matchers.rete.token import Token
 
     assert Token.valid([]) == Token(Token.TagType.VALID, [])
 
 
-@pytest.mark.wip
 def test_token_shortcut_invalid():
     from pyknow.matchers.rete.token import Token
 
     assert Token.invalid([]) == Token(Token.TagType.INVALID, [])
 
 
-@pytest.mark.wip
 def test_token_copy_mutable():
     from pyknow.matchers.rete.token import Token
 

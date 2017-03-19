@@ -7,9 +7,6 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-# pylint: disable=invalid-name, missing-docstring,
-# pylint: disable=too-few-public-methods, nonlocal-without-binding, no-self-use
-
 
 def test_KnowledgeEngine_has__facts():
     from pyknow.engine import KnowledgeEngine
@@ -167,26 +164,27 @@ def test_KnowledgeEngine_get_activations_returns_a_list():
     assert isinstance(ke.get_activations(), list)
 
 
-@pytest.mark.wip
 def test_KnowledgeEngine_get_activations_returns_activations():
     from pyknow.engine import KnowledgeEngine
     from pyknow import Rule
     from pyknow import Fact, L
 
     class Test(KnowledgeEngine):
-        # pylint: disable=too-few-public-methods
-        @Rule(Fact(a=L(1)), Fact(b=L(1)))
+        @Rule(Fact(a=1),
+              Fact(b=1),
+              Fact(c=1))
         def test(self):
-            # pylint: disable=no-self-use
             pass
 
     ke = Test()
     ke.reset()
     ke.run()
-    ke.declare(Fact(a=L(1)))
-    ke.declare(Fact(b=L(1)))
-    activations = list(ke.get_activations())
-    assert len(activations) == 1
+
+    ke.declare(Fact(a=1))
+    ke.declare(Fact(b=1))
+    ke.declare(Fact(c=1))
+
+    assert len(list(ke.get_activations())) == 1
 
 
 def test_KnowledgeEngine_has_run():
@@ -240,7 +238,6 @@ def test_KnowledgeEngine_run_1_fires_activation():
     assert executed
 
 
-@pytest.mark.wip
 def test_KnowledgeEngine_run_fires_all_activation():
     from pyknow.engine import KnowledgeEngine
     from pyknow import Rule
@@ -250,19 +247,16 @@ def test_KnowledgeEngine_run_fires_all_activation():
     class Test(KnowledgeEngine):
         @Rule()
         def rule1(self):
-            # pylint: disable=no-self-use
             nonlocal executed
             executed += 1
 
         @Rule()
         def rule2(self):
-            # pylint: disable=no-self-use
             nonlocal executed
             executed += 1
 
         @Rule()
         def rule3(self):
-            # pylint: disable=no-self-use
             nonlocal executed
             executed += 1
 
@@ -353,7 +347,6 @@ def test_rules_are_executed_once(to_declare_random):
     assert executions.count('rule2') == 1
 
 
-@pytest.mark.wip
 def test_default_is_and():
     """
         Test that AND is the default operator
@@ -367,41 +360,24 @@ def test_default_is_and():
 
     class Test(KnowledgeEngine):
         """ Test KE """
-        @Rule(Fact(something=L(1)),
-              Fact(something=L(2)))
+        @Rule(Fact(something=1),
+              Fact(something=2))
         def rule1(self):
             """ First rule, something=1 and something=2"""
             nonlocal executions
             executions.append('rule1')
 
-        @Rule(Fact(something=L(3)))
+        @Rule(Fact(something=3))
         def rule2(self):
             """ Second rule, only something=3 """
             nonlocal executions
             executions.append('rule2')
 
-    ke_ = Test()
-
-    to_declare = []
-
-    for i in range(1, 10):
-        to_declare.append(L(i))
-
-    # pylint: disable=redefined-variable-type
-    to_declare = dict(enumerate(to_declare))
-
-    for _, n in to_declare.items():
-        ke_.deffacts(Fact(something=n))
-
-    ke_.reset()
-    results = defaultdict(list)
-    for activation in ke_.agenda.activations:
-        results[''.join([str(to_declare[a - 1].resolve())
-                         for a in activation.facts])].append(1)
-
-    assert dict(results) == {'3': [1], '12': [1]}
-    assert len(ke_.agenda.activations) == 2
-    ke_.run()
+    ke = Test()
+    for n in (1, 2, 3):
+        ke.deffacts(Fact(something=n))
+    ke.reset()
+    ke.run()
 
     assert executions.count('rule1') == 1
     assert executions.count('rule2') == 1

@@ -1,7 +1,6 @@
 import pytest
 
 
-@pytest.mark.wip
 def test_matcher_exists():
     try:
         from pyknow.abstract import Matcher
@@ -9,7 +8,6 @@ def test_matcher_exists():
         assert False, exc
 
 
-@pytest.mark.wip
 def test_matcher_interface():
     from pyknow.abstract import Matcher
 

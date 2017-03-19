@@ -1,7 +1,6 @@
 import pytest
 
 
-@pytest.mark.wip
 def test_conflictsetchange_exists():
     try:
         from pyknow.matchers.rete.nodes import ConflictSetNode
@@ -9,7 +8,6 @@ def test_conflictsetchange_exists():
         assert False, exc
 
 
-@pytest.mark.wip
 def test_conflictsetchange_is_abstractnode():
     from pyknow.matchers.rete.nodes import ConflictSetNode
     from pyknow.matchers.rete.abstract import OneInputNode
@@ -17,14 +15,12 @@ def test_conflictsetchange_is_abstractnode():
     assert issubclass(ConflictSetNode, OneInputNode)
 
 
-@pytest.mark.wip
 def test_conflictsetchange_interface():
     from pyknow.matchers.rete.nodes import ConflictSetNode
 
     assert hasattr(ConflictSetNode, 'get_activations')
 
 
-@pytest.mark.wip
 def test_conflictsetchange_accepts_rule():
     from pyknow.matchers.rete.nodes import ConflictSetNode
     from pyknow.rule import Rule
@@ -36,7 +32,6 @@ def test_conflictsetchange_accepts_rule():
         ConflictSetNode('NOTARULE')
 
 
-@pytest.mark.wip
 def test_conflictsetchange_valid_adds_to_memory():
     from pyknow.fact import Fact
     from pyknow.matchers.rete.nodes import ConflictSetNode
@@ -52,7 +47,6 @@ def test_conflictsetchange_valid_adds_to_memory():
                      {'mycontextdata': 'data'}) in csn.memory
 
 
-@pytest.mark.wip
 def test_conflictsetchange_invalid_removes_from_memory():
     from pyknow.fact import Fact
     from pyknow.matchers.rete.nodes import ConflictSetNode
@@ -69,7 +63,6 @@ def test_conflictsetchange_invalid_removes_from_memory():
     assert not csn.memory
 
 
-@pytest.mark.wip
 def test_conflictsetchange_get_activations_data():
     from pyknow.matchers.rete.nodes import ConflictSetNode
     from pyknow.matchers.rete.token import TokenInfo

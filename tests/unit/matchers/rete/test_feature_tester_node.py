@@ -1,7 +1,6 @@
 import pytest
 
 
-@pytest.mark.wip
 def test_featuretesternode_exists():
     try:
         from pyknow.matchers.rete.nodes import FeatureTesterNode
@@ -9,7 +8,6 @@ def test_featuretesternode_exists():
         assert False, exc
 
 
-@pytest.mark.wip
 def test_featuretesternode_is_oneinputnode():
     from pyknow.matchers.rete.nodes import FeatureTesterNode
     from pyknow.matchers.rete.abstract import OneInputNode
@@ -17,7 +15,6 @@ def test_featuretesternode_is_oneinputnode():
     assert issubclass(FeatureTesterNode, OneInputNode)
 
 
-@pytest.mark.wip
 def test_featuretesternode_accepts_callable():
     from pyknow.matchers.rete.nodes import FeatureTesterNode
 
@@ -28,7 +25,6 @@ def test_featuretesternode_accepts_callable():
         FeatureTesterNode('NONCALLABLE')
 
 
-@pytest.mark.wip
 def test_featuretesternode_pass_when_callable_succeed(TestNode):
     from pyknow.matchers.rete.nodes import FeatureTesterNode
     from pyknow.matchers.rete.token import Token
@@ -48,7 +44,6 @@ def test_featuretesternode_pass_when_callable_succeed(TestNode):
     assert tn1.added == tn2.added == [token]
 
 
-@pytest.mark.wip
 def test_featuretesternode_pass_when_callable_fail(TestNode):
     from pyknow.matchers.rete.nodes import FeatureTesterNode
     from pyknow.matchers.rete.token import Token
@@ -68,7 +63,6 @@ def test_featuretesternode_pass_when_callable_fail(TestNode):
     assert tn1.added == tn2.added == []
 
 
-@pytest.mark.wip
 def test_featuretesternode_pass_when_callable_adds_context(TestNode):
     from pyknow.matchers.rete.nodes import FeatureTesterNode
     from pyknow.matchers.rete.token import Token
@@ -91,7 +85,6 @@ def test_featuretesternode_pass_when_callable_adds_context(TestNode):
     assert tn1.added == tn2.added == [newtoken]
 
 
-@pytest.mark.wip
 def test_featuretesternode_pass_when_callable_modify_context(TestNode):
     from pyknow.matchers.rete.nodes import FeatureTesterNode
     from pyknow.matchers.rete.token import Token
@@ -114,7 +107,6 @@ def test_featuretesternode_pass_when_callable_modify_context(TestNode):
     assert tn1.added == tn2.added == []
 
 
-@pytest.mark.wip
 def test_featuretesternode_pass_when_callable_dont_modify_context(TestNode):
     from pyknow.matchers.rete.nodes import FeatureTesterNode
     from pyknow.matchers.rete.token import Token
@@ -137,7 +129,6 @@ def test_featuretesternode_pass_when_callable_dont_modify_context(TestNode):
     assert tn1.added == tn2.added == [newtoken]
 
 
-@pytest.mark.wip
 def test_featuretesternode_pass_fact_to_matcher():
     from pyknow.matchers.rete.nodes import FeatureTesterNode
     from pyknow.matchers.rete.token import Token

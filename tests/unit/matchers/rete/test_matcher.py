@@ -3,7 +3,6 @@ import pytest
 from pyknow import abstract
 
 
-@pytest.mark.wip
 def test_retematcher_exists():
     try:
         from pyknow.matchers.rete import ReteMatcher
@@ -11,14 +10,12 @@ def test_retematcher_exists():
         assert False, exc
 
 
-@pytest.mark.wip
 def test_retematcher_is_matcher():
     from pyknow.matchers.rete import ReteMatcher
 
     assert issubclass(ReteMatcher, abstract.Matcher)
 
 
-@pytest.mark.wip
 def test_retematcher_is_not_abstract():
     from pyknow.matchers.rete import ReteMatcher
     from pyknow.engine import KnowledgeEngine
@@ -27,7 +24,6 @@ def test_retematcher_is_not_abstract():
     ReteMatcher(KnowledgeEngine())
 
 
-@pytest.mark.wip
 def test_retematcher_has_root_node():
     from pyknow.matchers.rete import ReteMatcher
     from pyknow.engine import KnowledgeEngine
@@ -38,7 +34,6 @@ def test_retematcher_has_root_node():
     assert isinstance(matcher.root_node, BusNode)
 
 
-@pytest.mark.wip
 def test_retematcher_changes_are_propagated(TestNode):
     from pyknow.engine import KnowledgeEngine
     from pyknow.fact import Fact
@@ -70,7 +65,6 @@ def test_retematcher_changes_are_propagated(TestNode):
     assert Token.invalid(f4) in tn2.added
 
 
-@pytest.mark.wip
 def test_retematcher_changes_return_activations_if_csn():
     from pyknow.engine import KnowledgeEngine
     from pyknow.fact import Fact

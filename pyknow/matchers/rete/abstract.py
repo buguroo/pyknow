@@ -26,6 +26,8 @@ class Node(metaclass=abc.ABCMeta):
         """Reset this node's memory."""
         pass
 
+    def __repr__(self):
+        return ""
 
 class OneInputNode(Node):
     """Nodes which only have one input port."""

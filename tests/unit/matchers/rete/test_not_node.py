@@ -1,7 +1,6 @@
 import pytest
 
 
-@pytest.mark.wip
 def test_notnode_exists():
     try:
         from pyknow.matchers.rete.nodes import NotNode
@@ -9,7 +8,6 @@ def test_notnode_exists():
         assert False, exc
 
 
-@pytest.mark.wip
 def test_notnode_is_abstractnode():
     from pyknow.matchers.rete.nodes import NotNode
     from pyknow.matchers.rete.abstract import TwoInputNode
@@ -17,7 +15,6 @@ def test_notnode_is_abstractnode():
     assert issubclass(NotNode, TwoInputNode)
 
 
-@pytest.mark.wip
 def test_notnode_accepts_callable():
     from pyknow.matchers.rete.nodes import NotNode
 
@@ -28,7 +25,6 @@ def test_notnode_accepts_callable():
         NotNode('NONCALLABLE')
 
 
-@pytest.mark.wip
 def test_notnode_left_activate_valid_empty_right(TestNode):
     from pyknow.matchers.rete.nodes import NotNode
     from pyknow.matchers.rete.token import Token
@@ -49,7 +45,6 @@ def test_notnode_left_activate_valid_empty_right(TestNode):
     assert nn.left_memory[token.to_info()] == 0
 
 
-@pytest.mark.wip
 def test_notnode_left_activate_valid_non_matching(TestNode):
     from pyknow.matchers.rete.nodes import NotNode
     from pyknow.matchers.rete.token import Token
@@ -73,7 +68,6 @@ def test_notnode_left_activate_valid_non_matching(TestNode):
     assert nn.left_memory[token.to_info()] == 0
 
 
-@pytest.mark.wip
 def test_notnode_left_activate_valid_matching(TestNode):
     from pyknow.matchers.rete.nodes import NotNode
     from pyknow.matchers.rete.token import Token
@@ -96,7 +90,6 @@ def test_notnode_left_activate_valid_matching(TestNode):
     assert nn.left_memory[token.to_info()] == 1
 
 
-@pytest.mark.wip
 def test_notnode_right_activate_valid_empty(TestNode):
     from pyknow.matchers.rete.nodes import NotNode
     from pyknow.matchers.rete.token import Token
@@ -117,7 +110,6 @@ def test_notnode_right_activate_valid_empty(TestNode):
     assert token.to_info() in nn.right_memory
 
 
-@pytest.mark.wip
 def test_notnode_right_activate_invalid_match_more_than_one(TestNode):
     from pyknow.matchers.rete.nodes import NotNode
     from pyknow.matchers.rete.token import Token
@@ -141,7 +133,6 @@ def test_notnode_right_activate_invalid_match_more_than_one(TestNode):
     assert nn.left_memory[token.to_info()] == 1
 
 
-@pytest.mark.wip
 def test_notnode_right_activate_invalid_match_just_one(TestNode):
     from pyknow.matchers.rete.nodes import NotNode
     from pyknow.matchers.rete.token import Token
@@ -165,7 +156,6 @@ def test_notnode_right_activate_invalid_match_just_one(TestNode):
     assert nn.left_memory[token.to_info()] == 0
 
 
-@pytest.mark.wip
 def test_notnode_right_activate_valid_match_more_than_one(TestNode):
     from pyknow.matchers.rete.nodes import NotNode
     from pyknow.matchers.rete.token import Token
@@ -189,7 +179,6 @@ def test_notnode_right_activate_valid_match_more_than_one(TestNode):
     assert nn.left_memory[token.to_info()] == 0
 
 
-@pytest.mark.wip
 def test_notnode_right_activate_valid_match_just_one(TestNode):
     from pyknow.matchers.rete.nodes import NotNode
     from pyknow.matchers.rete.token import Token

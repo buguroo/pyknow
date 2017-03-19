@@ -1,7 +1,6 @@
 import pytest
 
 
-@pytest.mark.wip
 def test_ordinarymatchnode_exists():
     try:
         from pyknow.matchers.rete.nodes import OrdinaryMatchNode
@@ -9,7 +8,6 @@ def test_ordinarymatchnode_exists():
         assert False, exc
 
 
-@pytest.mark.wip
 def test_ordinarymatchnode_is_abstractnode():
     from pyknow.matchers.rete.nodes import OrdinaryMatchNode
     from pyknow.matchers.rete.abstract import TwoInputNode
@@ -17,7 +15,6 @@ def test_ordinarymatchnode_is_abstractnode():
     assert issubclass(OrdinaryMatchNode, TwoInputNode)
 
 
-@pytest.mark.wip
 def test_ordinarymatchnode_accepts_callable():
     from pyknow.matchers.rete.nodes import OrdinaryMatchNode
 
@@ -28,7 +25,6 @@ def test_ordinarymatchnode_accepts_callable():
         OrdinaryMatchNode('NONCALLABLE')
 
 
-@pytest.mark.wip
 def test_ordinarymatchnode_left_activate_valid_store_in_left_memory():
     from pyknow.matchers.rete.nodes import OrdinaryMatchNode
     from pyknow.matchers.rete.token import Token, TokenInfo
@@ -45,7 +41,6 @@ def test_ordinarymatchnode_left_activate_valid_store_in_left_memory():
     assert TokenInfo({fact}, {}) in omn.left_memory
 
 
-@pytest.mark.wip
 def test_ordinarymatchnode_left_activate_valid_build_new_tokens(TestNode):
     from pyknow.matchers.rete.nodes import OrdinaryMatchNode
     from pyknow.matchers.rete.token import Token, TokenInfo
@@ -76,7 +71,6 @@ def test_ordinarymatchnode_left_activate_valid_build_new_tokens(TestNode):
                                       Fact(rightdata='rightdata2')])]
 
 
-@pytest.mark.wip
 def test_ordinarymatchnode_left_activate_invalid_remove_from_left_memory():
     from pyknow.matchers.rete.nodes import OrdinaryMatchNode
     from pyknow.matchers.rete.token import Token
@@ -93,7 +87,6 @@ def test_ordinarymatchnode_left_activate_invalid_remove_from_left_memory():
     assert not omn.left_memory
 
 
-@pytest.mark.wip
 def test_ordinarymatchnode_left_activate_invalid_build_new_tokens(TestNode):
     from pyknow.matchers.rete.nodes import OrdinaryMatchNode
     from pyknow.matchers.rete.token import Token
@@ -124,7 +117,6 @@ def test_ordinarymatchnode_left_activate_invalid_build_new_tokens(TestNode):
                                         Fact(rightdata='rightdata2')])]
 
 
-@pytest.mark.wip
 def test_ordinarymatchnode_right_activate_valid_store_in_right_memory():
     from pyknow.matchers.rete.nodes import OrdinaryMatchNode
     from pyknow.matchers.rete.token import Token, TokenInfo
@@ -141,7 +133,6 @@ def test_ordinarymatchnode_right_activate_valid_store_in_right_memory():
     assert TokenInfo({fact}, {}) in omn.right_memory
 
 
-@pytest.mark.wip
 def test_ordinarymatchnode_right_activate_valid_build_new_tokens(TestNode):
     from pyknow.matchers.rete.nodes import OrdinaryMatchNode
     from pyknow.matchers.rete.token import Token
@@ -172,7 +163,6 @@ def test_ordinarymatchnode_right_activate_valid_build_new_tokens(TestNode):
                                       Fact(leftdata='leftdata2')])]
 
 
-@pytest.mark.wip
 def test_ordinarymatchnode_right_activate_invalid_remove_from_right_memory():
     from pyknow.matchers.rete.nodes import OrdinaryMatchNode
     from pyknow.matchers.rete.token import Token
@@ -189,7 +179,6 @@ def test_ordinarymatchnode_right_activate_invalid_remove_from_right_memory():
     assert not omn.right_memory
 
 
-@pytest.mark.wip
 def test_ordinarymatchnode_right_activate_invalid_build_new_tokens(TestNode):
     from pyknow.matchers.rete.nodes import OrdinaryMatchNode
     from pyknow.matchers.rete.token import Token

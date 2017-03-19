@@ -1,7 +1,6 @@
 import pytest
 
 
-@pytest.mark.wip
 def test_busnode_exists():
     try:
         from pyknow.matchers.rete.nodes import BusNode
@@ -9,15 +8,13 @@ def test_busnode_exists():
         assert False, exc
 
 
-@pytest.mark.wip
-def test_busnode_is_abstractnode():
+def test_busnode_is_node():
     from pyknow.matchers.rete.nodes import BusNode
-    from pyknow.matchers.rete.abstract import AbstractNode
+    from pyknow.matchers.rete.abstract import Node
 
-    assert issubclass(BusNode, AbstractNode)
+    assert issubclass(BusNode, Node)
 
 
-@pytest.mark.wip
 def test_busnode_interface():
     from pyknow.matchers.rete.nodes import BusNode
 
@@ -25,7 +22,6 @@ def test_busnode_interface():
     assert hasattr(BusNode, 'remove')
 
 
-@pytest.mark.wip
 def test_busnode_add_child(TestNode):
     from pyknow.matchers.rete.nodes import BusNode
     from pyknow.fact import Fact
@@ -37,7 +33,6 @@ def test_busnode_add_child(TestNode):
     assert list(bn.children)[0].node is tn
 
 
-@pytest.mark.wip
 def test_busnode_add(TestNode):
     from pyknow.matchers.rete.nodes import BusNode
     from pyknow.matchers.rete.token import Token
@@ -56,7 +51,6 @@ def test_busnode_add(TestNode):
     assert tn2.added == [Token.valid(Fact())]
 
 
-@pytest.mark.wip
 def test_busnode_remove(TestNode):
     from pyknow.matchers.rete.nodes import BusNode
     from pyknow.matchers.rete.token import Token
