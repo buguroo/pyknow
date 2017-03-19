@@ -125,7 +125,6 @@ class KnowledgeEngine:
         self.running = True
         while steps > 0:
             activation = self.agenda.get_next()
-            print(activation)
             if activation is None:
                 break
             else:

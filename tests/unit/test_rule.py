@@ -3,8 +3,6 @@
 
 import pytest
 
-# pylint: disable=missing-docstring, invalid-name
-
 
 def test_Rule_can_decorate_function():
     from pyknow import Rule
@@ -116,7 +114,7 @@ def test_Rule_decorator_store_salience():
     assert myfunction.salience == 10
 
 
-def test_rule_is_iterable():
+def test_Rule_is_iterable():
     from pyknow import Rule
     from pyknow import Fact
 
@@ -125,3 +123,79 @@ def test_rule_is_iterable():
     assert next(rule_) == Fact(a=2)
     with pytest.raises(StopIteration):
         assert next(rule_)
+
+
+def test_Rule_can_decorate_method():
+    from pyknow import Rule
+
+    called = False
+
+    class TestRule:
+        @Rule()
+        def mymethod(self):
+            nonlocal called
+            called = True
+
+    obj = TestRule()
+    obj.mymethod()
+
+    assert called
+
+
+def test_Rule_can_decorate_method_with_one_parameter():
+    from pyknow import Rule
+
+    called = False
+
+    class TestRule:
+        @Rule()
+        def mymethod(self, x):
+            nonlocal called
+            called = True
+            assert x is True
+
+    obj = TestRule()
+    obj.mymethod(True)
+
+    assert called
+
+
+def test_Rule_can_decorate_method_with_multiple_positional_args():
+    from pyknow import Rule
+
+    called = False
+
+    class TestRule:
+        @Rule()
+        def mymethod(self, x, y, z):
+            nonlocal called
+            called = True
+            assert x == 'x'
+            assert y == 'y'
+            assert z == 'z'
+
+    obj = TestRule()
+    obj.mymethod('x', 'y', 'z')
+
+    assert called
+
+
+def test_Rule_can_decorate_method_with_mixed_args():
+    from pyknow import Rule
+
+    called = False
+
+    class TestRule:
+        @Rule()
+        def mymethod(self, x, y, z=None, a=None):
+            nonlocal called
+            called = True
+            assert x == 'x'
+            assert y == 'y'
+            assert z is None
+            assert a == 'a'
+
+    obj = TestRule()
+    obj.mymethod('x', 'y', a='a')
+
+    assert called

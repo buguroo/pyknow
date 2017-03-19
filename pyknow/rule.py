@@ -8,7 +8,7 @@ special case implemented in :mod:`pyknow.fact`.
 
 """
 from collections.abc import Callable
-from functools import update_wrapper
+from functools import update_wrapper, partial
 from itertools import chain
 
 from pyknow.watchers import RULE_WATCHER
@@ -43,31 +43,41 @@ class Rule(ConditionalElement):
         obj = super(Rule, cls).__new__(cls, *args)
 
         obj._wrapped = None
+        obj._wrapped_self = None
         obj.salience = salience
 
         RULE_WATCHER.debug("Initialized rule : %r", obj)
 
         return obj
 
-    def __call__(self, fst=None, *args, **kwargs):
+    def __call__(self, *args, **kwargs):
         """
         Make method checks if it's the first call, and update wrapper.
         Othersise execute the RHS.
         """
-        if self._wrapped is None and fst is None:
-            raise AttributeError("Mandatory function not provided.")
-
-        if self._wrapped is None and fst is not None:
-            self._wrapped = fst
-            return update_wrapper(self, self._wrapped)
+        if self._wrapped is None:
+            if not args:
+                raise AttributeError("Mandatory function not provided.")
+            else:
+                self._wrapped = args[0]
+                return update_wrapper(self, self._wrapped)
+        elif self._wrapped_self is None:
+            RULE_WATCHER.debug(
+                "Executing rule function %s (args=%r, kwargs=%r)",
+                self._wrapped.__name__, args, kwargs)
+            return self._wrapped(*args, **kwargs)
         else:
-            RULE_WATCHER.debug("Executing %s for rule %s, with context %s",
-                               self._wrapped.__name__, self, kwargs)
-
-            return self._wrapped(self, **kwargs)
+            RULE_WATCHER.debug(
+                "Executing rule method %s (args=%r, kwargs=%r)",
+                self._wrapped.__name__, args, kwargs)
+            return self._wrapped(self._wrapped_self, *args, **kwargs)
 
     def __repr__(self):
         return "%s => %r" % (super().__repr__(), self._wrapped)
+
+    def __get__(self, instance, owner):
+        self._wrapped_self = instance
+        return self
 
 
 class ComposableCE:
@@ -179,22 +189,14 @@ class LiteralPCE(PatternConditionalElement):
 
 
 class WildcardPCE(PatternConditionalElement):
-    def __new__(cls, *args, bind_to=None):
-        if len(args) != 0:
-            raise ValueError("WildcardPCE cannot contain any element.")
+    def __new__(cls, bind_to=None):
+        if bind_to is None:
+            return super(WildcardPCE, cls).__new__(cls)
         else:
-            obj = super(WildcardPCE, cls).__new__(cls, *args)
-            obj.bind_to = bind_to
-            return obj
-
-    def __hash__(self):
-        return hash(self.bind_to)
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.bind_to == other.bind_to
+            return super(WildcardPCE, cls).__new__(cls, bind_to)
 
     def __repr__(self):
-        return "W()" if self.bind_to is None else "W(bind_to=%r)" % self.bind_to
+        return "W()" if not self else "W(%r)" % self[0]
 
 
 class PredicatePCE(PatternConditionalElement):

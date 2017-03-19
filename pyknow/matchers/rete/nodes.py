@@ -160,6 +160,7 @@ class OrdinaryMatchNode(mixins.AnyChild,
                 branch_memory.remove(token.to_info())
 
         for other_data, other_context in matching_memory:
+            other_context = dict(other_context)
             match = self.matcher(token.context, other_context)
 
             if match:
@@ -257,7 +258,7 @@ class NotNode(mixins.AnyChild,
         """
         count = 0
         for _, right_context in self.right_memory:
-            if self.matcher(token.context, right_context):
+            if self.matcher(token.context, dict(right_context)):
                 count += 1
         if token.is_valid():
             self.left_memory[token.to_info()] = count
@@ -282,7 +283,7 @@ class NotNode(mixins.AnyChild,
             inc = -1
 
         for left in self.left_memory:
-            if self.matcher(left.context, token.context):
+            if self.matcher(dict(left.context), token.context):
                 self.left_memory[left] += inc
                 newcount = self.left_memory[left]
                 if (newcount == 0 and inc == -1) or \

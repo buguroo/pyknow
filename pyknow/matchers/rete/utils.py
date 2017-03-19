@@ -75,7 +75,9 @@ def extract_facts(rule):
 
 def generate_checks(fact):
     """Given a fact, generate a list of Check objects for checking it."""
+
     yield TypeCheck(type(fact))
+
     for key, value in fact.items():
         yield FeatureCheck(key, value)
 
@@ -91,6 +93,11 @@ def wire_rule(rule, alpha_terminals, lhs=None):
     @_wire_rule.register(Rule)
     @_wire_rule.register(AND)
     def _(elem):
+
+        def same_context(l, r):
+            common_context = set(l.keys()) & set(r.keys())
+            return all(l[k] == r[k] for k in common_context)
+
         if len(elem) == 1 and isinstance(elem[0], Fact):
             return alpha_terminals[elem[0]]
         elif len(elem) > 1:
@@ -102,13 +109,13 @@ def wire_rule(rule, alpha_terminals, lhs=None):
                     node_cls = OrdinaryMatchNode
 
                 if current_node is None:
-                    current_node = node_cls(lambda l, r: True)
+                    current_node = node_cls(same_context)
                     left_branch = _wire_rule(f)
                     right_branch = _wire_rule(s)
                 else:
                     left_branch = current_node
                     right_branch = _wire_rule(s)
-                    current_node = node_cls(lambda l, r: True)
+                    current_node = node_cls(same_context)
 
                 left_branch.add_child(current_node,
                                       current_node.activate_left)

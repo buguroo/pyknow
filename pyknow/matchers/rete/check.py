@@ -8,13 +8,12 @@ from pyknow.rule import ANDPCE, ORPCE, NOTPCE
 from .abstract import Check
 
 
-class TypeCheck(Check,
-                namedtuple('_TypeCheck', ['fact_type'])):
+class TypeCheck(Check, namedtuple('_TypeCheck', ['fact_type'])):
 
     _instances = dict()
 
     def __new__(cls, fact_type):
-        if not fact_type in cls._instances:
+        if fact_type not in cls._instances:
             cls._instances[fact_type] = super().__new__(cls, fact_type)
         return cls._instances[fact_type]
 
@@ -22,8 +21,25 @@ class TypeCheck(Check,
         return type(fact) == self.fact_type
 
 
+class SelfBindedCheck(Check, namedtuple('_SelfBindedCheck', ['items'])):
+
+    _instances = dict()
+
+    def __new__(cls, items):
+        if items not in cls._instances:
+            cls._instances[items] = super().__new__(cls, items)
+        return cls._instances[items]
+
+    def __call__(self, fact):
+        try:
+            return set(fact[k] for k in self.items) == 1
+        except KeyError:
+            return False
+
+
 class FeatureCheck(Check,
-                   namedtuple('_Check', ['what', 'how', 'check', 'lhs'])):
+                   namedtuple('_FeatureCheck',
+                              ['what', 'how', 'check', 'lhs'])):
 
     _instances = dict()
 
@@ -38,11 +54,11 @@ class FeatureCheck(Check,
             elif key_a is PredicatePCE:
                 key_b = tuple(dis.get_instructions(how[0]))
             elif key_a is WildcardPCE:
-                key_b = how.bind_to
+                key_b = how
             elif key_a is NOTPCE:
-                key_b = Check(what, how[0])
+                key_b = FeatureCheck(what, how[0])
             elif key_a in (ANDPCE, ORPCE):
-                key_b = tuple([Check(what, h) for h in how])
+                key_b = tuple([FeatureCheck(what, h) for h in how])
             else:
                 raise TypeError("Unknown PCE type.")
 
@@ -51,21 +67,32 @@ class FeatureCheck(Check,
             if key not in cls._instances:
                 if key_a is LiteralPCE:
                     lhs = how[0]
-                    check = lambda v, lhs: lhs == v
+
+                    def check(v, lhs):
+                        return lhs == v
                 elif key_a is PredicatePCE:
                     lhs = how[0]
-                    check = lambda v, lhs: lhs(v)
+
+                    def check(v, lhs):
+                        return lhs(v)
                 elif key_a is WildcardPCE:
                     lhs = how
-                    if how.bind_to is None:
-                        check = lambda v, lhs: True
+                    if not how:
+
+                        def check(v, lhs):
+                            return True
                     else:
-                        check = lambda v, lhs: {lhs.bind_to: v}
+
+                        def check(v, lhs):
+                            return {lhs[0]: v}
                 elif key_a is NOTPCE:
                     lhs = key_b
-                    check = lambda v, lhs: not lhs(v, is_fact=False)
+
+                    def check(v, lhs):
+                        return not lhs(v, is_fact=False)
                 elif key_a is ANDPCE:
                     lhs = key_b
+
                     def check(v, lhs):
                         value = dict()
                         for subcheck in lhs:
@@ -86,6 +113,7 @@ class FeatureCheck(Check,
                         return False
                 elif key_a is ORPCE:
                     lhs = key_b
+
                     def check(v, lhs):
                         for subcheck in lhs:
                             subres = subcheck(v, is_fact=False)
