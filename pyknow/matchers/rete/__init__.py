@@ -154,7 +154,7 @@ class ReteMatcher(Matcher):
                 content=repr(node))
 
             for child in node.children:
-                yield '{parent} -> {child} [label={child_label}];'.format(
+                yield '{parent} -> {child} [label="{child_label}"];'.format(
                     parent=name,
                     child=str(id(child.node)),
                     child_label=child.callback)

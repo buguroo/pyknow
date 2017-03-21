@@ -21,6 +21,19 @@ class TypeCheck(Check, namedtuple('_TypeCheck', ['fact_type'])):
         return type(fact) == self.fact_type
 
 
+class FactCapture(Check, namedtuple('_FactCapture', ['id'])):
+
+    _instances = dict()
+
+    def __new__(cls, id):
+        if id not in cls._instances:
+            cls._instances[id] = super().__new__(cls, id)
+        return cls._instances[id]
+
+    def __call__(self, fact):
+        return {self.id: fact}
+
+
 class FeatureCheck(Check,
                    namedtuple('_FeatureCheck',
                               ['what', 'how', 'check', 'expected'])):
