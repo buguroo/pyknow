@@ -21,25 +21,9 @@ class TypeCheck(Check, namedtuple('_TypeCheck', ['fact_type'])):
         return type(fact) == self.fact_type
 
 
-class SelfBindedCheck(Check, namedtuple('_SelfBindedCheck', ['items'])):
-
-    _instances = dict()
-
-    def __new__(cls, items):
-        if items not in cls._instances:
-            cls._instances[items] = super().__new__(cls, items)
-        return cls._instances[items]
-
-    def __call__(self, fact):
-        try:
-            return set(fact[k] for k in self.items) == 1
-        except KeyError:
-            return False
-
-
 class FeatureCheck(Check,
                    namedtuple('_FeatureCheck',
-                              ['what', 'how', 'check', 'lhs'])):
+                              ['what', 'how', 'check', 'expected'])):
 
     _instances = dict()
 
@@ -50,11 +34,11 @@ class FeatureCheck(Check,
         else:
             key_a = type(how)
             if key_a is LiteralPCE:
-                key_b = how[0]
+                key_b = (how[0], how.id)
             elif key_a is PredicatePCE:
-                key_b = tuple(dis.get_instructions(how[0]))
+                key_b = (tuple(dis.get_instructions(how[0])), how.id)
             elif key_a is WildcardPCE:
-                key_b = how
+                key_b = how.id
             elif key_a is NOTPCE:
                 key_b = FeatureCheck(what, how[0])
             elif key_a in (ANDPCE, ORPCE):
@@ -66,37 +50,57 @@ class FeatureCheck(Check,
 
             if key not in cls._instances:
                 if key_a is LiteralPCE:
-                    lhs = how[0]
+                    expected = how
 
-                    def check(v, lhs):
-                        return lhs == v
+                    def check(actual, expected):
+                        if expected.value == actual:
+                            if expected.id is None:
+                                return True
+                            else:
+                                return {expected.id: actual}
+                        else:
+                            return False
+
                 elif key_a is PredicatePCE:
-                    lhs = how[0]
+                    expected = how
 
-                    def check(v, lhs):
-                        return lhs(v)
+                    def check(actual, expected):
+                        if expected.match(actual):
+                            if expected.id is None:
+                                return True
+                            else:
+                                return {expected.id: actual}
+                        else:
+                            return False
+
                 elif key_a is WildcardPCE:
-                    lhs = how
-                    if not how:
+                    expected = how
 
-                        def check(v, lhs):
+                    def check(actual, expected):
+                        if expected.id is None:
                             return True
-                    else:
+                        else:
+                            return {expected.id: actual}
 
-                        def check(v, lhs):
-                            return {lhs[0]: v}
                 elif key_a is NOTPCE:
-                    lhs = key_b
+                    expected = key_b
 
-                    def check(v, lhs):
-                        return not lhs(v, is_fact=False)
+                    def check(actual, expected):
+                        subresult = expected(actual, is_fact=False)
+                        if isinstance(subresult, Mapping):
+                            newresult = {(False, k): v
+                                         for k, v in subresult.items()}
+                            return newresult
+                        else:
+                            return not subresult
+
                 elif key_a is ANDPCE:
-                    lhs = key_b
+                    expected = key_b
 
-                    def check(v, lhs):
+                    def check(actual, expected):
                         value = dict()
-                        for subcheck in lhs:
-                            subres = subcheck(v, is_fact=False)
+                        for subcheck in expected:
+                            subres = subcheck(actual, is_fact=False)
                             if subres is False:
                                 break
                             elif subres is True:
@@ -111,16 +115,18 @@ class FeatureCheck(Check,
                             else:
                                 return value
                         return False
-                elif key_a is ORPCE:
-                    lhs = key_b
 
-                    def check(v, lhs):
-                        for subcheck in lhs:
-                            subres = subcheck(v, is_fact=False)
+                elif key_a is ORPCE:
+                    expected = key_b
+
+                    def check(actual, expected):
+                        for subcheck in expected:
+                            subres = subcheck(actual, is_fact=False)
                             if subres:
                                 return subres
                         else:
                             return False
+
                 else:  # noqa
                     pass
 
@@ -129,7 +135,7 @@ class FeatureCheck(Check,
                     what,
                     how,
                     check,
-                    lhs)
+                    expected)
 
             return cls._instances[key]
 
@@ -143,4 +149,4 @@ class FeatureCheck(Check,
         else:
             record = data
 
-        return self.check(record, self.lhs)
+        return self.check(record, self.expected)

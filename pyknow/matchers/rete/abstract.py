@@ -29,6 +29,7 @@ class Node(metaclass=abc.ABCMeta):
     def __repr__(self):
         return ""
 
+
 class OneInputNode(Node):
     """Nodes which only have one input port."""
 

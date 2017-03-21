@@ -147,11 +147,18 @@ class ReteMatcher(Matcher):
         """
         def gen_edges(node):
             name = str(id(node))
-            yield name + '[label="%s: %s"];' % (node.__class__.__name__,
-                                                repr(node))
+
+            yield '{name} [label="{cls_name}: {content}"];'.format(
+                name=name,
+                cls_name=node.__class__.__name__,
+                content=repr(node))
+
             for child in node.children:
-                yield name + " -> " + str(id(child.node)) + ";"
+                yield '{parent} -> {child} [label={child_label}];'.format(
+                    parent=name,
+                    child=str(id(child.node)),
+                    child_label=child.callback)
                 yield from gen_edges(child.node)
 
         return "digraph {\n %s \n}" % ("\n".join(
-            set(gen_edges(self.root_node))))
+            gen_edges(self.root_node)))

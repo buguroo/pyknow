@@ -18,19 +18,22 @@ class Activation:
 
         self.rule = rule
         self.facts = facts
-        self.context = context
+        if context is None:
+            self.context = dict()
+        else:
+            self.context = context
 
     def __repr__(self):
         return "Activation(rule={}, facts={}, context={})".format(
             self.rule, self.facts, self.context)
 
     def __eq__(self, other):
-        if type(self) == type(other):
-            return self.rule == other.rule and self.facts == other.facts
-        else:
-            return False
+        return isinstance(other, self.__class__) \
+            and self.rule == other.rule \
+            and self.facts == other.facts \
+            and self.context == other.context
 
     def __hash__(self):
-        return hash(
-            (hash(self.rule), self.facts,
-             tuple(self.context.items() if self.context else tuple())))
+        return hash((self.rule,
+                     frozenset(self.facts),
+                     frozenset(self.context.items())))

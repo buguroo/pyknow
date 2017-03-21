@@ -51,7 +51,7 @@ class Rule(ConditionalElement):
         return obj
 
     def __hash__(self):
-        return hash(tuple(self) \
+        return hash(tuple(self)
                     + (self._wrapped, self._wrapped_self, self.salience))
 
     def __eq__(self, other):
@@ -193,35 +193,43 @@ class NOTPCE(PatternConditionalElement):
     pass
 
 
-class LiteralPCE(PatternConditionalElement):
-    def __new__(cls, *args):
-        if len(args) != 1:
-            raise ValueError("LiteralPCE must contain only one element.")
-        else:
-            return super(LiteralPCE, cls).__new__(cls, *args)
+class HasID:
+    def __hash__(self):
+        return hash((self.id, ) + tuple(self))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) \
+            and tuple(self) == tuple(other) \
+            and self.id == other.id
+
+
+class LiteralPCE(HasID, PatternConditionalElement):
+    def __new__(cls, value, id=None):
+        obj = super(LiteralPCE, cls).__new__(cls, value)
+        obj.id = id
+        obj.value = value
+        return obj
 
     def __repr__(self):
         return repr(self[0])
 
 
-class WildcardPCE(PatternConditionalElement):
-    def __new__(cls, bind_to=None):
-        if bind_to is None:
-            return super(WildcardPCE, cls).__new__(cls)
-        else:
-            return super(WildcardPCE, cls).__new__(cls, bind_to)
+class WildcardPCE(HasID, PatternConditionalElement):
+    def __new__(cls, id=None):
+        obj = super(WildcardPCE, cls).__new__(cls)
+        obj.id = id
+        return obj
 
     def __repr__(self):
         return "W()" if not self else "W(%r)" % self[0]
 
 
 class PredicatePCE(PatternConditionalElement):
-    def __new__(cls, *args, bind_to=None):
-        if len(args) != 1:
-            raise ValueError("PredicatePCE must contain only one element.")
-        elif not isinstance(args[0], Callable):
+    def __new__(cls, match, id=None):
+        if not isinstance(match, Callable):
             raise TypeError("PredicatePCE needs a callable.")
         else:
-            obj = super(PredicatePCE, cls).__new__(cls, *args)
-            obj.bind_to = bind_to
+            obj = super(PredicatePCE, cls).__new__(cls, match)
+            obj.id = id
+            obj.match = match
             return obj

@@ -95,8 +95,16 @@ def wire_rule(rule, alpha_terminals, lhs=None):
     def _(elem):
 
         def same_context(l, r):
-            common_context = set(l.keys()) & set(r.keys())
-            return all(l[k] == r[k] for k in common_context)
+            for key, value in l.items():
+                if isinstance(key, tuple):
+                    raise RuntimeError(
+                        'Negated value "%s" present before capture.' % key[1])
+                else:
+                    if key in r and value != r[key]:
+                        return False
+                    if (False, key) in r and value == r[(False, key)]:
+                        return False
+            return True
 
         if len(elem) == 1 and isinstance(elem[0], Fact):
             return alpha_terminals[elem[0]]

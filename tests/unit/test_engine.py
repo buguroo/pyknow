@@ -167,7 +167,7 @@ def test_KnowledgeEngine_get_activations_returns_a_list():
 def test_KnowledgeEngine_get_activations_returns_activations():
     from pyknow.engine import KnowledgeEngine
     from pyknow import Rule
-    from pyknow import Fact, L
+    from pyknow import Fact
 
     class Test(KnowledgeEngine):
         @Rule(Fact(a=1),
@@ -642,7 +642,7 @@ def test_matching_captured_different_facts_NOT_negative():
     matches (the NOT is therefore not executed).
     """
     from pyknow import Rule, NOT
-    from pyknow import Fact, L, W
+    from pyknow import Fact, W, L
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):
@@ -665,10 +665,9 @@ def test_matching_captured_different_facts_NOT_negative():
     assert executions == []
 
 
-@pytest.mark.pending
-def test_and_negated_variable__positive_match():
+def test_and_negated_variable__bad_definition():
     from pyknow import Rule, NOT
-    from pyknow import Fact, L, W
+    from pyknow import Fact, W
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):
@@ -677,24 +676,48 @@ def test_and_negated_variable__positive_match():
     executions = []
 
     class Person_KE(KnowledgeEngine):
-        @Rule(Person(name=L("name"), age=W('age')),
-              Person(name=L("name"), age=~W('age')))
+        @Rule(Person(age=~W('age')),
+              Person(age=W('age')))
         def same_name(self, age):
             nonlocal executions
             executions.append(age)
 
     ke_ = Person_KE()
-    ke_.deffacts(Person(name=L("name"), age=L(18)))
-    ke_.deffacts(Person(name=L('name'), age=L(19)))
+    ke_.deffacts(Person(name="name1", age=18))
+    ke_.deffacts(Person(name="name2", age=19))
+
+    with pytest.raises(RuntimeError):
+        ke_.reset()
+
+
+def test_and_negated_variable__positive_match():
+    from pyknow import Rule, NOT
+    from pyknow import Fact, W
+    from pyknow.engine import KnowledgeEngine
+
+    class Person(Fact):
+        pass
+
+    executions = []
+
+    class Person_KE(KnowledgeEngine):
+        @Rule(Person(age=W('age')),
+              Person(age=~W('age')))
+        def same_name(self, age):
+            nonlocal executions
+            executions.append(age)
+
+    ke_ = Person_KE()
+    ke_.deffacts(Person(name="name1", age=18))
+    ke_.deffacts(Person(name="name2", age=19))
     ke_.reset()
     ke_.run()
     assert set(executions) == {18, 19}
 
 
-@pytest.mark.pending
 def test_and_negated_variable__negative_match():
     from pyknow import Rule, NOT
-    from pyknow import Fact, L, W
+    from pyknow import Fact, W
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):
@@ -703,24 +726,23 @@ def test_and_negated_variable__negative_match():
     executions = []
 
     class Person_KE(KnowledgeEngine):
-        @Rule(Person(name=L("name"), age=W('age')),
-              Person(name=L("name"), age=~W("age")))
+        @Rule(Person(age=W('age')),
+              Person(age=~W("age")))
         def same_name(self, age):
             nonlocal executions
             executions.append(age)
 
     ke_ = Person_KE()
-    ke_.deffacts(Person(name=L("name"), age=L(18)))
-    ke_.deffacts(Person(name=L('name'), age=L(18)))
+    ke_.deffacts(Person(name="name1", age=18))
+    ke_.deffacts(Person(name="name2", age=18))
     ke_.reset()
     ke_.run()
     assert executions == []
 
 
-@pytest.mark.pending
 def test_not_aggregation():
     from pyknow import Rule, NOT, AND
-    from pyknow import Fact, L, W
+    from pyknow import Fact, W
     from pyknow.engine import KnowledgeEngine
 
     class Person(Fact):
@@ -732,42 +754,41 @@ def test_not_aggregation():
     executions = []
 
     class Person_KE(KnowledgeEngine):
-        @Rule(NOT(ConflictResolver(resolved=L(True))),
-              AND(Person(name=L("name"), age=W('age')),
-                  Person(name=L('name'), age=~W("age"))))
+        @Rule(NOT(ConflictResolver(resolved=True)),
+              AND(Person(age=W('age')),
+                  Person(age=~W("age"))))
         def same_name(self, age):
             nonlocal executions
             executions.append(age)
 
     ke_ = Person_KE()
-    ke_.deffacts(Person(name=L("name"), age=L(18)))
-    ke_.deffacts(Person(name=L('name'), age=L(19)))
-    ke_.deffacts(ConflictResolver(resolved=L(True)))
+    ke_.deffacts(Person(name="name1", age=18))
+    ke_.deffacts(Person(name='name2', age=19))
+    ke_.deffacts(ConflictResolver(resolved=True))
     ke_.reset()
     ke_.run()
     assert executions == []
 
     executions = []
-
     ke_ = Person_KE()
-    ke_.deffacts(Person(name=L("name"), age=L(18)))
-    ke_.deffacts(Person(name=L('name'), age=L(19)))
+    ke_.deffacts(Person(name="name1", age=18))
+    ke_.deffacts(Person(name='name2', age=19))
     ke_.reset()
     ke_.run()
-    assert executions == [19]
-    executions = []
+    assert set(executions) == {18, 19}
 
+    executions = []
     ke_ = Person_KE()
-    ke_.deffacts(Person(name=L("name"), age=L(18)))
-    ke_.deffacts(Person(name=L('name'), age=L(18)))
+    ke_.deffacts(Person(name="name1", age=18))
+    ke_.deffacts(Person(name="name2", age=18))
     ke_.reset()
     ke_.run()
     assert executions == []
 
     ke_ = Person_KE()
-    ke_.deffacts(Person(name=L("name"), age=L(18)))
-    ke_.deffacts(Person(name=L('name'), age=L(18)))
-    ke_.deffacts(ConflictResolver(resolved=L(True)))
+    ke_.deffacts(Person(name="name1", age=18))
+    ke_.deffacts(Person(name="name2", age=18))
+    ke_.deffacts(ConflictResolver(resolved=True))
     ke_.reset()
     ke_.run()
     assert executions == []

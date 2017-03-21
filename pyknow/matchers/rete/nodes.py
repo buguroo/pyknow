@@ -8,6 +8,7 @@ needed in this implementation.
 """
 from collections.abc import Mapping
 from contextlib import suppress
+from itertools import chain
 
 from pyknow.activation import Activation
 from pyknow.rule import Rule
@@ -142,7 +143,8 @@ class OrdinaryMatchNode(mixins.AnyChild,
         self.left_memory = list()
         self.right_memory = list()
 
-    def __activation(self, token, branch_memory, matching_memory):
+    def __activation(self, token, branch_memory, matching_memory,
+                     is_left=True):
         """
         Node activation internal function.
 
@@ -164,12 +166,21 @@ class OrdinaryMatchNode(mixins.AnyChild,
 
         for other_data, other_context in matching_memory:
             other_context = dict(other_context)
-            match = self.matcher(token.context, other_context)
+            if is_left:
+                match = self.matcher(token.context, other_context)
+            else:
+                match = self.matcher(other_context, token.context)
 
             if match:
                 newcontext = {}
-                newcontext.update(token.context)
-                newcontext.update(other_context)
+                for k, v in chain(token.context.items(),
+                                  other_context.items()):
+                    if isinstance(k, tuple):
+                        # Negated value are not needed any further
+                        pass
+                    else:  # Normal value
+                        newcontext[k] = v
+
                 newtoken = Token(token.tag,
                                  token.data | other_data,
                                  newcontext)
@@ -178,11 +189,17 @@ class OrdinaryMatchNode(mixins.AnyChild,
 
     def _activate_left(self, token):
         """Node left activation."""
-        self.__activation(token, self.left_memory, self.right_memory)
+        self.__activation(token,
+                          self.left_memory,
+                          self.right_memory,
+                          is_left=True)
 
     def _activate_right(self, token):
         """Node right activation."""
-        self.__activation(token, self.right_memory, self.left_memory)
+        self.__activation(token,
+                          self.right_memory,
+                          self.left_memory,
+                          is_left=False)
 
 
 class ConflictSetNode(mixins.AnyChild,
@@ -221,9 +238,10 @@ class ConflictSetNode(mixins.AnyChild,
 
     def get_activations(self):
         """Return a list of activations."""
-        return [Activation(self.rule,
-                           tuple(info.data),
-                           dict(info.context))
+        return [Activation(
+                    self.rule,
+                    tuple(info.data),
+                    {k: v for k, v in info.context if isinstance(k, str)})
                 for info in self.memory]
 
     def __repr__(self):
