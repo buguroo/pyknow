@@ -6,15 +6,14 @@
 from inspect import getmembers
 import logging
 
+from pyknow import abstract
+
 from pyknow.agenda import Agenda
-from pyknow.fact import InitialFact, Context, L
+from pyknow.fact import InitialFact
 from pyknow.factlist import FactList
 from pyknow.rule import Rule
-from pyknow.strategies import Depth
 
 logging.basicConfig()
-
-# pylint: disable=too-many-instance-attributes
 
 
 class KnowledgeEngine:
@@ -27,78 +26,24 @@ class KnowledgeEngine:
     This could be considered, when inherited from, as the
     ``knowlege-base``.
     """
-
-    __strategy__ = Depth
+    from pyknow.matchers import ReteMatcher as __matcher__
+    from pyknow.strategies import DepthStrategy as __strategy__
 
     def __init__(self):
-        self.context = Context()
         self._fixed_facts = []
-        self.facts = FactList()
         self.running = False
+        self.facts = FactList()
         self.agenda = Agenda()
-        self.strategy = self.__strategy__()
-        self._parent = False
-        self.shared_attributes = {}
 
-    def __repr__(self):
-        return "{}({})".format(self.__class__.__name__, self.shared_attributes)
+        if not issubclass(self.__matcher__, abstract.Matcher):
+            raise TypeError("__matcher__ must be a subclass of Matcher")
+        else:
+            self.matcher = self.__matcher__(self)
 
-    def set_shared_attributes(self, **shared_attributes):
-        """
-        Stablises a dict with shared attributes to be used
-        by this KE's childs on a tree
-        """
-
-        self.shared_attributes.update(shared_attributes)
-
-    @property
-    def parent(self):
-        """
-        Parent Knowledge Engine. Used in tree-like KEs.
-        :return: KnowledgeEngine
-        """
-
-        return self._parent
-
-    @parent.setter
-    def parent(self, parent):
-        """
-        Set a parent for later use.
-        It must inherit from ``pyknow.engine.KnowledgeEngine``
-        """
-
-        if not isinstance(parent, KnowledgeEngine):
-            raise ValueError("Parent must descend from KnowledgeEngine")
-
-        self._parent = parent
-
-    def declare(self, *facts):
-        """
-        Declare from inside a fact, equivalent to ``assert`` in clips.
-
-        .. note::
-
-            This updates the agenda.
-        """
-
-        if not self.running:
-            logging.warning("Declaring fact while not run()")
-        self.__declare(*facts)
-        self.strategy.update_agenda(self.agenda, self.get_activations())
-
-    def __declare(self, *facts):
-        """
-        Internal declaration method. Used for ``declare`` and ``deffacts``
-        """
-
-        def _declare_facts(facts):
-            """ Declare facts """
-            for fact in facts:
-                for value in fact.value.values():
-                    if not isinstance(value, L):
-                        raise TypeError("Can only use ``L`` tipe on declare")
-                yield self.facts.declare(fact)
-        return list(_declare_facts(facts))
+        if not issubclass(self.__strategy__, abstract.Strategy):
+            raise TypeError("__strategy__ must be a subclass of Strategy")
+        else:
+            self.strategy = self.__strategy__()
 
     def deffacts(self, *facts):
         """
@@ -111,29 +56,13 @@ class KnowledgeEngine:
 
         self._fixed_facts.extend(facts)
 
-    def retract(self, idx):
+    def load_initial_facts(self):
         """
-        Retracts a specific fact, using its index
-
-        .. note::
-            This updates the agenda
+        Declares all fixed_facts
         """
 
-        idx = self.facts.retract(idx)
-        self.agenda.remove_from_fact(idx)
-        self.strategy.update_agenda(self.agenda, self.get_activations())
-
-    def retract_matching(self, fact):
-        """
-        Retracts a specific fact, comparing against another fact
-
-        .. note::
-            This updates the agenda
-        """
-
-        for idx in self.facts.retract_matching(fact):
-            self.agenda.remove_from_fact(idx)
-        self.strategy.update_agenda(self.agenda, self.get_activations())
+        if self._fixed_facts:
+            self.__declare(*self._fixed_facts)
 
     def modify(self, fact, result_fact):
         """
@@ -160,42 +89,47 @@ class KnowledgeEngine:
 
     def get_activations(self):
         """
-        Matches the rule-base (see :func:`pyknow.engine.get_rules`)
-        with the fact-list and returns each match
+        Return activations
+        """
+        return self.matcher.changes(*self.facts.changes)
+
+    def retract(self, idx):
+        """
+        Retracts a specific fact, using its index
+
+        .. note::
+            This updates the agenda
         """
 
-        for rule in self.get_rules():
-            capturations = rule.get_capturations(self.facts)
-            for act in rule.get_activations(self.facts, capturations):
-                if act:
-                    act.rule = rule
-                    yield act
+        idx = self.facts.retract(idx)
+        self.agenda.remove_from_fact(idx)
+        self.strategy.update_agenda(self.agenda, self.get_activations())
 
-        return
+    def retract_matching(self, fact):
+        """
+        Retracts a specific fact, comparing against another fact
 
-    def run(self, steps=None):
+        .. note::
+            This updates the agenda
+        """
+
+        for idx in self.facts.retract_matching(fact):
+            self.agenda.remove_from_fact(idx)
+        self.strategy.update_agenda(self.agenda, self.get_activations())
+
+    def run(self, steps=float('inf')):
         """
         Execute agenda activations
         """
 
         self.running = True
-        while steps is None or steps > 0:
+        while steps > 0:
             activation = self.agenda.get_next()
             if activation is None:
                 break
             else:
-                if steps is not None:
-                    steps -= 1
-                activation.rule(self, activation=activation)
-        self.running = False
-
-    def load_initial_facts(self):
-        """
-        Declares all fixed_facts
-        """
-
-        if self._fixed_facts:
-            self.__declare(*self._fixed_facts)
+                steps -= 1
+                activation.rule(self, **activation.context)
 
     def reset(self):
         """
@@ -210,4 +144,28 @@ class KnowledgeEngine:
         self.facts = FactList()
         self.__declare(InitialFact())
         self.load_initial_facts()
-        self.strategy.update_agenda(self.agenda, self.get_activations())
+        activations = self.get_activations()
+        self.strategy.update_agenda(self.agenda, activations)
+        self.running = False
+
+    def __declare(self, *facts):
+        """
+        Internal declaration method. Used for ``declare`` and ``deffacts``
+        """
+
+        return [self.facts.declare(fact) for fact in facts]
+
+    def declare(self, *facts):
+        """
+        Declare from inside a fact, equivalent to ``assert`` in clips.
+
+        .. note::
+
+            This updates the agenda.
+        """
+
+        if not self.running:
+            logging.warning("Declaring fact while not run()")
+        self.__declare(*facts)
+        activations = self.get_activations()
+        self.strategy.update_agenda(self.agenda, activations)

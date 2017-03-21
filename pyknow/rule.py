@@ -1,36 +1,30 @@
 #!/usr/bin/env python
 """
+Definitions of clips' Conditional Elements, except ``Pattern Conditional
+Element``.
 
-Definitions of clips' Conditional Elements, except
-``Pattern Conditional Element``.
-
-``Pattern CE`` defines direct matching against patterns, wich is a special
-case implemented in :mod:`pyknow.fact`.
+``Pattern CE`` defines direct matching against patterns, wich is a
+special case implemented in :mod:`pyknow.fact`.
 
 """
+from collections.abc import Callable
+from functools import update_wrapper, partial
+from itertools import chain
 
-from functools import update_wrapper
-from itertools import chain, product
-
-from pyknow.fact import InitialFact
-from pyknow.factlist import FactList
-from pyknow.activation import Activation
 from pyknow.watchers import RULE_WATCHER
-from pyknow.match import Capturation
 
 
-def sum_objs(objs):
-    """
-    Sum objects. This is done like this for if not, sum() by default uses
-    '0' as start, thus tries to sum whatever with provide with zero.
-    """
+class ConditionalElement(tuple):
+    """Base Conditional Element"""
 
-    first_obj = next(objs, None)
-    if first_obj is not None:
-        return sum(objs, first_obj)
+    def __new__(cls, *args):
+        return super(ConditionalElement, cls).__new__(cls, args)
+
+    def __repr__(self):
+        return "%s%s" % (self.__class__.__name__, super().__repr__())
 
 
-class Rule:
+class Rule(ConditionalElement):
     """
     Base ``CE``, all ``CE`` are to derive from this class.
 
@@ -38,107 +32,204 @@ class Rule:
     to be called twice:
 
     #. The first call is when the decorator is been created. At this
-       point we assign the function decorated to ``self.__fn`` and
+       point we assign the function decorated to ``self._wrapped`` and
        return ``self`` to be called the second time.
 
     #. The second call is to execute the decorated function, se we
        pass all the arguments along.
     """
 
-    def __init__(self, *conds, salience=0):
-        if not conds:
-            conds = (InitialFact(),)
-        self.__fn = None
-        self._conds = conds
-        self.salience = salience
-        RULE_WATCHER.debug("Initialized rule with conds %s", conds)
+    def __new__(cls, *args, salience=0):
+        obj = super(Rule, cls).__new__(cls, *args)
 
-    def __repr__(self):
-        return "{}({})".format(self.__class__.__name__, self._conds)
+        obj._wrapped = None
+        obj._wrapped_self = None
+        obj.salience = salience
 
-    def __call__(self, fst=None, *args, **kwargs):
+        RULE_WATCHER.debug("Initialized rule : %r", obj)
+
+        return obj
+
+    def __hash__(self):
+        return hash(tuple(self)
+                    + (self._wrapped, self._wrapped_self, self.salience))
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            self_data = tuple(self) + (self._wrapped,
+                                       self._wrapped_self,
+                                       self.salience)
+            other_data = tuple(other) + (other._wrapped,
+                                         other._wrapped_self,
+                                         other.salience)
+            return self_data == other_data
+        else:
+            return False
+
+    def __call__(self, *args, **kwargs):
         """
         Make method checks if it's the first call, and update wrapper.
         Othersise execute the RHS.
         """
-        if self.__fn is None and fst is None:
-            raise AttributeError("Mandatory function not provided.")
+        if self._wrapped is None:
+            if not args:
+                raise AttributeError("Mandatory function not provided.")
+            else:
+                self._wrapped = args[0]
+                return update_wrapper(self, self._wrapped)
+        elif self._wrapped_self is None:
+            RULE_WATCHER.debug(
+                "Executing rule function %s (args=%r, kwargs=%r)",
+                self._wrapped.__name__, args, kwargs)
+            return self._wrapped(*args, **kwargs)
+        else:
+            RULE_WATCHER.debug(
+                "Executing rule method %s (args=%r, kwargs=%r)",
+                self._wrapped.__name__, args, kwargs)
+            return self._wrapped(self._wrapped_self, *args, **kwargs)
 
-        if self.__fn is None and fst is not None:
-            self.__fn = fst
-            return update_wrapper(self, self.__fn)
+    def __repr__(self):
+        return "%s => %r" % (super().__repr__(), self._wrapped)
 
-        if 'activation' in kwargs:
-            activation = kwargs.pop('activation')
-            RULE_WATCHER.debug("Executing rule %s for activation %s",
-                               self, activation)
-            if activation.context:
-                kwargs.update(activation.context)
-
-        return self.__fn(*tuple(obj for obj in (fst,) if obj) + args, **kwargs)
-
-    def get_activations(self, factlist, capturations=Capturation()):
-        """
-        For this :obj:`pyknow.rule.Rule`, returns all the
-        :obj:`pyknow.activation.Activation`, for the provided factlist.
-
-        :param factlist: :obj:`pyknow.factlist.FactList` to match against.
-        :return: Tuple of unique :obj:`pyknow.activation.Activation` matches.
-        """
-
-        if not isinstance(factlist, FactList):
-            raise ValueError("Factlist must be a factlist instance")
-
-        def _all_activations():
-            """
-            Tengo un problema aqui al sacar las activaciones.
-            El InitialFact tambien matchea y entra dentro del product(),
-            entonces acabo con una activación con el initialfact y otra
-            sin el en el caso de los or
-            """
-            for cond in self._conds:
-                yield (a for a in cond.get_activations(factlist, capturations))
-
-        return (sum_objs(iter(a)) for a in product(*_all_activations()))
-
-    def get_capturations(self, factlist):
-        """
-        Return captured values with its facts from all our children
-        """
-        return sum((cond.get_capturations(factlist) for cond in self._conds),
-                   Capturation())
+    def __get__(self, instance, owner):
+        self._wrapped_self = instance
+        return self
 
 
-class AND(Rule):
+class ComposableCE:
+    def __and__(self, other):
+        if isinstance(self, AND) and isinstance(other, AND):
+            return AND(*[x for x in chain(self, other)])
+        elif isinstance(self, AND):
+            return AND(*[x for x in self]+[other])
+        elif isinstance(other, AND):
+            return AND(*[self]+[x for x in other])
+        else:
+            return AND(self, other)
+
+    def __or__(self, other):
+        if isinstance(self, OR) and isinstance(other, OR):
+            return OR(*[x for x in chain(self, other)])
+        elif isinstance(self, OR):
+            return OR(*[x for x in self]+[other])
+        elif isinstance(other, OR):
+            return OR(*[self]+[x for x in other])
+        else:
+            return OR(self, other)
+
+    def __invert__(self):
+        return NOT(self)
+
+
+class AND(ComposableCE, ConditionalElement):
     """
     ``AND CE``
     ----------
 
     See (:ref:`conditional_and`) narrative documentation.
     """
+
     pass
 
 
-class OR(Rule):
+class OR(ComposableCE, ConditionalElement):
     """
     ``Or CE``
     ---------
     See (:ref:`conditional_or`) narrative documentation
     """
 
-    def get_activations(self, factlist, capturations):
-        activations = (cond.get_activations(factlist, capturations)
-                       for cond in self._conds)
-        return iter(set(chain(*activations)))
+    pass
 
 
-class NOT(Rule):
+class NOT(ComposableCE, ConditionalElement):
     """
     ``NOT CE``
     ----------
     See (:ref:`conditional_not`) narrative documentation
     """
-    def get_activations(self, factlist, capturations):
-        if next(super().get_activations(factlist, capturations), None) is None:
-            if factlist.facts:
-                yield Activation(rule=None, facts=(0,))
+
+    pass
+
+
+class ComposablePCE:
+    def __and__(self, other):
+        if isinstance(self, ANDPCE) and isinstance(other, ANDPCE):
+            return ANDPCE(*[x for x in chain(self, other)])
+        elif isinstance(self, ANDPCE):
+            return ANDPCE(*[x for x in self]+[other])
+        elif isinstance(other, ANDPCE):
+            return ANDPCE(*[self]+[x for x in other])
+        else:
+            return ANDPCE(self, other)
+
+    def __or__(self, other):
+        if isinstance(self, ORPCE) and isinstance(other, ORPCE):
+            return ORPCE(*[x for x in chain(self, other)])
+        elif isinstance(self, ORPCE):
+            return ORPCE(*[x for x in self]+[other])
+        elif isinstance(other, ORPCE):
+            return ORPCE(*[self]+[x for x in other])
+        else:
+            return ORPCE(self, other)
+
+    def __invert__(self):
+        return NOTPCE(self)
+
+
+class PatternConditionalElement(ComposablePCE, ConditionalElement):
+    pass
+
+
+class ANDPCE(PatternConditionalElement):
+    pass
+
+
+class ORPCE(PatternConditionalElement):
+    pass
+
+
+class NOTPCE(PatternConditionalElement):
+    pass
+
+
+class HasID:
+    def __hash__(self):
+        return hash((self.id, ) + tuple(self))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) \
+            and tuple(self) == tuple(other) \
+            and self.id == other.id
+
+
+class LiteralPCE(HasID, PatternConditionalElement):
+    def __new__(cls, value, id=None):
+        obj = super(LiteralPCE, cls).__new__(cls, value)
+        obj.id = id
+        obj.value = value
+        return obj
+
+    def __repr__(self):
+        return repr(self[0])
+
+
+class WildcardPCE(HasID, PatternConditionalElement):
+    def __new__(cls, id=None):
+        obj = super(WildcardPCE, cls).__new__(cls)
+        obj.id = id
+        return obj
+
+    def __repr__(self):
+        return "W()" if not self else "W(%r)" % self[0]
+
+
+class PredicatePCE(PatternConditionalElement):
+    def __new__(cls, match, id=None):
+        if not isinstance(match, Callable):
+            raise TypeError("PredicatePCE needs a callable.")
+        else:
+            obj = super(PredicatePCE, cls).__new__(cls, match)
+            obj.id = id
+            obj.match = match
+            return obj
