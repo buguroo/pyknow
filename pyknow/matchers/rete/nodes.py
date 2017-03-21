@@ -106,8 +106,16 @@ class FeatureTesterNode(mixins.AnyChild,
         if match:
             if isinstance(match, Mapping):
                 for key, value in match.items():
-                    if token.context.get(key, value) != value:
-                        return False
+                    if isinstance(key, tuple):  # Negated condition
+                        if key[1] in token.context \
+                                and token.context[key[1]] == value:
+                            return False
+                    else:
+                        if token.context.get(key, value) != value:
+                            return False
+                        if (False, key) in token.context \
+                                and token.context[(False, key)] == value:
+                            return False
                 token.context.update(match)
             for child in self.children:
                 MATCH_WATCHER.debug(
