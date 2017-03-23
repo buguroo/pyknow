@@ -19,7 +19,8 @@ class AnyChild:
 
     def add_child(self, node, callback):
         """Add node and callback to the children set."""
-        self.children.add(ChildNode(node, callback))
+        if node not in self.children:
+            self.children.append(ChildNode(node, callback))
 
 
 class HasMatcher:

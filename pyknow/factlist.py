@@ -11,7 +11,7 @@ Also see `retrieving the fact-list \
 
 from collections import OrderedDict
 from pyknow.fact import Fact
-from pyknow.watchers import FACT_WATCHER
+from pyknow import watchers
 
 
 class FactList:
@@ -29,8 +29,16 @@ class FactList:
 
     def __init__(self):
         self.facts = OrderedDict()
+        self._ifacts = dict()
         self.last_read = OrderedDict()
         self._fidx = 0
+        self.added = list()
+        self.removed = list()
+
+    def __repr__(self):
+        return "\n".join(
+            "{idx}: {fact}".format(idx=idx, fact=fact)
+            for idx, fact in self.facts.items())
 
     def declare(self, fact):
         """
@@ -53,9 +61,12 @@ class FactList:
 
         if fact not in self.facts.values():
             idx = self._fidx
+            fact['__factid__'] = idx
             self.facts[idx] = fact
+            self._ifacts[fact] = idx
             self._fidx += 1
-            FACT_WATCHER.debug("Declared fact: %s at %s", fact, idx)
+            self.added.append(fact)
+            watchers.FACTS.debug("==> %s: %r", idx, fact)
             return idx
         else:
             return None
@@ -76,8 +87,14 @@ class FactList:
         if idx not in self.facts:
             raise IndexError('Fact not found.')
 
+        fact = self.facts[idx]
+
+        watchers.FACTS.debug("<== %s: %r", idx, fact)
+        self.removed.append(fact)
+
         del self.facts[idx]
-        FACT_WATCHER.debug("Retracted fact %s", idx)
+        del self._ifacts[fact]
+
         return idx
 
     def retract_matching(self, fact):
@@ -88,20 +105,37 @@ class FactList:
         :throws ValueError: If no fact matches in the factlist
         """
 
-        facts = [idx for idx, value in self.facts.items() if fact == value]
-        if not facts:
-            raise ValueError("No matching fact")
-        return [self.retract(fact) for fact in facts]
+        def search_matching(model_fact):
+            model_fact_set = set(model_fact.items())
+
+            for fact in self.facts.values():
+                this_fact_set = {(k, v)
+                                 for k, v in fact.items()
+                                 if k != '__factid__'}
+                if model_fact_set == this_fact_set:
+                    yield fact['__factid__'][0]
+
+        retracted = [self.retract(f) for f in search_matching(fact)]
+        if retracted:
+            return retracted
+        else:
+            raise ValueError("No matching fact.")
 
     @property
     def changes(self):
         """
         Return a tuple with the removed and added facts since last run.
         """
-        removed = set(self.last_read.values()) - set(self.facts.values())
-        added = set(self.facts.values()) - set(self.last_read.values())
-        self.last_read = self.facts.copy()
-        return added, removed
+        try:
+            return self.added, self.removed
+        finally:
+            self.added = list()
+            self.removed = list()
 
-    def __repr__(self):
-        return str(self.facts.values())
+    def idx_from_fact(self, fact):
+        return self._ifacts[fact]
+
+    def indexes_from_facts(self, facts):
+        for f in facts:
+            if f in self._ifacts:
+                yield self._ifacts[f]

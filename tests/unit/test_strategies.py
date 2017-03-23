@@ -53,7 +53,7 @@ def test_DepthStrategy_update_agenda_no_facts_returns_empty_agenda():
     st = DepthStrategy()
     a = Agenda()
 
-    st.update_agenda(a, set())
+    st.update_agenda(a, [], [])
 
     assert not a.activations
 
@@ -63,44 +63,65 @@ def test_DepthStrategy_update_agenda_activations_to_agenda():
     from pyknow.activation import Activation
     from pyknow import Rule
     from pyknow.agenda import Agenda
+    from pyknow import Fact
+    from pyknow.factlist import FactList
 
-    act1 = Activation(rule=Rule(), facts=(1, ))
-    act2 = Activation(rule=Rule(), facts=(2, ))
+    fl = FactList()
+    f1 = Fact(1)
+    fl.declare(f1)
+    f2 = Fact(2)
+    fl.declare(f2)
+
+    act1 = Activation(rule=Rule(), facts=(f1, ))
+    act2 = Activation(rule=Rule(), facts=(f2, ))
 
     a = Agenda()
 
     st = DepthStrategy()
-    st.update_agenda(a, {act1, act2})
+    st.update_agenda(a, {act1, act2}, set())
 
     assert act1 in a.activations
     assert act2 in a.activations
 
 
-def test_DepthStrategy_update_agenda_asertion_order_affects_agenda_order_1():
+def test_DepthStrategy_update_agenda_assertion_order_affects_agenda_order_1():
     from pyknow.strategies import DepthStrategy
     from pyknow.activation import Activation
     from pyknow import Rule
     from pyknow.agenda import Agenda
+    from pyknow import Fact
+    from pyknow.factlist import FactList
 
-    act1 = Activation(rule=Rule(), facts=(1, ))
-    act2 = Activation(rule=Rule(), facts=(2, ))
+    fl = FactList()
+    f1 = Fact(1)
+    fl.declare(f1)
+    f2 = Fact(2)
+    fl.declare(f2)
+    f3 = Fact(3)
+    fl.declare(f3)
+    f4 = Fact(4)
+    fl.declare(f4)
+
+    act1 = Activation(rule=Rule(), facts=(f1, ))
+    act2 = Activation(rule=Rule(), facts=(f2, ))
     first = {act1, act2}
 
-    act3 = Activation(rule=Rule(), facts=(3, ))
-    act4 = Activation(rule=Rule(), facts=(4, ))
+    act3 = Activation(rule=Rule(), facts=(f3, ))
+    act4 = Activation(rule=Rule(), facts=(f4, ))
     second = {act3, act4}
 
     a = Agenda()
 
     st = DepthStrategy()
 
-    st.update_agenda(a, first)
-    st.update_agenda(a, second)
+    st.update_agenda(a, first, set())
+    run1 = set(a.activations)
 
-    left, right = set(list(a.activations)[:2]), set(list(a.activations)[2:])
+    st.update_agenda(a, second, first)
+    run2 = set(a.activations)
 
-    assert left == second
-    assert right == first
+    assert run1 == first
+    assert run2 == second
 
 
 def test_DepthStrategy_update_agenda_asertion_order_affects_agenda_order_2():
@@ -108,26 +129,39 @@ def test_DepthStrategy_update_agenda_asertion_order_affects_agenda_order_2():
     from pyknow.activation import Activation
     from pyknow import Rule
     from pyknow.agenda import Agenda
+    from pyknow import Fact
+    from pyknow.factlist import FactList
 
-    act1 = Activation(rule=Rule(), facts=(1, ))
-    act2 = Activation(rule=Rule(), facts=(2, ))
+    fl = FactList()
+    f1 = Fact(1)
+    fl.declare(f1)
+    f2 = Fact(2)
+    fl.declare(f2)
+    f3 = Fact(3)
+    fl.declare(f3)
+    f4 = Fact(4)
+    fl.declare(f4)
+
+    act1 = Activation(rule=Rule(), facts=(f1, ))
+    act2 = Activation(rule=Rule(), facts=(f2, ))
     first = {act1, act2}
 
-    act3 = Activation(rule=Rule(), facts=(3, ))
-    act4 = Activation(rule=Rule(), facts=(4, ))
+    act3 = Activation(rule=Rule(), facts=(f3, ))
+    act4 = Activation(rule=Rule(), facts=(f4, ))
     second = {act3, act4}
 
     a = Agenda()
 
     st = DepthStrategy()
 
-    st.update_agenda(a, second)
-    st.update_agenda(a, first)
+    st.update_agenda(a, second, set())
+    run1 = set(a.activations)
 
-    left, right = set(list(a.activations)[:2]), set(list(a.activations)[2:])
+    st.update_agenda(a, first, second)
+    run2 = set(a.activations)
 
-    assert left == first
-    assert right == second
+    assert run1 == second
+    assert run2 == first
 
 
 def test_DepthStrategy_update_agenda_different_salience():
@@ -136,12 +170,25 @@ def test_DepthStrategy_update_agenda_different_salience():
     from pyknow.strategies import DepthStrategy
     from pyknow.activation import Activation
     from pyknow import Rule
+    from pyknow import Fact
     from pyknow.agenda import Agenda
+    from pyknow.factlist import FactList
 
-    act1 = Activation(rule=Rule(salience=1), facts=(1, ))
-    act2 = Activation(rule=Rule(salience=2), facts=(2, ))
-    act3 = Activation(rule=Rule(salience=3), facts=(3, ))
-    act4 = Activation(rule=Rule(salience=4), facts=(4, ))
+    flist = FactList()
+
+    f1 = Fact(1)
+    flist.declare(f1)
+    f2 = Fact(2)
+    flist.declare(f2)
+    f3 = Fact(3)
+    flist.declare(f3)
+    f4 = Fact(4)
+    flist.declare(f4)
+
+    act1 = Activation(rule=Rule(salience=1), facts=(f1, ))
+    act2 = Activation(rule=Rule(salience=2), facts=(f2, ))
+    act3 = Activation(rule=Rule(salience=3), facts=(f3, ))
+    act4 = Activation(rule=Rule(salience=4), facts=(f4, ))
 
     acts = [act1, act2, act3, act4]
     shuffle(acts)
@@ -150,49 +197,10 @@ def test_DepthStrategy_update_agenda_different_salience():
     a = Agenda()
 
     for act in acts:
-        st.update_agenda(a, [act])
+        st.update_agenda(a, set(acts), set())
 
     order = list(a.activations)
-    assert (order.index(act4) < order.index(act3) <
-            order.index(act2) < order.index(act1))
-
-
-@pytest.mark.parametrize("strategy", ['DepthStrategy'])
-def test_Strategy_update_agenda_doesnt_add_executed_activations(strategy):
-    from pyknow import strategies
-    from pyknow.activation import Activation
-    from pyknow import Rule
-    from pyknow.agenda import Agenda
-
-    act1 = Activation(rule=Rule(), facts=(1, ))
-    act2 = Activation(rule=Rule(), facts=(2, ))
-
-    acts = [act1, act2]
-
-    st = getattr(strategies, strategy)()
-    a = Agenda()
-    a.executed.add(act1)
-
-    st.update_agenda(a, acts)
-
-    assert act1 not in a.activations
-    assert act2 in a.activations
-
-
-@pytest.mark.parametrize("strategy", ['DepthStrategy'])
-def test_Strategy_update_agenda_update_executed(strategy):
-    from pyknow import strategies
-    from pyknow.activation import Activation
-    from pyknow import Rule
-    from pyknow.agenda import Agenda
-
-    act1 = Activation(rule=Rule(), facts=(1, ))
-    act2 = Activation(rule=Rule(), facts=(2, ))
-
-    st = getattr(strategies, strategy)()
-    a = Agenda()
-    a.executed.add(act1)
-
-    st.update_agenda(a, [act2])
-
-    assert act1 not in a.executed
+    assert (order.index(act4)
+            < order.index(act3)
+            < order.index(act2)
+            < order.index(act1))

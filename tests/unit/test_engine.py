@@ -46,12 +46,6 @@ def test_KnowledgeEngine_has_retract():
     assert hasattr(KnowledgeEngine, 'retract')
 
 
-def test_KnowledgeEngine_has_retract_matching():
-    from pyknow.engine import KnowledgeEngine
-
-    assert hasattr(KnowledgeEngine, 'retract_matching')
-
-
 def test_KnowledgeEngine_retract_retracts_fact():
     from pyknow.engine import KnowledgeEngine
     from unittest.mock import patch
@@ -59,32 +53,8 @@ def test_KnowledgeEngine_retract_retracts_fact():
     ke = KnowledgeEngine()
     with patch('pyknow.factlist.FactList') as mock:
         ke.facts = mock
-        ke.retract(0)
+        ke.retract({'__factid__': (0, )})
         assert mock.retract.called
-
-
-def test_KnowledgeEngine_retract_matching_retracts_fact():
-    from pyknow.engine import KnowledgeEngine
-    from unittest.mock import patch
-
-    ke = KnowledgeEngine()
-    with patch('pyknow.factlist.FactList') as mock:
-        ke.facts = mock
-        ke.retract_matching(False)
-        assert mock.retract_matching.called
-
-
-def test_KnowledgeEngine_modify_retracts_and_declares():
-    from pyknow.engine import KnowledgeEngine
-    from unittest.mock import patch
-
-    ke = KnowledgeEngine()
-    with patch('pyknow.factlist.FactList') as mock:
-        with patch('pyknow.engine.KnowledgeEngine.declare') as declare_mock:
-            ke.facts = mock
-            ke.modify(False, False)
-            assert mock.retract_matching.called
-            assert declare_mock.called
 
 
 def test_KnowledgeEngine_has_agenda():
@@ -161,10 +131,15 @@ def test_KnowledgeEngine_get_activations_exists():
 def test_KnowledgeEngine_get_activations_returns_a_list():
     from pyknow.engine import KnowledgeEngine
     ke = KnowledgeEngine()
-    assert isinstance(ke.get_activations(), list)
+
+    res = ke.get_activations()
+
+    assert isinstance(res, tuple)
+    assert isinstance(res[0], set)
+    assert isinstance(res[1], set)
 
 
-def test_KnowledgeEngine_get_activations_returns_activations():
+def test_KnowledgeEngine_get_activations_returns_activations_added():
     from pyknow.engine import KnowledgeEngine
     from pyknow import Rule
     from pyknow import Fact
@@ -177,14 +152,14 @@ def test_KnowledgeEngine_get_activations_returns_activations():
             pass
 
     ke = Test()
+
+    ke.deffacts(Fact(a=1))
+    ke.deffacts(Fact(b=1))
+    ke.deffacts(Fact(c=1))
+
     ke.reset()
-    ke.run()
 
-    ke.declare(Fact(a=1))
-    ke.declare(Fact(b=1))
-    ke.declare(Fact(c=1))
-
-    assert len(list(ke.get_activations())) == 1
+    assert len(ke.agenda.activations) == 1
 
 
 def test_KnowledgeEngine_has_run():

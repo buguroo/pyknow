@@ -13,18 +13,19 @@ class Agenda:
     """
     def __init__(self):
         self.activations = deque()
-        self.executed = set()
+
+    def __repr__(self):
+        return "\n".join(
+            "{idx}: {rule} {facts}".format(idx=idx,
+                                           rule=act.rule.__name__,
+                                           facts=act.facts)
+            for idx, act in enumerate(self.activations))
 
     def get_next(self):
-        """
-        Returns the next activation, removes it from
-        activations list and adds it to executed activations list
+        """Returns the next activation, removes it from activations list."""
 
-        """
         try:
-            act = self.activations.popleft()
-            self.executed.add(act)
-            return act
+            return self.activations.popleft()
         except IndexError:
             return None
 

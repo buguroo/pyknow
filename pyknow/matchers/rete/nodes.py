@@ -12,7 +12,6 @@ from itertools import chain
 
 from pyknow.activation import Activation
 from pyknow.rule import Rule
-from pyknow.watchers import MATCH_WATCHER
 
 from . import mixins
 from .abstract import Node, OneInputNode, TwoInputNode
@@ -99,10 +98,6 @@ class FeatureTesterNode(mixins.AnyChild,
 
         match = self.matcher(fact)
 
-        MATCH_WATCHER.debug(
-            "%s matcher %s with %s returned %s", self.__class__.__name__,
-            self.matcher, token, match)
-
         if match:
             if isinstance(match, Mapping):
                 for key, value in match.items():
@@ -118,9 +113,6 @@ class FeatureTesterNode(mixins.AnyChild,
                             return False
                 token.context.update(match)
             for child in self.children:
-                MATCH_WATCHER.debug(
-                    "Invoking children callback %s with token %s",
-                    self.children, token)
                 child.callback(token)
 
     def __repr__(self):
@@ -230,6 +222,9 @@ class ConflictSetNode(mixins.AnyChild,
         else:
             self.rule = rule
 
+        self.added = set()
+        self.removed = set()
+
         super().__init__()
 
     def _reset(self):
@@ -238,19 +233,38 @@ class ConflictSetNode(mixins.AnyChild,
 
     def _activate(self, token):
         """Activate this node for the given token."""
+
+        info = token.to_info()
+
+        activation = Activation(
+            self.rule,
+            frozenset(info.data),
+            {k: v for k, v in info.context if isinstance(k, str)})
+
         if token.is_valid():
-            self.memory.append(token.to_info())
+            if info not in self.memory:
+                self.memory.append(info)
+                self.added.add(activation)
+                if activation in self.removed:
+                    self.removed.remove(activation)
         else:
-            with suppress(ValueError):
-                self.memory.remove(token.to_info())
+            try:
+                self.memory.remove(info)
+            except ValueError:
+                pass
+            else:
+                self.removed.add(activation)
+                if activation in self.added:
+                    self.added.remove(activation)
 
     def get_activations(self):
         """Return a list of activations."""
-        return [Activation(
-                    self.rule,
-                    tuple(info.data),
-                    {k: v for k, v in info.context if isinstance(k, str)})
-                for info in self.memory]
+        res = (self.added, self.removed)
+
+        self.added = set()
+        self.removed = set()
+
+        return res
 
     def __repr__(self):
         return repr(self.rule)

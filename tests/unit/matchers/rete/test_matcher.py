@@ -47,13 +47,13 @@ def test_retematcher_changes_are_propagated(TestNode):
     matcher.root_node.add_child(tn1, tn1.activate)
     matcher.root_node.add_child(tn2, tn2.activate)
 
-    f1 = Fact(a=1)
-    f2 = Fact(b=2)
-    f3 = Fact(c=3)
-    f4 = Fact(d=4)
+    f1 = Fact(__factid__=1)
+    f2 = Fact(__factid__=2)
+    f3 = Fact(__factid__=3)
+    f4 = Fact(__factid__=4)
 
-    matcher.changes(adding={f1, f2},
-                    deleting={f3, f4})
+    matcher.changes(adding=[f1, f2],
+                    deleting=[f3, f4])
 
     assert Token.valid(f1) in tn1.added
     assert Token.valid(f1) in tn2.added
@@ -78,12 +78,8 @@ def test_retematcher_changes_return_activations_if_csn():
     csn = ConflictSetNode(rule)
     matcher.root_node.add_child(csn, csn.activate)
 
-    activations = matcher.changes(adding={Fact(a=1),
-                                          Fact(b=2)})
+    added, removed = matcher.changes(adding=[Fact(__factid__=1),
+                                             Fact(__factid__=2)])
 
-    assert len(activations) == 2
-    assert all(isinstance(a, Activation) for a in activations)
-
-#
-# TODO (@dfrancos) walking into the engine building the network
-#
+    assert len(added) == 2
+    assert all(isinstance(a, Activation) for a in added)

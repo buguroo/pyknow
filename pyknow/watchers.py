@@ -12,6 +12,7 @@ import logging
 
 logging.basicConfig()
 
+
 def define_watcher(name):
     watcher = logging.getLogger('.'.join((__name__, name)))
     watcher.setLevel(logging.CRITICAL)

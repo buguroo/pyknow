@@ -8,10 +8,10 @@ special case implemented in :mod:`pyknow.fact`.
 
 """
 from collections.abc import Callable
-from functools import update_wrapper, partial
+from functools import update_wrapper, partial, lru_cache
 from itertools import chain
 
-from pyknow.watchers import RULE_WATCHER
+from pyknow import watchers
 
 
 class ConditionalElement(tuple):
@@ -46,8 +46,6 @@ class Rule(ConditionalElement):
         obj._wrapped_self = None
         obj.salience = salience
 
-        RULE_WATCHER.debug("Initialized rule : %r", obj)
-
         return obj
 
     def __hash__(self):
@@ -78,14 +76,8 @@ class Rule(ConditionalElement):
                 self._wrapped = args[0]
                 return update_wrapper(self, self._wrapped)
         elif self._wrapped_self is None:
-            RULE_WATCHER.debug(
-                "Executing rule function %s (args=%r, kwargs=%r)",
-                self._wrapped.__name__, args, kwargs)
             return self._wrapped(*args, **kwargs)
         else:
-            RULE_WATCHER.debug(
-                "Executing rule method %s (args=%r, kwargs=%r)",
-                self._wrapped.__name__, args, kwargs)
             return self._wrapped(self._wrapped_self, *args, **kwargs)
 
     def __repr__(self):
@@ -94,6 +86,17 @@ class Rule(ConditionalElement):
     def __get__(self, instance, owner):
         self._wrapped_self = instance
         return self
+
+
+class Bindable:
+    def __rlshift__(self, other):
+        if not isinstance(other, str):
+            raise TypeError("%s can only be binded to a string" % self)
+        elif self.id is not None:
+            raise RuntimeError("%s can only be binded once" % self)
+        else:
+            self.id = other
+            return self
 
 
 class ComposableCE:
@@ -198,12 +201,12 @@ class HasID:
         return hash((self.id, ) + tuple(self))
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) \
-            and tuple(self) == tuple(other) \
-            and self.id == other.id
+        return (self.__class__ == other.__class__
+                and self.id == other.id
+                and super().__eq__(other))
 
 
-class LiteralPCE(HasID, PatternConditionalElement):
+class LiteralPCE(HasID, Bindable, PatternConditionalElement):
     def __new__(cls, value, id=None):
         obj = super(LiteralPCE, cls).__new__(cls, value)
         obj.id = id
@@ -214,17 +217,17 @@ class LiteralPCE(HasID, PatternConditionalElement):
         return repr(self[0])
 
 
-class WildcardPCE(HasID, PatternConditionalElement):
+class WildcardPCE(HasID, Bindable, PatternConditionalElement):
     def __new__(cls, id=None):
         obj = super(WildcardPCE, cls).__new__(cls)
         obj.id = id
         return obj
 
     def __repr__(self):
-        return "W()" if not self else "W(%r)" % self[0]
+        return "W()" if self.id is None else "W(%r)" % self.id
 
 
-class PredicatePCE(PatternConditionalElement):
+class PredicatePCE(HasID, Bindable, PatternConditionalElement):
     def __new__(cls, match, id=None):
         if not isinstance(match, Callable):
             raise TypeError("PredicatePCE needs a callable.")

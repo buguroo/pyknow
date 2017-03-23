@@ -1,6 +1,8 @@
+from collections import deque
 import abc
 
-from pyknow.watchers import AGENDA_WATCHER
+from pyknow import watchers
+from pyknow.activation import Activation
 
 
 class Matcher(metaclass=abc.ABCMeta):
@@ -20,22 +22,29 @@ class Matcher(metaclass=abc.ABCMeta):
 
 
 class Strategy(metaclass=abc.ABCMeta):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.resolved = dict()
+
     @abc.abstractmethod
-    def _update_agenda(self, agenda, acts):
+    def _update_agenda(self, agenda, added, removed):
         pass
 
-    def update_agenda(self, agenda, acts):
-        acts_set = set(acts)
+    def update_agenda(self, agenda, added, removed):
+        for act in removed:
+            if act in agenda.activations:
+                watchers.ACTIVATIONS.debug(
+                    "<== %r: %r",
+                    getattr(act.rule, '__name__', None),
+                    sorted(act.facts, key=lambda x: hash(x.__class__)))
 
-        # Remove executed activations from the activation list
-        nonexecuted = acts_set - agenda.executed
+        for act in added:
+            watchers.ACTIVATIONS.debug(
+                "==> %r: %r",
+                getattr(act.rule, '__name__', None),
+                sorted(act.facts, key=lambda x: hash(x.__class__)))
 
         # Resolve conflicts using the appropiate strategy.
-        res = self._update_agenda(agenda, nonexecuted)
-
-        # Update executed set removing activations not found in the
-        # current set.
-        agenda.executed = acts_set & agenda.executed
-
-        AGENDA_WATCHER.debug("Agenda updated: %s", agenda)
-        return res
+        new_activations = deque(self._update_agenda(agenda, added, removed))
+        if new_activations != agenda.activations:
+            agenda.activations = new_activations

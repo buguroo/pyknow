@@ -5,17 +5,26 @@ See :ref:conditional_elements
 
 """
 from collections import OrderedDict
+from functools import lru_cache
+from itertools import chain
 import operator as op
 
 from pyknow.rule import PatternConditionalElement, LiteralPCE
-from pyknow.rule import AND, OR, NOT, ComposableCE
+from pyknow.rule import AND, OR, NOT, ComposableCE, Bindable
 
 
-class Fact(ComposableCE, OrderedDict):
+class Fact(ComposableCE, Bindable, dict):
     """
     Base Fact class
 
     """
+    def __init__(self, *args, **kwargs):
+        self.update(dict(chain(enumerate(args), kwargs.items())))
+
+    def update(self, mapping):
+        for k, v in mapping.items():
+            self[k] = v
+
     @staticmethod
     def arg_to_ce(arg):
         if not isinstance(arg, PatternConditionalElement):
@@ -23,25 +32,26 @@ class Fact(ComposableCE, OrderedDict):
         else:
             return arg
 
-    def __init__(self, *args, **kwargs):
-        super(Fact, self).__init__()
+    def __setitem__(self, key, value):
+        return super().__setitem__(key, self.arg_to_ce(value))
 
-        for idx, arg in enumerate(args):
-            self[idx] = self.arg_to_ce(arg)
+    def copy(self):
+        args = [v for k, v in self.items() if isinstance(k, int)]
+        kwargs = {k: v for k, v in self.items() if not isinstance(k, int)}
+        return self.__class__(*args, **kwargs)
 
-        for key, value in sorted(kwargs.items(), key=op.itemgetter(0)):
-            if key.isidentifier():
-                self[key] = self.arg_to_ce(value)
-            else:
-                raise ValueError("{!r} is not a valid identifier.".format(key))
+    @property
+    def id(self):
+        return self.get('id', None)
+
+    @id.setter
+    def id(self, value):
+        super().__setitem__('id', LiteralPCE(value))
 
     @classmethod
     def from_iter(cls, pairs):
         obj = cls()
-
-        for k, v in pairs:
-            obj[k] = v
-
+        obj.update(dict(pairs))
         return obj
 
     def __repr__(self):
@@ -52,13 +62,15 @@ class Fact(ComposableCE, OrderedDict):
                  for k, v in self.items())))
 
     def __hash__(self):
-        return hash(frozenset(self.items()))
+        try:
+            return self._hash
+        except AttributeError:
+            self._hash = hash(frozenset(self.items()))
+            return self._hash
 
     def __eq__(self, other):
-        if type(self) == type(other):
-            return hash(self) == hash(other)
-        else:
-            return False
+        return (self.__class__ == other.__class__
+                and super().__eq__(other))
 
 
 class InitialFact(Fact):

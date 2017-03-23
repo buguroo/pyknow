@@ -84,11 +84,14 @@ def test_factlist_changes():
     from pyknow import Fact
     flist = FactList()
 
-    flist.declare(Fact(a=1))
-    assert flist.changes[0] == {Fact(a=1)}
 
-    flist.declare(Fact(b=1))
-    assert flist.changes[0] == {Fact(b=1)}
+    f0 = Fact(a=1)
+    flist.declare(f0)
+    assert flist.changes[0] == [f0]
+
+    f1 = Fact(b=1)
+    flist.declare(f1)
+    assert flist.changes[0] == [f1]
 
     flist.retract_matching(Fact(b=1))
-    assert flist.changes[1] == {Fact(b=1)}
+    assert flist.changes[1] == [f1]

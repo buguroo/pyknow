@@ -12,9 +12,10 @@ from functools import lru_cache
 from itertools import chain
 from collections import Counter
 
-from pyknow import OR
+from .check import TypeCheck, FactCapture, FeatureCheck
 from .nodes import BusNode, ConflictSetNode, FeatureTesterNode
 from .utils import prepare_rule, extract_facts, generate_checks, wire_rule
+from pyknow import OR
 from pyknow.abstract import Matcher
 
 
@@ -29,13 +30,19 @@ class ReteMatcher(Matcher):
 
     @lru_cache(maxsize=1)
     def _get_conflict_set_nodes(self):
+        nodes = list()
+
         def _get_csn(node):
             if isinstance(node, ConflictSetNode):
                 yield node
             for child in node.children:
                 yield from _get_csn(child.node)
 
-        return set(_get_csn(self.root_node))
+        for node in _get_csn(self.root_node):
+            if node not in nodes:
+                nodes.append(node)
+
+        return tuple(nodes)
 
     def changes(self, adding=None, deleting=None):
         """Pass the given changes to the root_node."""
@@ -46,10 +53,15 @@ class ReteMatcher(Matcher):
             for deleted in deleting:
                 self.root_node.remove(deleted)
 
-        activations = []
+        added = set()
+        removed = set()
+
         for csn in self._get_conflict_set_nodes():
-            activations += csn.get_activations()
-        return activations
+            c_added, c_removed = csn.get_activations()
+            added |= c_added
+            removed |= c_removed
+
+        return (added, removed)
 
     def build_network(self):
         ruleset = self.prepare_ruleset(self.engine)
@@ -84,7 +96,18 @@ class ReteMatcher(Matcher):
         # Make a ranking of the most used checks
         check_rank = Counter(chain.from_iterable(fact_checks.values()))
 
-        def weighted_check_sort(rule):
+        def weighted_check_sort(check):
+            """Sort check by its type and number of times seen."""
+            if isinstance(check, TypeCheck):
+                return float('inf')
+            elif isinstance(check, FactCapture):
+                return float('-inf')
+            elif isinstance(check, FeatureCheck):
+                return check_rank[check]
+            else:
+                raise TypeError("Unknown check type.")
+
+        def weighted_rule_sort(rule):
             """Sort rules by the average weight of its checks."""
             total = 0
             for fact in rule_facts[rule]:
@@ -92,7 +115,7 @@ class ReteMatcher(Matcher):
                     total += check_rank[check]
             return total / len(rule_facts[rule])
 
-        sorted_rules = sorted(ruleset, key=weighted_check_sort, reverse=True)
+        sorted_rules = sorted(ruleset, key=weighted_rule_sort, reverse=True)
 
         # For rule in rank order and for each rule fact also in rank
         # order, build the alpha brank looking for an existing node
@@ -103,7 +126,7 @@ class ReteMatcher(Matcher):
                 current_node = root_node
                 fact_sorted_checks = sorted(
                     fact_checks[fact],
-                    key=lambda c: check_rank[c],
+                    key=weighted_check_sort,
                     reverse=True)
 
                 for check in fact_sorted_checks:

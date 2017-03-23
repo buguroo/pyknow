@@ -12,6 +12,7 @@ from pyknow.agenda import Agenda
 from pyknow.fact import InitialFact
 from pyknow.factlist import FactList
 from pyknow.rule import Rule
+from pyknow import watchers
 
 logging.basicConfig()
 
@@ -64,15 +65,24 @@ class KnowledgeEngine:
         if self._fixed_facts:
             self.__declare(*self._fixed_facts)
 
-    def modify(self, fact, result_fact):
-        """
-        Modifies a fact.
-        Facts are inmutable in Clips, thus, as documented in clips reference
-        manual, this retracts a fact and then re-declares it
+    def modify(self, declared_fact, **modifiers):
         """
 
-        self.retract_matching(fact)
-        self.declare(result_fact)
+        Modifies a fact.
+
+        Facts are inmutable in Clips, thus, as documented in clips
+        reference manual, this retracts a fact and then re-declares it
+
+        `modifiers` must be a Mapping object containing keys and values
+        to be changed.
+
+        """
+
+        self.retract(declared_fact)
+
+        newfact = declared_fact.copy()
+        newfact.update(modifiers)
+        self.declare(newfact)
 
     def get_rules(self):
         """
@@ -93,29 +103,21 @@ class KnowledgeEngine:
         """
         return self.matcher.changes(*self.facts.changes)
 
-    def retract(self, idx):
+    def __retract(self, idx):
+        idx = self.facts.retract(idx)
+        self.agenda.remove_from_fact(idx)
+        if not self.running:
+            added, removed = self.get_activations()
+            self.strategy.update_agenda(self.agenda, added, removed)
+
+    def retract(self, declared_fact):
         """
         Retracts a specific fact, using its index
 
         .. note::
             This updates the agenda
         """
-
-        idx = self.facts.retract(idx)
-        self.agenda.remove_from_fact(idx)
-        self.strategy.update_agenda(self.agenda, self.get_activations())
-
-    def retract_matching(self, fact):
-        """
-        Retracts a specific fact, comparing against another fact
-
-        .. note::
-            This updates the agenda
-        """
-
-        for idx in self.facts.retract_matching(fact):
-            self.agenda.remove_from_fact(idx)
-        self.strategy.update_agenda(self.agenda, self.get_activations())
+        self.__retract(declared_fact['__factid__'][0])
 
     def run(self, steps=float('inf')):
         """
@@ -123,13 +125,41 @@ class KnowledgeEngine:
         """
 
         self.running = True
-        while steps > 0:
+        activation = None
+        execution = 0
+        while steps > 0 and self.running:
+
+            added, removed = self.get_activations()
+            self.strategy.update_agenda(self.agenda, added, removed)
+
+            for idx, act in enumerate(self.agenda.activations):
+                watchers.AGENDA.debug(
+                    "%d: %r %r",
+                    idx,
+                    act.rule.__name__,
+                    list(self.facts.indexes_from_facts(act.facts)))
+
             activation = self.agenda.get_next()
+
             if activation is None:
                 break
             else:
                 steps -= 1
+                execution += 1
+
+                watchers.RULES.debug(
+                    "FIRE %s %s: %s",
+                    execution,
+                    activation.rule.__name__,
+                    list(self.facts.indexes_from_facts(activation.facts)))
+
                 activation.rule(self, **activation.context)
+                self.strategy.executed.add(activation)
+
+        self.running = False
+
+    def halt(self):
+        self.running = False
 
     def reset(self):
         """
@@ -144,16 +174,17 @@ class KnowledgeEngine:
         self.facts = FactList()
         self.__declare(InitialFact())
         self.load_initial_facts()
-        activations = self.get_activations()
-        self.strategy.update_agenda(self.agenda, activations)
         self.running = False
 
     def __declare(self, *facts):
         """
         Internal declaration method. Used for ``declare`` and ``deffacts``
         """
+        res = [self.facts.declare(fact) for fact in facts]
 
-        return [self.facts.declare(fact) for fact in facts]
+        if not self.running:
+            added, removed = self.get_activations()
+            self.strategy.update_agenda(self.agenda, added, removed)
 
     def declare(self, *facts):
         """
@@ -167,5 +198,3 @@ class KnowledgeEngine:
         if not self.running:
             logging.warning("Declaring fact while not run()")
         self.__declare(*facts)
-        activations = self.get_activations()
-        self.strategy.update_agenda(self.agenda, activations)

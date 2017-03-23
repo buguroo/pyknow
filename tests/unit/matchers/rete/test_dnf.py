@@ -91,7 +91,7 @@ def test_or_inside_fact():
                      Fact(a=LiteralPCE(2), b=3)))
 
     result = dnf(input_)
-    assert result == output
+    assert set(result[0]) == set(output[0])
 
 
 def test_multiple_or_inside_fact():
@@ -107,7 +107,7 @@ def test_multiple_or_inside_fact():
                      Fact(a=LiteralPCE(2), b=LiteralPCE(4))))
 
     result = dnf(input_)
-    assert result == output
+    assert set(result[0]) == set(output[0])
 
 
 def test_double_not_inside_fact():

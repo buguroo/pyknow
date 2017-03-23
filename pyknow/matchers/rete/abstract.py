@@ -7,7 +7,7 @@ class Node(metaclass=abc.ABCMeta):
 
     def __init__(self):
         """Initialize `self.children` and reset the node own memory."""
-        self.children = set()
+        self.children = list()
         self._reset()  # Reset it's OWN memory.
 
     @abc.abstractmethod
