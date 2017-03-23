@@ -9,21 +9,16 @@ and all of them.
 
 """
 import logging
-import os
 
 logging.basicConfig()
-RULE_WATCHER = logging.getLogger('rule')
-FACT_WATCHER = logging.getLogger('fact')
-AGENDA_WATCHER = logging.getLogger('agenda')
-MATCH_WATCHER = logging.getLogger('match')
 
-RULE_WATCHER.setLevel(logging.CRITICAL)
-FACT_WATCHER.setLevel(logging.CRITICAL)
-AGENDA_WATCHER.setLevel(logging.CRITICAL)
-MATCH_WATCHER.setLevel(logging.CRITICAL)
+def define_watcher(name):
+    watcher = logging.getLogger('.'.join((__name__, name)))
+    watcher.setLevel(logging.CRITICAL)
+    return watcher
 
 
-def watch(what=False):
+def watch(*what, level=logging.DEBUG):
     """
     Enable watchers.
 
@@ -32,10 +27,17 @@ def watch(what=False):
 
     """
     if not what:
-        what = [RULE_WATCHER, FACT_WATCHER, AGENDA_WATCHER, MATCH_WATCHER]
+        what = ALL
+
     for watcher in what:
-        watcher.setLevel(logging.DEBUG)
+        watcher.setLevel(level)
 
 
-if os.getenv("ENABLE_WATCHERS"):
-    watch()
+RULES = define_watcher('RULES')
+ACTIVATIONS = define_watcher('ACTIVATIONS')
+FACTS = define_watcher('FACTS')
+AGENDA = define_watcher('AGENDA')
+
+ALL = tuple(v for k, v in globals().items() if k.isupper())
+__all__ = (tuple(k for k, v in globals().items() if k.isupper())
+           + ('ALL', 'watch'))
