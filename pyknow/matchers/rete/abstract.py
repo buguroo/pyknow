@@ -19,7 +19,7 @@ class Node(metaclass=abc.ABCMeta):
         """Reset itself and recursively all its children."""
         self._reset()
         for child in self.children:
-            child.reset()
+            child.node.reset()
 
     @abc.abstractmethod
     def _reset(self):

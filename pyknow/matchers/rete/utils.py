@@ -1,4 +1,4 @@
-from functools import singledispatch
+from functools import singledispatch, lru_cache
 from .dnf import dnf
 from .check import FeatureCheck, TypeCheck, FactCapture
 from .nodes import ConflictSetNode, NotNode, OrdinaryMatchNode
@@ -99,7 +99,7 @@ def wire_rule(rule, alpha_terminals, lhs=None):
 
         def same_context(l, r):
             for key, value in l.items():
-                if isinstance(key, tuple):
+                if key[0] is False:
                     raise RuntimeError(
                         'Negated value "%s" present before capture.' % key[1])
                 else:

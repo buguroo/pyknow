@@ -137,7 +137,7 @@ class KnowledgeEngine:
                     "%d: %r %r",
                     idx,
                     act.rule.__name__,
-                    list(self.facts.indexes_from_facts(act.facts)))
+                    sorted(a['__factid__'].value for a in act.facts))
 
             activation = self.agenda.get_next()
 
@@ -151,7 +151,7 @@ class KnowledgeEngine:
                     "FIRE %s %s: %s",
                     execution,
                     activation.rule.__name__,
-                    list(self.facts.indexes_from_facts(activation.facts)))
+                    sorted(f['__factid__'].value for f in activation.facts))
 
                 activation.rule(self, **activation.context)
                 self.strategy.executed.add(activation)
@@ -172,6 +172,7 @@ class KnowledgeEngine:
 
         self.agenda = Agenda()
         self.facts = FactList()
+        self.matcher.reset()
         self.__declare(InitialFact())
         self.load_initial_facts()
         self.running = False

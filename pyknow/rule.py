@@ -210,11 +210,14 @@ class LiteralPCE(HasID, Bindable, PatternConditionalElement):
     def __new__(cls, value, id=None):
         obj = super(LiteralPCE, cls).__new__(cls, value)
         obj.id = id
-        obj.value = value
         return obj
 
+    @property
+    def value(self):
+        return self[0]
+
     def __repr__(self):
-        return repr(self[0])
+        return "L(%r)" % self.value
 
 
 class WildcardPCE(HasID, Bindable, PatternConditionalElement):
@@ -234,5 +237,8 @@ class PredicatePCE(HasID, Bindable, PatternConditionalElement):
         else:
             obj = super(PredicatePCE, cls).__new__(cls, match)
             obj.id = id
-            obj.match = match
             return obj
+
+    @property
+    def match(self):
+        return self[0]

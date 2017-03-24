@@ -27,6 +27,7 @@ class ReteMatcher(Matcher):
         super().__init__(*args, **kwargs)
         self.root_node = BusNode()
         self.build_network()
+        self.reset()
 
     @lru_cache(maxsize=1)
     def _get_conflict_set_nodes(self):
@@ -67,6 +68,9 @@ class ReteMatcher(Matcher):
         ruleset = self.prepare_ruleset(self.engine)
         alpha_terminals = self.build_alpha_part(ruleset, self.root_node)
         self.build_beta_part(ruleset, alpha_terminals)
+
+    def reset(self):
+        self.root_node.reset()
 
     @staticmethod
     def prepare_ruleset(engine):
@@ -185,3 +189,7 @@ class ReteMatcher(Matcher):
 
         return "digraph {\n %s \n}" % ("\n".join(
             gen_edges(self.root_node)))
+
+    def show_network(self):
+        from graphviz import Source
+        return Source(self.print_network())

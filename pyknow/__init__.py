@@ -6,3 +6,5 @@ from .rule import PredicatePCE as P
 from .rule import WildcardPCE as W
 
 from .engine import KnowledgeEngine
+
+from .watchers import *
