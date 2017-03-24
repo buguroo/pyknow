@@ -244,18 +244,20 @@ class ConflictSetNode(mixins.AnyChild,
         if token.is_valid():
             if info not in self.memory:
                 self.memory.append(info)
-                self.added.add(activation)
                 if activation in self.removed:
                     self.removed.remove(activation)
+                else:
+                    self.added.add(activation)
         else:
             try:
                 self.memory.remove(info)
             except ValueError:
                 pass
             else:
-                self.removed.add(activation)
                 if activation in self.added:
                     self.added.remove(activation)
+                else:
+                    self.removed.add(activation)
 
     def get_activations(self):
         """Return a list of activations."""
@@ -306,8 +308,12 @@ class NotNode(mixins.AnyChild,
         for _, right_context in self.right_memory:
             if self.matcher(token.context, dict(right_context)):
                 count += 1
+
         if token.is_valid():
             self.left_memory[token.to_info()] = count
+        else:
+            del self.left_memory[token.to_info()]
+
         if count == 0:
             for child in self.children:
                 child.callback(token)
