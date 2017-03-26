@@ -64,3 +64,49 @@ def test_or_with_multiple_nots_get_multiple_activations():
     t.run()
 
     assert executions == 3
+
+
+def test_initial_not_vs_and_not():
+    from pyknow import KnowledgeEngine, Rule, Fact
+
+    executions = 0
+
+    class Test(KnowledgeEngine):
+        @Rule(Fact(a=1) & ~Fact(b=2))
+        def test_fact_before_not(self):
+            nonlocal executions
+            executions +=1
+
+    t = Test()
+    f1 = Fact(a=1)
+    t.deffacts(f1)
+    t.reset()
+    t.run()
+
+    assert executions == 1
+
+    t.retract(f1)
+    t.declare(Fact(a=1))
+    t.run()
+    assert executions == 2
+
+    executions = 0
+
+    class Test(KnowledgeEngine):
+        @Rule(~Fact(b=2) & Fact(a=1))
+        def test_fact_after_not(self):
+            nonlocal executions
+            executions +=1
+
+    t = Test()
+    f1 = Fact(a=1)
+    t.deffacts(f1)
+    t.reset()
+    t.run()
+
+    assert executions == 1
+
+    t.retract(f1)
+    t.declare(Fact(a=1))
+    t.run()
+    assert executions == 2

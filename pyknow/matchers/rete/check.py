@@ -82,9 +82,7 @@ class FeatureCheck(Check,
 
         if key not in cls._instances:
             if key_a is LiteralPCE:
-                expected = how
-
-                def check(actual, expected):
+                def equal_literal(actual, expected):
                     if expected.value == actual:
                         if expected.__bind__ is None:
                             return True
@@ -93,10 +91,10 @@ class FeatureCheck(Check,
                     else:
                         return False
 
-            elif key_a is PredicatePCE:
                 expected = how
-
-                def check(actual, expected):
+                check = equal_literal
+            elif key_a is PredicatePCE:
+                def match_predicate(actual, expected):
                     if expected.match(actual):
                         if expected.__bind__ is None:
                             return True
@@ -105,19 +103,19 @@ class FeatureCheck(Check,
                     else:
                         return False
 
-            elif key_a is WildcardPCE:
                 expected = how
-
-                def check(actual, expected):
+                check = match_predicate
+            elif key_a is WildcardPCE:
+                def wildcard_match(actual, expected):
                     if expected.__bind__ is None:
                         return True
                     else:
                         return {expected.__bind__: actual}
 
+                expected = how
+                check = wildcard_match
             elif key_a is NOTPCE:
-                expected = key_b
-
-                def check(actual, expected):
+                def not_equal(actual, expected):
                     subresult = expected(actual, is_fact=False)
                     if isinstance(subresult, Mapping):
                         newresult = {(False, k): v
@@ -126,10 +124,10 @@ class FeatureCheck(Check,
                     else:
                         return not subresult
 
-            elif key_a is ANDPCE:
                 expected = key_b
-
-                def check(actual, expected):
+                check = not_equal
+            elif key_a is ANDPCE:
+                def and_match(actual, expected):
                     value = dict()
                     for subcheck in expected:
                         subres = subcheck(actual, is_fact=False)
@@ -148,10 +146,10 @@ class FeatureCheck(Check,
                             return value
                     return False
 
-            elif key_a is ORPCE:
                 expected = key_b
-
-                def check(actual, expected):
+                check = and_match
+            elif key_a is ORPCE:
+                def or_match(actual, expected):
                     for subcheck in expected:
                         subres = subcheck(actual, is_fact=False)
                         if subres:
@@ -159,6 +157,8 @@ class FeatureCheck(Check,
                     else:
                         return False
 
+                expected = key_b
+                check = or_match
             else:  # noqa
                 pass
 
@@ -188,7 +188,7 @@ class FeatureCheck(Check,
         return res
 
     def __str__(self):
-        return "%s == %s" % (self.what, self.expected)
+        return "%s (%s) %s" % (self.what, self.check.__name__, self.expected)
 
 
 class SameContextCheck(Check):
@@ -199,20 +199,11 @@ class SameContextCheck(Check):
                     'Negated value "%s" present before capture.' % key[1])
             else:
                 if key in r and value != r[key]:
-                    res = False
-                    break
+                    return False
                 if (False, key) in r and value == r[(False, key)]:
-                    res = False
-                    break
+                    return False
         else:
-            res = True
-
-        if res:
-            MATCH.info("%r | %r = %r", l, r, res)
-        else:
-            MATCH.debug("%r | %r = %r", l, r, res)
-
-        return res
+            return True
 
 
 class WhereCheck(Check, namedtuple('_WhereCheck', ['test'])):

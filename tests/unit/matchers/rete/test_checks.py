@@ -8,15 +8,17 @@ def test_featurecheck_exists():
         assert False, exc
 
 
-def test_featurecheck_accepts_PCE():
+def test_featurecheck_convert_nonPCE_to_PCE():
     from pyknow.matchers.rete.check import FeatureCheck
-    from pyknow.rule import PredicatePCE
+    from pyknow.rule import LiteralPCE 
 
-    with pytest.raises(TypeError):
-        FeatureCheck('somekey', lambda _: None)
+    def testfunc():
+        pass
 
-    # MUST NOT RAISE
-    FeatureCheck('somekey', PredicatePCE(lambda _: None))
+    fc = FeatureCheck('somekey', testfunc)
+
+    assert fc.how == LiteralPCE(testfunc)
+
 
 def test_featurecheck_is_borg_basic_literal():
     from pyknow.matchers.rete.check import FeatureCheck

@@ -138,7 +138,7 @@ class KnowledgeEngine:
                     "%d: %r %r",
                     idx,
                     act.rule.__name__,
-                    sorted(a['__factid__'] for a in act.facts))
+                    ", ".join(str(f) for f in act.facts))
 
             activation = self.agenda.get_next()
 
@@ -152,11 +152,13 @@ class KnowledgeEngine:
                     "FIRE %s %s: %s",
                     execution,
                     activation.rule.__name__,
-                    sorted((f for f in activation.facts),
-                           key=lambda f: f.__factid__))
+                    ", ".join(str(f) for f in activation.facts))
 
-                activation.rule(self, **activation.context)
-                self.strategy.executed.append(activation)
+                activation.rule(
+                    self,
+                    **{k: v
+                       for k, v in activation.context.items()
+                       if not k.startswith('__')})
 
         self.running = False
 

@@ -2,7 +2,8 @@ from functools import singledispatch, lru_cache
 import warnings
 
 from .dnf import dnf
-from .check import FeatureCheck, TypeCheck, FactCapture, SameContextCheck, WhereCheck
+from .check import FeatureCheck, TypeCheck, FactCapture, SameContextCheck
+from .check import WhereCheck
 from .nodes import ConflictSetNode, NotNode, OrdinaryMatchNode
 from .nodes import FeatureTesterNode, WhereNode
 from pyknow import Rule, InitialFact, NOT, OR, Fact, AND
@@ -95,6 +96,9 @@ def generate_checks(fact):
                     "Unknown special symbol '%s' inside pattern" % key)
         else:
             yield FeatureCheck(key, value)
+
+    # Assign the matching fact to the context
+    yield FactCapture("__pattern_%s__" % id(fact))
 
 
 def wire_rule(rule, alpha_terminals, lhs=None):

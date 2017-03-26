@@ -124,6 +124,7 @@ def test_notnode_right_activate_invalid_match_more_than_one(TestNode):
 
     token = Token.invalid(Fact(test='data'))
 
+    nn.right_memory.append(token.to_info())
     nn.left_memory[token.to_info()] = 2
 
     nn.activate_right(token)
@@ -147,6 +148,7 @@ def test_notnode_right_activate_invalid_match_just_one(TestNode):
 
     token = Token.invalid(Fact(test='data'))
 
+    nn.right_memory.append(token.to_info())
     nn.left_memory[token.to_info()] = 1
 
     nn.activate_right(token)

@@ -12,7 +12,7 @@ from itertools import chain
 
 from pyknow.activation import Activation
 from pyknow.rule import Rule
-from pyknow.watchers import MATCHER
+from pyknow.watchers import MATCHER, MATCH
 
 from . import mixins
 from .abstract import Node, OneInputNode, TwoInputNode
@@ -181,25 +181,39 @@ class OrdinaryMatchNode(mixins.AnyChild,
         for other_data, other_context in matching_memory:
             other_context = dict(other_context)
             if is_left:
-                match = self.matcher(token.context, other_context)
+                left_context = token.context
+                right_context = other_context
             else:
-                match = self.matcher(other_context, token.context)
+                left_context = other_context
+                right_context = token.context
+
+            match = self.matcher(left_context, right_context)
 
             if match:
-                newcontext = {}
-                for k, v in chain(token.context.items(),
-                                  other_context.items()):
-                    if isinstance(k, tuple):
+                MATCH.info("%s (%s | %s) = True",
+                           self.__class__.__name__,
+                           left_context,
+                           right_context)
+
+                newcontext = {k: v for k, v in token.context.items()
+                              if isinstance(k, str)}
+
+                for k, v in other_context.items():
+                    if not isinstance(k, tuple):
                         # Negated value are not needed any further
-                        pass
-                    else:  # Normal value
                         newcontext[k] = v
 
                 newtoken = Token(token.tag,
                                  token.data | other_data,
                                  newcontext)
+
                 for child in self.children:
                     child.callback(newtoken)
+            else:
+                MATCH.debug("%s (%s | %s) = False",
+                            self.__class__.__name__,
+                            left_context,
+                            right_context)
 
     def _activate_left(self, token):
         """Node left activation."""
@@ -318,19 +332,39 @@ class NotNode(mixins.AnyChild,
         If the number of matches is zero the token activates all children.
 
         """
-        count = 0
-        for _, right_context in self.right_memory:
-            if self.matcher(token.context, dict(right_context)):
-                count += 1
+        if not self.right_memory:
+            if token.is_valid():
+                self.left_memory[token.to_info()] = 0
+            else:
+                del self.left_memory[token.to_info()]
 
-        if token.is_valid():
-            self.left_memory[token.to_info()] = count
-        else:
-            del self.left_memory[token.to_info()]
-
-        if count == 0:
             for child in self.children:
                 child.callback(token)
+
+        elif token.is_valid():
+            count = 0
+
+            for _, right_context in self.right_memory:
+                if self.matcher(token.context, dict(right_context)):
+                    count += 1
+
+            if count == 0:
+                for child in self.children:
+                    child.callback(token)
+
+            self.left_memory[token.to_info()] = count
+        else:
+            count = 0
+            for _, right_context in self.right_memory:
+                if self.matcher(token.context, dict(right_context)):
+                    count += 1
+                    break
+
+            if count == 0:
+                for child in self.children:
+                    child.callback(token)
+
+            del self.left_memory[token.to_info()]
 
     def _activate_right(self, token):
         """
@@ -347,6 +381,7 @@ class NotNode(mixins.AnyChild,
             inc = 1
         else:
             inc = -1
+            self.right_memory.remove(token.to_info())
 
         for left in self.left_memory:
             if self.matcher(dict(left.context), token.context):
@@ -358,5 +393,6 @@ class NotNode(mixins.AnyChild,
                         newtoken = left.to_valid_token()
                     else:
                         newtoken = left.to_invalid_token()
+
                     for child in self.children:
                         child.callback(newtoken)

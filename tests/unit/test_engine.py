@@ -135,8 +135,8 @@ def test_KnowledgeEngine_get_activations_returns_a_list():
     res = ke.get_activations()
 
     assert isinstance(res, tuple)
-    assert isinstance(res[0], set)
-    assert isinstance(res[1], set)
+    assert isinstance(res[0], list)
+    assert isinstance(res[1], list)
 
 
 def test_KnowledgeEngine_get_activations_returns_activations_added():
@@ -259,26 +259,26 @@ def test_KnowledgeEngine_reset():
     """
 
     from pyknow.engine import KnowledgeEngine
-    from pyknow import Fact, L
+    from pyknow import Fact
 
     ke = KnowledgeEngine()
-    ke.deffacts(Fact(foo=L(1)))
-    ke.deffacts(Fact(foo=L(1), bar=L(2)))
+    ke.deffacts(Fact(foo=1))
+    ke.deffacts(Fact(foo=1, bar=2))
     ke.reset()
 
     assert len(ke.facts.facts) == 3
 
     ke = KnowledgeEngine()
-    ke.deffacts(Fact(foo=L(1)))
-    ke.declare(Fact(foo=L(9)))
-    ke.deffacts(Fact(foo=L(1), bar=L(2)))
+    ke.deffacts(Fact(foo=1))
+    ke.declare(Fact(foo=9))
+    ke.deffacts(Fact(foo=1, bar=2))
     ke.reset()
 
     assert len(ke.facts.facts) == 3
 
     ke = KnowledgeEngine()
-    ke.deffacts(Fact(foo=L(1)))
-    ke.declare(Fact(foo=L(9)))
+    ke.deffacts(Fact(foo=1))
+    ke.declare(Fact(foo=9))
     ke.reset()
 
     assert len(ke.facts.facts) == 2
@@ -402,17 +402,17 @@ def test_or_operator():
             pass
 
     ke_ = Test()
-    ke_.deffacts(Fact(something=L(1)))
+    ke_.deffacts(Fact(something=1))
     ke_.reset()
     assert len(ke_.agenda.activations) == 1
 
     ke_ = Test()
-    ke_.deffacts(Fact(something=L(2)))
+    ke_.deffacts(Fact(something=2))
     ke_.reset()
     assert len(ke_.agenda.activations) == 1
 
     ke_ = Test()
-    ke_.deffacts(Fact(something=L(3)))
+    ke_.deffacts(Fact(something=3))
     ke_.reset()
     assert len(ke_.agenda.activations) == 0
 
@@ -430,7 +430,7 @@ def test_ke_inheritance():
     class Base(KnowledgeEngine):
         @Rule(Person(name=L('pepe')))
         def is_pepe(self):
-            self.declare(Person(drinks=L("coffee")))
+            self.declare(Person(drinks="coffee"))
 
     class Test(Base):
         @Rule(Person(drinks=L("coffee")))
@@ -439,7 +439,7 @@ def test_ke_inheritance():
             executed = True
 
     ke_ = Test()
-    ke_.deffacts(Person(name=L('pepe')))
+    ke_.deffacts(Person(name='pepe'))
     ke_.reset()
     ke_.run()
 
@@ -459,7 +459,7 @@ def test_nested_declarations():
     class Person_KE(KnowledgeEngine):
         @Rule(Person(name=L("David")))
         def david(self):
-            self.declare(Person(name=L("Pepe")))
+            self.declare(Person(name="Pepe"))
 
         @Rule(Person(name=L("Pepe")))
         def pepe(self):
@@ -467,7 +467,7 @@ def test_nested_declarations():
             executed = True
 
     ke_ = Person_KE()
-    ke_.deffacts(Person(name=L("David")))
+    ke_.deffacts(Person(name="David"))
     ke_.reset()
     ke_.run()
     assert executed
@@ -486,7 +486,7 @@ def test_matching_different_number_of_arguments():
     class Person_KE(KnowledgeEngine):
         @Rule(Person(name=L("David")))
         def david(self):
-            self.declare(Person(name=L("Pepe"), apellido=L("stuff")))
+            self.declare(Person(name="Pepe", apellido="stuff"))
 
         @Rule(Person(name=L("Pepe")))
         def pepe(self):
@@ -494,7 +494,7 @@ def test_matching_different_number_of_arguments():
             executed = True
 
     ke_ = Person_KE()
-    ke_.deffacts(Person(name=L("David")))
+    ke_.deffacts(Person(name="David"))
     ke_.reset()
     ke_.run()
     assert executed
@@ -517,8 +517,8 @@ def test_matching_captured_different_facts_AND():
             executions.append(name)
 
     ke_ = Person_KE()
-    ke_.deffacts(Person(name=L("NotAName"), surname=L('surname')))
-    ke_.deffacts(Person(name=L('name'), surname=L("NotAName")))
+    ke_.deffacts(Person(name="NotAName", surname='surname'))
+    ke_.deffacts(Person(name='name', surname="NotAName"))
     ke_.reset()
     ke_.run()
     assert executions == ["NotAName"]
@@ -569,8 +569,8 @@ def test_matching_captured_same_facts_AND():
             executions.append(name)
 
     ke_ = Person_KE()
-    ke_.deffacts(Person(name=L('NotAName'), surname=L("NotAName")))
-    ke_.deffacts(Person(name=L('name'), surname=L("NotAName")))
+    ke_.deffacts(Person(name='NotAName', surname="NotAName"))
+    ke_.deffacts(Person(name='name', surname="NotAName"))
     ke_.reset()
     ke_.run()
     assert executions == ["NotAName"]
@@ -601,7 +601,7 @@ def test_matching_captured_different_facts_NOT_positive():
             executions.append(name)
 
     ke_ = Person_KE()
-    ke_.deffacts(Person(name=L('name'), surname=L("NotAName")))
+    ke_.deffacts(Person(name='name', surname="NotAName"))
     ke_.reset()
     ke_.run()
     assert executions == ["name"]
@@ -632,8 +632,8 @@ def test_matching_captured_different_facts_NOT_negative():
             executions.append(name)
 
     ke_ = Person_KE()
-    ke_.deffacts(Person(name=L('name'), surname=L("NotAName")))
-    ke_.deffacts(Person(name=L('name'), surname=L("name")))
+    ke_.deffacts(Person(name='name', surname="NotAName"))
+    ke_.deffacts(Person(name='name', surname="name"))
     ke_.reset()
     ke_.run()
     assert executions == []

@@ -78,7 +78,7 @@ def test_DepthStrategy_update_agenda_activations_to_agenda():
     a = Agenda()
 
     st = DepthStrategy()
-    st.update_agenda(a, {act1, act2}, set())
+    st.update_agenda(a, [act1, act2], [])
 
     assert act1 in a.activations
     assert act2 in a.activations
@@ -93,35 +93,37 @@ def test_DepthStrategy_update_agenda_assertion_order_affects_agenda_order_1():
     from pyknow.factlist import FactList
 
     fl = FactList()
+
     f1 = Fact(1)
     fl.declare(f1)
+
     f2 = Fact(2)
     fl.declare(f2)
+
     f3 = Fact(3)
     fl.declare(f3)
+
     f4 = Fact(4)
     fl.declare(f4)
 
     act1 = Activation(rule=Rule(), facts=(f1, ))
     act2 = Activation(rule=Rule(), facts=(f2, ))
-    first = {act1, act2}
+    first = [act1, act2]
 
     act3 = Activation(rule=Rule(), facts=(f3, ))
     act4 = Activation(rule=Rule(), facts=(f4, ))
-    second = {act3, act4}
+    second = [act3, act4]
 
     a = Agenda()
 
     st = DepthStrategy()
 
-    st.update_agenda(a, first, set())
-    run1 = set(a.activations)
+    oldact = a.activations
+    st.update_agenda(a, first, [])
+    assert list(a.activations) == list(reversed(first))
 
     st.update_agenda(a, second, first)
-    run2 = set(a.activations)
-
-    assert run1 == first
-    assert run2 == second
+    assert list(a.activations) == list(reversed(second))
 
 
 def test_DepthStrategy_update_agenda_asertion_order_affects_agenda_order_2():
@@ -133,35 +135,36 @@ def test_DepthStrategy_update_agenda_asertion_order_affects_agenda_order_2():
     from pyknow.factlist import FactList
 
     fl = FactList()
+
     f1 = Fact(1)
     fl.declare(f1)
+
     f2 = Fact(2)
     fl.declare(f2)
+
     f3 = Fact(3)
     fl.declare(f3)
+
     f4 = Fact(4)
     fl.declare(f4)
 
     act1 = Activation(rule=Rule(), facts=(f1, ))
     act2 = Activation(rule=Rule(), facts=(f2, ))
-    first = {act1, act2}
+    first = [act1, act2]
 
     act3 = Activation(rule=Rule(), facts=(f3, ))
     act4 = Activation(rule=Rule(), facts=(f4, ))
-    second = {act3, act4}
+    second = [act3, act4]
 
     a = Agenda()
 
     st = DepthStrategy()
 
-    st.update_agenda(a, second, set())
-    run1 = set(a.activations)
+    st.update_agenda(a, second, [])
+    assert list(a.activations) == list(reversed(second))
 
     st.update_agenda(a, first, second)
-    run2 = set(a.activations)
-
-    assert run1 == second
-    assert run2 == first
+    assert list(a.activations) == list(reversed(first))
 
 
 def test_DepthStrategy_update_agenda_different_salience():
@@ -178,10 +181,13 @@ def test_DepthStrategy_update_agenda_different_salience():
 
     f1 = Fact(1)
     flist.declare(f1)
+
     f2 = Fact(2)
     flist.declare(f2)
+
     f3 = Fact(3)
     flist.declare(f3)
+
     f4 = Fact(4)
     flist.declare(f4)
 
@@ -197,7 +203,7 @@ def test_DepthStrategy_update_agenda_different_salience():
     a = Agenda()
 
     for act in acts:
-        st.update_agenda(a, set(acts), set())
+        st.update_agenda(a, acts, [])
 
     order = list(a.activations)
     assert (order.index(act4)

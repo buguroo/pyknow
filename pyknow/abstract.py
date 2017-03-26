@@ -39,19 +39,17 @@ class Strategy(metaclass=abc.ABCMeta):
     def update_agenda(self, agenda, added, removed):
         if watchers.ACTIVATIONS.level <= logging.INFO:
             for act in removed:
-                if act in agenda.activations:
-                    watchers.ACTIVATIONS.info(
-                        " <== %r: %r",
-                        getattr(act.rule, '__name__', None),
-                        sorted((f for f in act.facts),
-                               key=lambda f: f.__factid__))
+                watchers.ACTIVATIONS.info(
+                    " <== %r: %s %s",
+                    getattr(act.rule, '__name__', None),
+                    ", ".join(str(f) for f in act.facts),
+                    "[EXECUTED]" if act not in agenda.activations else "")
 
             for act in added:
                 watchers.ACTIVATIONS.info(
-                    " ==> %r: %r",
+                    " ==> %r: %s",
                     getattr(act.rule, '__name__', None),
-                    sorted((f for f in act.facts),
-                           key=lambda f: f.__factid__))
+                    ", ".join(str(f) for f in act.facts))
 
         # Resolve conflicts using the appropiate strategy.
         new_activations = deque(self._update_agenda(agenda, added, removed))
