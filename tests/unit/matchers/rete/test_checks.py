@@ -133,9 +133,9 @@ def test_featurecheck_call_literal():
     assert not check(Fact(otherkey='mydata'))
 
     # Literal with binding, matching and not matching
-    check = FeatureCheck('mykey', L('mydata', id='D'))
+    check = FeatureCheck('mykey', L('mydata', __bind__='D'))
     assert check(Fact(mykey='mydata')) == {'D': 'mydata'}
-    check = FeatureCheck('mykey', L('mydata', id='D'))
+    check = FeatureCheck('mykey', L('mydata', __bind__='D'))
     assert check(Fact(mykey='otherdata')) is False
 
 
@@ -188,7 +188,7 @@ def test_featurecheck_call_predicate():
     assert not check(Fact(1))
 
     # Positional field matching with binding
-    check = FeatureCheck(0, P(lambda val: True, id='K'))
+    check = FeatureCheck(0, P(lambda val: True, __bind__='K'))
     assert check(Fact(1)) == {'K': 1}
 
 

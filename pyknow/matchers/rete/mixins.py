@@ -36,3 +36,6 @@ class HasMatcher:
             self.matcher = matcher
 
         super().__init__()
+
+    def __str__(self):
+        return "%s: %s" % (self.__class__.__name__, self.matcher)

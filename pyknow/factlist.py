@@ -37,7 +37,7 @@ class FactList:
 
     def __repr__(self):
         return "\n".join(
-            "{idx}: {fact}".format(idx=idx, fact=fact)
+            "%s: %r" % (fact, fact)
             for idx, fact in self.facts.items())
 
     def declare(self, fact):
@@ -60,13 +60,14 @@ class FactList:
             raise ValueError('The fact must descend the Fact class.')
 
         if fact not in self.facts.values():
+            # TODO: check now we have __factid__
             idx = self._fidx
-            fact['__factid__'] = idx
+            fact.__factid__ = idx
             self.facts[idx] = fact
             self._ifacts[fact] = idx
             self._fidx += 1
             self.added.append(fact)
-            watchers.FACTS.debug("==> %s: %r", idx, fact)
+            watchers.FACTS.info(" ==> %s: %r", fact, fact)
             return idx
         else:
             return None
@@ -89,7 +90,7 @@ class FactList:
 
         fact = self.facts[idx]
 
-        watchers.FACTS.debug("<== %s: %r", idx, fact)
+        watchers.FACTS.info(" <== %s: %r", fact, fact)
         self.removed.append(fact)
 
         del self.facts[idx]
@@ -111,9 +112,11 @@ class FactList:
             for fact in self.facts.values():
                 this_fact_set = {(k, v)
                                  for k, v in fact.items()
-                                 if k != '__factid__'}
+                                 if not (isinstance(k, str)
+                                         and k.startswith('__')
+                                         and k.endswith('__'))}
                 if model_fact_set == this_fact_set:
-                    yield fact['__factid__'][0]
+                    yield fact.__factid__
 
         retracted = [self.retract(f) for f in search_matching(fact)]
         if retracted:
@@ -132,10 +135,5 @@ class FactList:
             self.added = list()
             self.removed = list()
 
-    def idx_from_fact(self, fact):
-        return self._ifacts[fact]
-
-    def indexes_from_facts(self, facts):
-        for f in facts:
-            if f in self._ifacts:
-                yield self._ifacts[f]
+    def __getitem__(self, item):
+        return self.facts[item]

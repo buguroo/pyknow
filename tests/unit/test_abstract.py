@@ -11,4 +11,4 @@ def test_matcher_exists():
 def test_matcher_interface():
     from pyknow.abstract import Matcher
 
-    assert Matcher.__abstractmethods__ == {'changes'}
+    assert Matcher.__abstractmethods__ == {'changes', 'reset'}

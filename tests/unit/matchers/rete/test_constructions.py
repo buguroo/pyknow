@@ -45,3 +45,22 @@ def test_self_referencing_fact_with_negation():
     ke.run()
 
     assert result == [1]
+
+
+def test_or_with_multiple_nots_get_multiple_activations():
+    from pyknow import KnowledgeEngine, Rule, Fact
+
+
+    executions = 0
+
+    class Test(KnowledgeEngine):
+        @Rule(~Fact(a=1) | ~Fact(a=2) | ~Fact(a=3))
+        def test(self):
+            nonlocal executions
+            executions += 1
+
+    t = Test()
+    t.reset()
+    t.run()
+
+    assert executions == 3

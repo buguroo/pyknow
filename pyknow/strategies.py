@@ -3,7 +3,6 @@ from itertools import chain
 import operator as op
 
 from pyknow.abstract import Strategy
-from pyknow.watchers import ACTIVATIONS
 
 
 def listdict():
@@ -15,15 +14,18 @@ class DepthStrategy(Strategy):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.activations = list()
-        self.executed = set()
+        self.executed = list()
 
     def _update_agenda(self, agenda, added, removed):
-        removed = set(removed) | self.executed
-        self.executed = set()
+        removed = removed + self.executed
         self.activations.extend(added)
 
         for act in removed:
-            self.activations.remove(act)
+            try:
+                self.activations.remove(act)
+            except ValueError:
+                # Already executed rule.
+                pass
 
         sorted_activations = sorted(
             enumerate(self.activations),

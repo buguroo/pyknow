@@ -1,9 +1,12 @@
 from functools import singledispatch, lru_cache
+import warnings
+
 from .dnf import dnf
-from .check import FeatureCheck, TypeCheck, FactCapture
+from .check import FeatureCheck, TypeCheck, FactCapture, SameContextCheck
 from .nodes import ConflictSetNode, NotNode, OrdinaryMatchNode
 from pyknow import Rule, InitialFact, NOT, OR, Fact, AND
 from pyknow.rule import ConditionalElement
+from pyknow.watchers import MATCH
 
 
 @singledispatch
@@ -79,8 +82,15 @@ def generate_checks(fact):
     yield TypeCheck(type(fact))
 
     for key, value in fact.items():
-        if key == 'id':
-            yield FactCapture(value[0])
+        if (isinstance(key, str)
+                and key.startswith('__')
+                and key.endswith('__')):
+            # Special fact feature
+            if key == '__bind__':
+                yield FactCapture(value)
+            else:
+                warnings.warn(
+                    "Unknown special symbol '%s' inside pattern" % key)
         else:
             yield FeatureCheck(key, value)
 
@@ -96,19 +106,6 @@ def wire_rule(rule, alpha_terminals, lhs=None):
     @_wire_rule.register(Rule)
     @_wire_rule.register(AND)
     def _(elem):
-
-        def same_context(l, r):
-            for key, value in l.items():
-                if key[0] is False:
-                    raise RuntimeError(
-                        'Negated value "%s" present before capture.' % key[1])
-                else:
-                    if key in r and value != r[key]:
-                        return False
-                    if (False, key) in r and value == r[(False, key)]:
-                        return False
-            return True
-
         if len(elem) == 1 and isinstance(elem[0], Fact):
             return alpha_terminals[elem[0]]
         elif len(elem) > 1:
@@ -120,13 +117,13 @@ def wire_rule(rule, alpha_terminals, lhs=None):
                     node_cls = OrdinaryMatchNode
 
                 if current_node is None:
-                    current_node = node_cls(same_context)
+                    current_node = node_cls(SameContextCheck())
                     left_branch = _wire_rule(f)
                     right_branch = _wire_rule(s)
                 else:
                     left_branch = current_node
                     right_branch = _wire_rule(s)
-                    current_node = node_cls(same_context)
+                    current_node = node_cls(SameContextCheck())
 
                 left_branch.add_child(current_node,
                                       current_node.activate_left)

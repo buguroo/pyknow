@@ -92,10 +92,10 @@ class Bindable:
     def __rlshift__(self, other):
         if not isinstance(other, str):
             raise TypeError("%s can only be binded to a string" % self)
-        elif self.id is not None:
+        elif self.__bind__ is not None:
             raise RuntimeError("%s can only be binded once" % self)
         else:
-            self.id = other
+            self.__bind__ = other
             return self
 
 
@@ -198,18 +198,18 @@ class NOTPCE(PatternConditionalElement):
 
 class HasID:
     def __hash__(self):
-        return hash((self.id, ) + tuple(self))
+        return hash((self.__bind__, ) + tuple(self))
 
     def __eq__(self, other):
         return (self.__class__ == other.__class__
-                and self.id == other.id
+                and self.__bind__ == other.__bind__
                 and super().__eq__(other))
 
 
 class LiteralPCE(HasID, Bindable, PatternConditionalElement):
-    def __new__(cls, value, id=None):
+    def __new__(cls, value, __bind__=None):
         obj = super(LiteralPCE, cls).__new__(cls, value)
-        obj.id = id
+        obj.__bind__ = __bind__
         return obj
 
     @property
@@ -221,22 +221,22 @@ class LiteralPCE(HasID, Bindable, PatternConditionalElement):
 
 
 class WildcardPCE(HasID, Bindable, PatternConditionalElement):
-    def __new__(cls, id=None):
+    def __new__(cls, __bind__=None):
         obj = super(WildcardPCE, cls).__new__(cls)
-        obj.id = id
+        obj.__bind__ = __bind__
         return obj
 
     def __repr__(self):
-        return "W()" if self.id is None else "W(%r)" % self.id
+        return "W()" if self.__bind__ is None else "W(%r)" % self.__bind__
 
 
 class PredicatePCE(HasID, Bindable, PatternConditionalElement):
-    def __new__(cls, match, id=None):
+    def __new__(cls, match, __bind__=None):
         if not isinstance(match, Callable):
             raise TypeError("PredicatePCE needs a callable.")
         else:
             obj = super(PredicatePCE, cls).__new__(cls, match)
-            obj.id = id
+            obj.__bind__ = __bind__
             return obj
 
     @property

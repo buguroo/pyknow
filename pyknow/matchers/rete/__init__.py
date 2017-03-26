@@ -27,7 +27,6 @@ class ReteMatcher(Matcher):
         super().__init__(*args, **kwargs)
         self.root_node = BusNode()
         self.build_network()
-        self.reset()
 
     @lru_cache(maxsize=1)
     def _get_conflict_set_nodes(self):
@@ -54,13 +53,13 @@ class ReteMatcher(Matcher):
             for deleted in deleting:
                 self.root_node.remove(deleted)
 
-        added = set()
-        removed = set()
+        added = list()
+        removed = list()
 
         for csn in self._get_conflict_set_nodes():
             c_added, c_removed = csn.get_activations()
-            added |= c_added
-            removed |= c_removed
+            added.extend(c_added)
+            removed.extend(c_removed)
 
         return (added, removed)
 
@@ -172,19 +171,24 @@ class ReteMatcher(Matcher):
         Generate a graphviz compatible graph.
 
         """
+        edges = set()
+
         def gen_edges(node):
+            nonlocal edges
             name = str(id(node))
 
-            yield '{name} [label="{cls_name}: {content}"];'.format(
+            yield '{name} [label="{cls_name}"];'.format(
                 name=name,
-                cls_name=node.__class__.__name__,
-                content=repr(node))
+                cls_name=str(node))
 
             for child in node.children:
-                yield '{parent} -> {child} [label="{child_label}"];'.format(
-                    parent=name,
-                    child=str(id(child.node)),
-                    child_label=child.callback)
+                if (node, child.callback) not in edges:
+                    yield ('{parent} -> {child} '
+                           '[label="{child_label}"];').format(
+                        parent=name,
+                        child=str(id(child.node)),
+                        child_label=child.callback.__name__)
+                    edges.add((node, child.callback))
                 yield from gen_edges(child.node)
 
         return "digraph {\n %s \n}" % ("\n".join(

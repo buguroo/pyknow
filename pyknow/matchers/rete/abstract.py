@@ -1,5 +1,6 @@
 """Abstract base classes for the RETE implementation."""
 import abc
+from pyknow.watchers import MATCHER
 
 
 class Node(metaclass=abc.ABCMeta):
@@ -17,6 +18,7 @@ class Node(metaclass=abc.ABCMeta):
 
     def reset(self):
         """Reset itself and recursively all its children."""
+        MATCHER.debug("Node <%s> reset", self)
         self._reset()
         for child in self.children:
             child.node.reset()
@@ -26,8 +28,8 @@ class Node(metaclass=abc.ABCMeta):
         """Reset this node's memory."""
         pass
 
-    def __repr__(self):
-        return ""
+    def __str__(self):
+        return self.__class__.__name__
 
 
 class OneInputNode(Node):
@@ -35,6 +37,7 @@ class OneInputNode(Node):
 
     def activate(self, token):
         """Make a copy of the received token and call `self._activate`."""
+        MATCHER.debug("Node <%s> activated with token %r", self, token)
         return self._activate(token.copy())
 
     @abc.abstractproperty
@@ -48,6 +51,7 @@ class TwoInputNode(Node):
 
     def activate_left(self, token):
         """Make a copy of the received token and call `_activate_left`."""
+        MATCHER.debug("Node <%s> activated left with token %r", self, token)
         return self._activate_left(token.copy())
 
     @abc.abstractproperty
@@ -57,12 +61,16 @@ class TwoInputNode(Node):
 
     def activate_right(self, token):
         """Make a copy of the received token and call `_activate_right`."""
+        MATCHER.debug("Node <%s> activated right with token %r", self, token)
         return self._activate_right(token.copy())
 
     @abc.abstractproperty
     def _activate_right(self, token):
         """Node right activation routine."""
         pass
+
+    def __str__(self):
+        return self.__class__.__name__
 
 
 class Check(metaclass=abc.ABCMeta):
@@ -78,3 +86,6 @@ class Check(metaclass=abc.ABCMeta):
 
         """
         pass
+
+    def __str__(self):
+        return self.__class__.__name__

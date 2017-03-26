@@ -38,6 +38,8 @@ RULES = define_watcher('RULES')
 ACTIVATIONS = define_watcher('ACTIVATIONS')
 FACTS = define_watcher('FACTS')
 AGENDA = define_watcher('AGENDA')
+MATCH = define_watcher('MATCH')
+MATCHER = define_watcher('MATCHER')
 
 ALL = tuple(v for k, v in globals().items() if k.isupper())
 __all__ = (tuple(k for k, v in globals().items() if k.isupper())

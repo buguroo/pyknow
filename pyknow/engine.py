@@ -5,13 +5,14 @@
 
 from inspect import getmembers
 import logging
+import warnings
 
 from pyknow import abstract
 
 from pyknow.agenda import Agenda
 from pyknow.fact import InitialFact
 from pyknow.factlist import FactList
-from pyknow.rule import Rule
+from pyknow.rule import Rule, ConditionalElement
 from pyknow import watchers
 
 logging.basicConfig()
@@ -53,7 +54,7 @@ class KnowledgeEngine:
         """
 
         if self.running:
-            logging.warning("Declaring fixed facts while run()")
+            warnings.warn("Declaring fixed facts while run()")
 
         self._fixed_facts.extend(facts)
 
@@ -117,7 +118,7 @@ class KnowledgeEngine:
         .. note::
             This updates the agenda
         """
-        self.__retract(declared_fact['__factid__'][0])
+        self.__retract(declared_fact['__factid__'])
 
     def run(self, steps=float('inf')):
         """
@@ -137,7 +138,7 @@ class KnowledgeEngine:
                     "%d: %r %r",
                     idx,
                     act.rule.__name__,
-                    sorted(a['__factid__'].value for a in act.facts))
+                    sorted(a['__factid__'] for a in act.facts))
 
             activation = self.agenda.get_next()
 
@@ -147,14 +148,15 @@ class KnowledgeEngine:
                 steps -= 1
                 execution += 1
 
-                watchers.RULES.debug(
+                watchers.RULES.info(
                     "FIRE %s %s: %s",
                     execution,
                     activation.rule.__name__,
-                    sorted(f['__factid__'].value for f in activation.facts))
+                    sorted((f for f in activation.facts),
+                           key=lambda f: f.__factid__))
 
                 activation.rule(self, **activation.context)
-                self.strategy.executed.add(activation)
+                self.strategy.executed.append(activation)
 
         self.running = False
 
@@ -181,7 +183,12 @@ class KnowledgeEngine:
         """
         Internal declaration method. Used for ``declare`` and ``deffacts``
         """
-        res = [self.facts.declare(fact) for fact in facts]
+        for fact in facts:
+            if any(isinstance(v, ConditionalElement) for v in fact.values()):
+                raise TypeError(
+                    "Declared facts cannot contain conditional elements")
+            else:
+                self.facts.declare(fact)
 
         if not self.running:
             added, removed = self.get_activations()
@@ -197,5 +204,5 @@ class KnowledgeEngine:
         """
 
         if not self.running:
-            logging.warning("Declaring fact while not run()")
+            warnings.warn("Declaring fact while not run()")
         self.__declare(*facts)

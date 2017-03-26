@@ -32,21 +32,32 @@ class Fact(ComposableCE, Bindable, dict):
         else:
             return arg
 
-    def __setitem__(self, key, value):
-        return super().__setitem__(key, self.arg_to_ce(value))
-
     def copy(self):
         args = [v for k, v in self.items() if isinstance(k, int)]
         kwargs = {k: v for k, v in self.items() if not isinstance(k, int)}
         return self.__class__(*args, **kwargs)
 
-    @property
-    def id(self):
-        return self.get('id', None)
+    @staticmethod
+    def isspecial(key):
+        return (isinstance(key, str)
+                and key.startswith('__')
+                and key.endswith('__'))
 
-    @id.setter
-    def id(self, value):
-        super().__setitem__('id', LiteralPCE(value))
+    @property
+    def __bind__(self):
+        return self.get('__bind__', None)
+
+    @__bind__.setter
+    def __bind__(self, value):
+        super().__setitem__('__bind__', value)
+
+    @property
+    def __factid__(self):
+        return self.get('__factid__', None)
+
+    @__factid__.setter
+    def __factid__(self, value):
+        super().__setitem__('__factid__', value)
 
     @classmethod
     def from_iter(cls, pairs):
@@ -54,12 +65,19 @@ class Fact(ComposableCE, Bindable, dict):
         obj.update(dict(pairs))
         return obj
 
+    def __str__(self):
+        if self.__factid__ is None:
+            return "<Undeclared Fact> %r" % self
+        else:
+            return "<f-%d>" % self.__factid__
+
     def __repr__(self):
         return "{}({})".format(
             self.__class__.__name__,
             ", ".join(
                 (repr(v) if isinstance(k, int) else "{}={!r}".format(k, v)
-                 for k, v in self.items())))
+                 for k, v in self.items()
+                 if not self.isspecial(k))))
 
     def __hash__(self):
         try:

@@ -12,6 +12,7 @@ from itertools import chain
 
 from pyknow.activation import Activation
 from pyknow.rule import Rule
+from pyknow.watchers import MATCHER
 
 from . import mixins
 from .abstract import Node, OneInputNode, TwoInputNode
@@ -35,12 +36,14 @@ class BusNode(mixins.AnyChild,
     def add(self, fact):
         """Create a VALID token and send it to all children."""
         token = Token.valid(fact)
+        MATCHER.debug("<BusNode> added %r", token)
         for child in self.children:
             child.callback(token)
 
     def remove(self, fact):
         """Create an INVALID token and send it to all children."""
         token = Token.invalid(fact)
+        MATCHER.debug("<BusNode> added %r", token)
         for child in self.children:
             child.callback(token)
 
@@ -114,9 +117,6 @@ class FeatureTesterNode(mixins.AnyChild,
                 token.context.update(match)
             for child in self.children:
                 child.callback(token)
-
-    def __repr__(self):
-        return repr(self.matcher)
 
 
 class OrdinaryMatchNode(mixins.AnyChild,
@@ -222,8 +222,8 @@ class ConflictSetNode(mixins.AnyChild,
         else:
             self.rule = rule
 
-        self.added = set()
-        self.removed = set()
+        self.added = list()
+        self.removed = list()
 
         super().__init__()
 
@@ -247,7 +247,7 @@ class ConflictSetNode(mixins.AnyChild,
                 if activation in self.removed:
                     self.removed.remove(activation)
                 else:
-                    self.added.add(activation)
+                    self.added.append(activation)
         else:
             try:
                 self.memory.remove(info)
@@ -257,19 +257,19 @@ class ConflictSetNode(mixins.AnyChild,
                 if activation in self.added:
                     self.added.remove(activation)
                 else:
-                    self.removed.add(activation)
+                    self.removed.append(activation)
 
     def get_activations(self):
         """Return a list of activations."""
         res = (self.added, self.removed)
 
-        self.added = set()
-        self.removed = set()
+        self.added = list()
+        self.removed = list()
 
         return res
 
-    def __repr__(self):
-        return repr(self.rule)
+    def __str__(self):
+        return "%s: %s" % (self.__class__.__name__, self.rule.__name__)
 
 
 class NotNode(mixins.AnyChild,

@@ -21,7 +21,6 @@ class Matcher(metaclass=abc.ABCMeta):
         """
         pass
 
-
     @abc.abstractmethod
     def reset(self):
         """Reset the matcher memory."""
@@ -38,19 +37,21 @@ class Strategy(metaclass=abc.ABCMeta):
         pass
 
     def update_agenda(self, agenda, added, removed):
-        if watchers.ACTIVATIONS.level <= logging.DEBUG:
+        if watchers.ACTIVATIONS.level <= logging.INFO:
             for act in removed:
                 if act in agenda.activations:
-                    watchers.ACTIVATIONS.debug(
-                        "<== %r: %r",
+                    watchers.ACTIVATIONS.info(
+                        " <== %r: %r",
                         getattr(act.rule, '__name__', None),
-                        sorted(a['__factid__'].value for a in act.facts))
+                        sorted((f for f in act.facts),
+                               key=lambda f: f.__factid__))
 
             for act in added:
-                watchers.ACTIVATIONS.debug(
-                    "==> %r: %r",
+                watchers.ACTIVATIONS.info(
+                    " ==> %r: %r",
                     getattr(act.rule, '__name__', None),
-                    sorted(a['__factid__'].value for a in act.facts))
+                    sorted((f for f in act.facts),
+                           key=lambda f: f.__factid__))
 
         # Resolve conflicts using the appropiate strategy.
         new_activations = deque(self._update_agenda(agenda, added, removed))

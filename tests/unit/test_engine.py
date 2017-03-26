@@ -310,10 +310,9 @@ def test_rules_are_executed_once(to_declare_random):
 
     to_declare = list(set(to_declare_random + [1, 2, 3]))
     shuffle(to_declare)
-    print(to_declare)
 
     for i in to_declare:
-        ke.deffacts(Fact(something=L(i)))
+        ke.deffacts(Fact(something=i))
 
     ke.reset()
     ke.run()
@@ -379,7 +378,7 @@ def test_or_notmatching_operator():
         ke_ = Test()
         ke_.reset()
         for val in test:
-            ke_.deffacts(Fact(none=L(val)))
+            ke_.deffacts(Fact(none=val))
         ke_.reset()
         assert len(ke_.agenda.activations) == 0
 
@@ -767,3 +766,27 @@ def test_not_aggregation():
     ke_.reset()
     ke_.run()
     assert executions == []
+
+
+def test_declare_raises_typeerror_if_conditionalelement_found():
+    from pyknow import KnowledgeEngine, L, W, P, Fact
+
+    ke = KnowledgeEngine()
+
+    with pytest.raises(TypeError):
+        ke.declare(Fact(L(1)))
+
+    with pytest.raises(TypeError):
+        ke.declare(Fact(W()))
+
+    with pytest.raises(TypeError):
+        ke.declare(Fact(P(lambda _: True)))
+
+    with pytest.raises(TypeError):
+        ke.declare(Fact(~L(1)))
+
+    with pytest.raises(TypeError):
+        ke.declare(Fact(L(1) | L(2)))
+
+    with pytest.raises(TypeError):
+        ke.declare(Fact(L(1) & L(2)))
