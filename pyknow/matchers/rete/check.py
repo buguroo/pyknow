@@ -1,6 +1,7 @@
 from collections import namedtuple
 from collections.abc import Mapping
 import dis
+import inspect
 
 from pyknow.rule import PatternConditionalElement
 from pyknow.rule import LiteralPCE, PredicatePCE, WildcardPCE
@@ -210,5 +211,27 @@ class SameContextCheck(Check):
             MATCH.info("%r | %r = %r", l, r, res)
         else:
             MATCH.debug("%r | %r = %r", l, r, res)
+
+        return res
+
+
+class WhereCheck(Check, namedtuple('_WhereCheck', ['test'])):
+
+    _instances = dict()
+
+    def __new__(cls, test):
+        if test not in cls._instances:
+            obj = super().__new__(cls, test)
+            obj.parameters = inspect.signature(test).parameters.keys()
+            cls._instances[test] = obj
+
+        return cls._instances[test]
+
+    def __call__(self, context):
+        parameters = {k: context[k] for k in self.parameters}
+        res = self.test(**parameters)
+
+        log = MATCH.info if res else MATCH.debug
+        log("TEST %r(%r) == %r", self.test, parameters, res)
 
         return res

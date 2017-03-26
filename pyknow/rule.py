@@ -7,7 +7,7 @@ Element``.
 special case implemented in :mod:`pyknow.fact`.
 
 """
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from functools import update_wrapper, partial, lru_cache
 from itertools import chain
 
@@ -39,12 +39,31 @@ class Rule(ConditionalElement):
        pass all the arguments along.
     """
 
-    def __new__(cls, *args, salience=0):
+    def __new__(cls, *args, salience=0, where=None):
         obj = super(Rule, cls).__new__(cls, *args)
 
         obj._wrapped = None
         obj._wrapped_self = None
         obj.salience = salience
+
+        if where is None:
+            where = list()
+        elif not isinstance(where, Iterable):
+            where = [where]
+        obj.where = where
+
+        return obj
+
+    def new_conditions(self, *args):
+        """
+        Generate a new rule with the same attributes but with the given
+        conditions.
+
+        """
+        obj = self.__class__(*args, salience=self.salience, where=self.where)
+
+        if self._wrapped:
+            obj = obj(self._wrapped)
 
         return obj
 

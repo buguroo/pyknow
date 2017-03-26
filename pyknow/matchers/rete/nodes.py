@@ -48,6 +48,20 @@ class BusNode(mixins.AnyChild,
             child.callback(token)
 
 
+class WhereNode(mixins.AnyChild,
+                mixins.HasMatcher,
+                mixins.NoMemory,
+                OneInputNode):
+    """
+    Check some conditions over a token context.
+
+    """
+    def _activate(self, token):
+        if self.matcher(token.context):
+            for child in self.children:
+                child.callback(token)
+
+
 class FeatureTesterNode(mixins.AnyChild,
                         mixins.HasMatcher,
                         mixins.NoMemory,

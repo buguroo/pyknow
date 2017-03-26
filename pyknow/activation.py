@@ -32,3 +32,16 @@ class Activation:
     def __repr__(self):
         return "Activation(rule={}, facts={}, context={})".format(
             self.rule, self.facts, self.context)
+
+    def __eq__(self, other):
+        try:
+            return (self.context == other.context
+                    and self.facts == other.facts
+                    and self.rule == other.rule)
+        except AttributeError:
+            return False
+
+    def __hash__(self):
+        return hash((self.rule,
+                     frozenset(self.facts),
+                     frozenset(self.context.items())))

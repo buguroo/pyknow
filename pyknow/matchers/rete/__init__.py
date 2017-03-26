@@ -46,12 +46,13 @@ class ReteMatcher(Matcher):
 
     def changes(self, adding=None, deleting=None):
         """Pass the given changes to the root_node."""
-        if adding is not None:
-            for added in adding:
-                self.root_node.add(added)
         if deleting is not None:
             for deleted in deleting:
                 self.root_node.remove(deleted)
+
+        if adding is not None:
+            for added in adding:
+                self.root_node.add(added)
 
         added = list()
         removed = list()

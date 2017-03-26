@@ -2,8 +2,9 @@ from functools import singledispatch, lru_cache
 import warnings
 
 from .dnf import dnf
-from .check import FeatureCheck, TypeCheck, FactCapture, SameContextCheck
+from .check import FeatureCheck, TypeCheck, FactCapture, SameContextCheck, WhereCheck
 from .nodes import ConflictSetNode, NotNode, OrdinaryMatchNode
+from .nodes import FeatureTesterNode, WhereNode
 from pyknow import Rule, InitialFact, NOT, OR, Fact, AND
 from pyknow.rule import ConditionalElement
 from pyknow.watchers import MATCH
@@ -34,11 +35,12 @@ def prepare_rule(exp):
 @prepare_rule.register(Rule)
 def _(exp):
     dnf_rule = dnf(exp)
-    prep_rule = Rule(*[prepare_rule(e) for e in dnf_rule])(dnf_rule._wrapped)
+    prep_rule = dnf_rule.new_conditions(
+        *[prepare_rule(e) for e in dnf_rule])
     if not prep_rule:
-        return Rule(InitialFact())(prep_rule._wrapped)
+        return prep_rule.new_conditions(InitialFact())
     elif isinstance(prep_rule[0], NOT):
-        return Rule(InitialFact(), *prep_rule)(prep_rule._wrapped)
+        return prep_rule.new_conditions(InitialFact(), *prep_rule)
     else:
         return dnf(prep_rule)
 
@@ -141,7 +143,15 @@ def wire_rule(rule, alpha_terminals, lhs=None):
     def _(elem):
         return alpha_terminals[elem[0]]
 
+    # Build beta network
+    last_node = _wire_rule(lhs)
+
+    # Add all (where) tests to the end of the beta network, before the CSN
+    for test in rule.where:
+        test_node = WhereNode(WhereCheck(test))
+        last_node.add_child(test_node, test_node.activate)
+        last_node = test_node
+
     # Add a new child to the last node to trigger the rule
     conflict_set_node = ConflictSetNode(rule)
-    last_node = _wire_rule(lhs)
     last_node.add_child(conflict_set_node, conflict_set_node.activate)
