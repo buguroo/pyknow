@@ -1,13 +1,15 @@
 from functools import singledispatch, lru_cache
 import warnings
 
-from .dnf import dnf
 from .check import FeatureCheck, TypeCheck, FactCapture, SameContextCheck
 from .check import WhereCheck
+from .dnf import dnf
 from .nodes import ConflictSetNode, NotNode, OrdinaryMatchNode
 from .nodes import FeatureTesterNode, WhereNode
 from pyknow import Rule, InitialFact, NOT, OR, Fact, AND
+from pyknow.rule import ANDPCE, ORPCE, NOTPCE
 from pyknow.rule import ConditionalElement
+from pyknow.rule import LiteralPCE, PredicatePCE, WildcardPCE
 from pyknow.watchers import MATCH
 
 

@@ -1,5 +1,6 @@
 from collections import namedtuple
 from collections.abc import Mapping
+from functools import singledispatch
 import dis
 import inspect
 
@@ -8,6 +9,10 @@ from pyknow.rule import LiteralPCE, PredicatePCE, WildcardPCE
 from pyknow.rule import ANDPCE, ORPCE, NOTPCE
 from .abstract import Check
 from pyknow.watchers import MATCH
+
+
+CheckFunction = namedtuple('CheckFunction',
+                           ['key_a', 'key_b', 'expected', 'check'])
 
 
 class TypeCheck(Check, namedtuple('_TypeCheck', ['fact_type'])):
@@ -63,111 +68,17 @@ class FeatureCheck(Check,
         if not isinstance(how, PatternConditionalElement):
             how = LiteralPCE(how)
 
-        key_a = type(how)
+        check_function = cls.get_check_function(how, what)
 
-        if key_a is LiteralPCE:
-            key_b = (how.value, how.__bind__)
-        elif key_a is PredicatePCE:
-            key_b = (tuple(dis.get_instructions(how.match)), how.__bind__)
-        elif key_a is WildcardPCE:
-            key_b = how.__bind__
-        elif key_a is NOTPCE:
-            key_b = FeatureCheck(what, how[0])
-        elif key_a in (ANDPCE, ORPCE):
-            key_b = tuple([FeatureCheck(what, h) for h in how])
-        else:
-            raise TypeError("Unknown PCE type.")
-
-        key = (what, key_a, key_b)
+        key = (what, check_function.key_a, check_function.key_b)
 
         if key not in cls._instances:
-            if key_a is LiteralPCE:
-                def equal_literal(actual, expected):
-                    if expected.value == actual:
-                        if expected.__bind__ is None:
-                            return True
-                        else:
-                            return {expected.__bind__: actual}
-                    else:
-                        return False
-
-                expected = how
-                check = equal_literal
-            elif key_a is PredicatePCE:
-                def match_predicate(actual, expected):
-                    if expected.match(actual):
-                        if expected.__bind__ is None:
-                            return True
-                        else:
-                            return {expected.__bind__: actual}
-                    else:
-                        return False
-
-                expected = how
-                check = match_predicate
-            elif key_a is WildcardPCE:
-                def wildcard_match(actual, expected):
-                    if expected.__bind__ is None:
-                        return True
-                    else:
-                        return {expected.__bind__: actual}
-
-                expected = how
-                check = wildcard_match
-            elif key_a is NOTPCE:
-                def not_equal(actual, expected):
-                    subresult = expected(actual, is_fact=False)
-                    if isinstance(subresult, Mapping):
-                        newresult = {(False, k): v
-                                     for k, v in subresult.items()}
-                        return newresult
-                    else:
-                        return not subresult
-
-                expected = key_b
-                check = not_equal
-            elif key_a is ANDPCE:
-                def and_match(actual, expected):
-                    value = dict()
-                    for subcheck in expected:
-                        subres = subcheck(actual, is_fact=False)
-                        if subres is False:
-                            break
-                        elif subres is True:
-                            pass
-                        elif isinstance(subres, Mapping):
-                            value.update(subres)
-                        else:
-                            raise TypeError('Bad check value.')
-                    else:
-                        if not value:
-                            return True
-                        else:
-                            return value
-                    return False
-
-                expected = key_b
-                check = and_match
-            elif key_a is ORPCE:
-                def or_match(actual, expected):
-                    for subcheck in expected:
-                        subres = subcheck(actual, is_fact=False)
-                        if subres:
-                            return subres
-                    else:
-                        return False
-
-                expected = key_b
-                check = or_match
-            else:  # noqa
-                pass
-
             cls._instances[key] = super(Check, cls).__new__(
                 cls,
                 what,
                 how,
-                check,
-                expected)
+                check_function.check,
+                check_function.expected)
 
         return cls._instances[key]
 
@@ -189,6 +100,120 @@ class FeatureCheck(Check,
 
     def __str__(self):
         return "%s (%s) %s" % (self.what, self.check.__name__, self.expected)
+
+    @singledispatch
+    @staticmethod
+    def get_check_function(pce, what=None):
+        raise TypeError("Unknown PCE type.")
+
+    @get_check_function.register(LiteralPCE)
+    def _(pce, what=None):
+        def equal_literal(actual, expected):
+            if expected.value == actual:
+                if expected.__bind__ is None:
+                    return True
+                else:
+                    return {expected.__bind__: actual}
+            else:
+                return False
+
+        return CheckFunction(key_a=LiteralPCE,
+                             key_b=(pce.value, pce.__bind__),
+                             expected=pce,
+                             check=equal_literal)
+
+    @get_check_function.register(PredicatePCE)
+    def _(pce, what=None):
+        def match_predicate(actual, expected):
+            if expected.match(actual):
+                if expected.__bind__ is None:
+                    return True
+                else:
+                    return {expected.__bind__: actual}
+            else:
+                return False
+
+        return CheckFunction(key_a=PredicatePCE,
+                             key_b=(tuple(dis.get_instructions(pce.match)),
+                                    pce.__bind__),
+                             expected=pce,
+                             check=match_predicate)
+
+    @get_check_function.register(WildcardPCE)
+    def _(pce, what=None):
+        def wildcard_match(actual, expected):
+            if expected.__bind__ is None:
+                return True
+            else:
+                return {expected.__bind__: actual}
+
+        return CheckFunction(key_a=WildcardPCE,
+                             key_b=pce.__bind__,
+                             expected=pce,
+                             check=wildcard_match)
+
+    @get_check_function.register(NOTPCE)
+    def _(pce, what=None):
+        def not_equal(actual, expected):
+            subresult = expected(actual, is_fact=False)
+            if isinstance(subresult, Mapping):
+                newresult = {(False, k): v
+                             for k, v in subresult.items()}
+                return newresult
+            else:
+                return not subresult
+
+        key_b = FeatureCheck(what, pce[0])
+
+        return CheckFunction(key_a=NOTPCE,
+                             key_b=key_b,
+                             expected=key_b,
+                             check=not_equal)
+
+    @get_check_function.register(ANDPCE)
+    def _(pce, what=None):
+        def and_match(actual, expected):
+            value = dict()
+            for subcheck in expected:
+                subres = subcheck(actual, is_fact=False)
+                if subres is False:
+                    break
+                elif subres is True:
+                    pass
+                elif isinstance(subres, Mapping):
+                    value.update(subres)
+                else:
+                    raise TypeError('Bad check value.')
+            else:
+                if not value:
+                    return True
+                else:
+                    return value
+            return False
+
+        key_b = tuple(FeatureCheck(what, x) for x in pce)
+
+        return CheckFunction(key_a=ANDPCE,
+                             key_b=key_b,
+                             expected=key_b,
+                             check=and_match)
+
+    @get_check_function.register(ORPCE)
+    def _(pce, what=None):
+        def or_match(actual, expected):
+            for subcheck in expected:
+                subres = subcheck(actual, is_fact=False)
+                if subres:
+                    return subres
+            else:
+                return False
+
+        key_b = tuple(FeatureCheck(what, x) for x in pce)
+
+        return CheckFunction(key_a=ORPCE,
+                             key_b=key_b,
+                             expected=key_b,
+                             check=or_match)
 
 
 class SameContextCheck(Check):
