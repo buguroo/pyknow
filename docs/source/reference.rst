@@ -47,7 +47,7 @@ Rule
 
 `Rule` is the basic method of composing patterns. You can add as many
 patterns or conditional elements as you want to a Rule and it will fire
-if every one of them matches. Meaning it by default behaves like `AND`.
+if every one of them matches. Therefore, it behaves like `AND` by default.
 
 .. code-block:: python
 
@@ -100,10 +100,10 @@ before rules with a lower one.
 where
 +++++
 
-Callable or list of callables that will be called if the rule's pattern match.
+Callable (or callables list) that will be called if the rule's pattern match.
 
 The callable parameters are analyzed and if they match with a binded
-value of the pattern, they will be passed along.
+value for the rule's pattern, they will be passed along.
 
 .. code-block:: python
    :caption: Will match only for facts where `x` + `y` equals 42.
@@ -138,7 +138,7 @@ OR
 ++
 
 `OR` creates a composed pattern in which any of the given pattern will
-make the rule to match.
+make the rule match.
 
 .. code-block:: python
    :caption: Match if a fact matching Fact(1) exists **and/or** a fact matching Fact(2) exists
@@ -152,14 +152,14 @@ make the rule to match.
 .. warning::
 
    If multiple facts match, the rule will be fired multiple times, one
-   for each valid combination of matching facts. 
+   for each valid combination of matching facts.
 
 
 NOT
 +++
 
 This element matches if the given pattern does not match with any fact
-or combination of facts. Therefore this element match the *absence* of
+or combination of facts. Therefore this element matches the *absence* of
 the given pattern.
 
 .. code-block:: python
@@ -170,13 +170,13 @@ the given pattern.
        pass
 
 
-Pattern Conditional Elements: PCE for sort
-------------------------------------------
+Pattern Conditional Elements: PCE for short
+-------------------------------------------
 
 `LiteralPCE` a.k.a. L()
 +++++++++++++++++++++++
 
-This element performs a exact match with the given value. The matching
+This element performs an exact match with the given value. The matching
 is done using the equality operator `==`.
 
 .. code-block:: python
@@ -188,8 +188,7 @@ is done using the equality operator `==`.
 
 .. note::
 
-   This is the default PCE used when no PCE is given as a value in a
-   pattern.
+   This is the default PCE used when no PCE is given as a pattern value.
 
 
 `WildcardPCE` a.k.a. W()
@@ -206,19 +205,19 @@ This element matches with **any** value.
 
 .. note::
 
-   This element **only** match if the element exist.
+   This element **only** matches if the element exist.
 
 
 `PredicatePCE` a.k.a. P()
 +++++++++++++++++++++++++
 
-The match of this element is the result of apply the given callable to
-the fact extracted value. If the callable returns `True` the PCE will
+The match of this element is the result of applying the given callable to
+the fact-extracted value. If the callable returns `True` the PCE will
 match, in other case the PCE will not match.
 
 
 .. code-block:: python
-   :caption: Match if some fact is declared which first parameter is an instance of int
+   :caption: Match if some fact is declared whose first parameter is an instance of int
 
    @Rule(Fact(P(lambda x: isinstance(x, int))))
    def _():
@@ -228,14 +227,14 @@ match, in other case the PCE will not match.
 Composing PCEs: `&`, `|` and `~`
 --------------------------------
 
-All PCE can be composed together using the composition operators `&`,
+All PCEs can be composed together using the composition operators `&`,
 `|` and `~`.
 
 
 `ANDPCE()` a.k.a. `&`
 +++++++++++++++++++++
 
-The composed PCE match if all the given PCE match.
+The composed PCE matches if all the given PCEs match.
 
 .. code-block:: python
    :caption: Match if key `x` of `Point` is a value between 0 and 255.
@@ -248,7 +247,7 @@ The composed PCE match if all the given PCE match.
 `ORPCE()` a.k.a. `|`
 ++++++++++++++++++++
 
-The composed PCE match if any of the given PCE matches.
+The composed PCE matches if any of the given PCE matches.
 
 .. code-block:: python
    :caption: Match if `name` is either `Alice` or `Bob`.
@@ -262,7 +261,7 @@ The composed PCE match if any of the given PCE matches.
 +++++++++++++++++++++
 
 This composed PCE negates the given PCE, reversing the logic. If the
-given PCE matches this will not and vice versa.
+given PCE matches, this will not and vice versa.
 
 .. code-block:: python
    :caption: Match if `name` is not `Charlie`.
@@ -275,7 +274,7 @@ given PCE matches this will not and vice versa.
 Variable Binding: The `<<` Operator
 -----------------------------------
 
-Any patterns and some PCE can be binded to a name using the `<<`
+Any patterns and some PCEs can be binded to a name using the `<<`
 operator.
 
 .. code-block:: python

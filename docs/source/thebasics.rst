@@ -1,7 +1,7 @@
 The Basics
 ==========
 
-An expert system is a program capable of pair up a set of **facts** with
+An expert system is a program capable of pairing up a set of **facts** with
 a set of **rules** to those facts, and execute some actions based on the
 matching rules.
 
@@ -41,7 +41,7 @@ Let's enumerate some facts about `Facts`, so... metafacts ;)
 
 
 #. You can mix autonumeric values with key-values, but autonumeric must
-   be first:
+   be declared first:
 
    .. code-block:: python
 
@@ -51,7 +51,7 @@ Let's enumerate some facts about `Facts`, so... metafacts ;)
       >>> f['b']
       2
 
-#. You can subclass `Fact` to express different kind of data or extend
+#. You can subclass `Fact` to express different kinds of data or extend
    it with your custom functionality.
 
    .. code-block:: python
@@ -87,12 +87,12 @@ Let's enumerate some facts about `Facts`, so... metafacts ;)
 Rules
 -----
 
-In PyKnow a **rule** is a callable decorated with the `Rule` decorator.
+In PyKnow a **rule** is a callable, decorated with `Rule`.
 
-The rule have two components, the LHS (left-hand-side) and the RHS
+The rule has two components, the LHS (left-hand-side) and the RHS
 (right-hand-side).
 
-* The *LHS* describe (using **patterns**) the conditions on which the rule
+* The *LHS* describes (using **patterns**) the conditions on which the rule
   * should be executed (or fired).
 
 * The *RHS* is the set of actions to perform when the rule is fired.
@@ -104,12 +104,12 @@ For a `Fact` to match a `Pattern`, all pattern restrictions must be
 
    class MyFact(Fact):
        pass
-  
+
    @Rule(MyFact())  # This is the LHS
    def match_with_every_myfact():
        """This rule will match with every instance of `MyFact`."""
        # This is the RHS
-       pass 
+       pass
 
    @Rule(Fact('animal', family='felinae'))
    def match_with_cats():
@@ -136,7 +136,7 @@ You can use logic operators to express complex *LHS* conditions.
        enable_superpowers()
 
 
-For a `Rule` to be useful must be a method of a subclass of `KnowledgeEngine`.
+For a `Rule` to be useful, it must be a method of a `KnowledgeEngine` subclass.
 
 
 `Facts` vs `Patterns`
@@ -174,7 +174,7 @@ This is where all the magic happens.
 The first step is to make a subclass of it and use `Rule` to decorate its
 methods.
 
-After that you can instantiate, populate with facts, and finally run it.
+After that, you can instantiate it, populate it with facts, and finally run it.
 
 .. code-block:: python
    :caption: greet.py
@@ -226,7 +226,7 @@ For a KnowledgeEngine to run, this things must happen:
    This stores the facts internally.
 
 #. The method **reset** must be called:
-   
+
    * This declares the special fact *InitialFact*. Necessary for some
      rules to work properly.
 
