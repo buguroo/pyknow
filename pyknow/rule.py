@@ -1,12 +1,3 @@
-#!/usr/bin/env python
-"""
-Definitions of clips' Conditional Elements, except ``Pattern Conditional
-Element``.
-
-``Pattern CE`` defines direct matching against patterns, wich is a
-special case implemented in :mod:`pyknow.fact`.
-
-"""
 from collections.abc import Callable, Iterable
 from functools import update_wrapper, partial, lru_cache
 from itertools import chain
@@ -144,33 +135,14 @@ class ComposableCE:
 
 
 class AND(ComposableCE, ConditionalElement):
-    """
-    ``AND CE``
-    ----------
-
-    See (:ref:`conditional_and`) narrative documentation.
-    """
-
     pass
 
 
 class OR(ComposableCE, ConditionalElement):
-    """
-    ``Or CE``
-    ---------
-    See (:ref:`conditional_or`) narrative documentation
-    """
-
     pass
 
 
 class NOT(ComposableCE, ConditionalElement):
-    """
-    ``NOT CE``
-    ----------
-    See (:ref:`conditional_not`) narrative documentation
-    """
-
     pass
 
 
