@@ -6,7 +6,7 @@ Philosophy
 
 We aim to implement a Python alternative to CLIPS, as compatible as
 possible. With the goal of making it easy for the CLIPS programmer to
-transfer all the already knowledge she/he has to this platform.
+transfer all his/her knowledge to this platform.
 
 
 Features
@@ -21,7 +21,8 @@ Differences between CLIPS and PyKnow
 ------------------------------------
 
 #. CLIPS is a programming language, PyKnow is a Python library. This
-   imposes some limitations in the expressivity of the LHS.
+   imposes some limitations on the constructions we can do (specially on
+   the LHS of a rule).
 
 #. CLIPS is written in C, PyKnow in Python. A noticiable impact in
    performance is to be expected.

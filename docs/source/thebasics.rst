@@ -230,7 +230,7 @@ For a KnowledgeEngine to run, this things must happen:
    * This declares the special fact *InitialFact*. Necessary for some
      rules to work properly.
 
-   * All facts declared with `deffacts` are declared.
+   * All facts stored using `deffacts` are declared.
 
 #. The method **run** must be called. This starts the cycle of execution.
 
@@ -243,5 +243,5 @@ Both methods are used to declare facts on the engine instance, but:
 * `declare` adds the facts directly to the working memory.
 
 * `deffacts` stores the facts in a special permanent memory, and every
-    time **reset** is called, the facts are added to the working memory
-    using `declare`.
+  time **reset** is called, the facts are added to the working memory
+  using `declare`.
