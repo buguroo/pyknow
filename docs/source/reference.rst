@@ -47,7 +47,7 @@ Rule
 
 `Rule` is the basic method of composing patterns. You can add as many
 patterns or conditional elements as you want to a Rule and it will fire
-if every one of them matches. Meaning it by default behaves like `AND`.
+if every one of them matches. Therefore, it behaves like `AND` by default.
 
 .. code-block:: python
 
@@ -78,6 +78,7 @@ The following diagram shows the rules of composition of a rule:
      "Rule" -> "Pattern" [label="contains"];
 
    }
+
 
 salience
 ++++++++
@@ -121,7 +122,7 @@ OR
 ++
 
 `OR` creates a composed pattern in which any of the given pattern will
-make the rule to match.
+make the rule match.
 
 .. code-block:: python
    :caption: Match if a fact matching Fact(1) exists **and/or** a fact matching Fact(2) exists
@@ -135,14 +136,14 @@ make the rule to match.
 .. warning::
 
    If multiple facts match, the rule will be fired multiple times, one
-   for each valid combination of matching facts. 
+   for each valid combination of matching facts.
 
 
 NOT
 +++
 
 This element matches if the given pattern does not match with any fact
-or combination of facts. Therefore this element match the *absence* of
+or combination of facts. Therefore this element matches the *absence* of
 the given pattern.
 
 .. code-block:: python
@@ -221,7 +222,7 @@ Field Constraints: FC for sort
 L (Literal Field Constraint)
 ++++++++++++++++++++++++++++
 
-This element performs a exact match with the given value. The matching
+This element performs an exact match with the given value. The matching
 is done using the equality operator `==`.
 
 .. code-block:: python
@@ -233,7 +234,7 @@ is done using the equality operator `==`.
 
 .. note::
 
-   This is the default FC used when no FC is given as a value in a
+   This is the default FC used when no FC is given as a pattern value.
    pattern.
 
 
@@ -251,19 +252,18 @@ This element matches with **any** value.
 
 .. note::
 
-   This element **only** match if the element exist.
+   This element **only** matches if the element exist.
 
 
 P (Predicate Field Constraint)
 ++++++++++++++++++++++++++++++
 
-The match of this element is the result of apply the given callable to
-the fact extracted value. If the callable returns `True` the FC will
+The match of this element is the result of applying the given callable to
+the fact-extracted value. If the callable returns `True` the FC will
 match, in other case the FC will not match.
 
-
 .. code-block:: python
-   :caption: Match if some fact is declared which first parameter is an instance of int
+   :caption: Match if some fact is declared whose first parameter is an instance of int
 
    @Rule(Fact(P(lambda x: isinstance(x, int))))
    def _():
@@ -273,14 +273,14 @@ match, in other case the FC will not match.
 Composing FCs: `&`, `|` and `~`
 -------------------------------
 
-All FC can be composed together using the composition operators `&`,
-`|` and `~`.
+All FC can be composed together using the composition operators `&`, `|`
+and `~`.
 
 
 `ANDFC()` a.k.a. `&`
 +++++++++++++++++++++
 
-The composed FC match if all the given FC match.
+The composed FC matches if all the given FC match.
 
 .. code-block:: python
    :caption: Match if key `x` of `Point` is a value between 0 and 255.
@@ -293,7 +293,7 @@ The composed FC match if all the given FC match.
 `ORFC()` a.k.a. `|`
 ++++++++++++++++++++
 
-The composed FC match if any of the given FC matches.
+The composed FC matches if any of the given FC matches.
 
 .. code-block:: python
    :caption: Match if `name` is either `Alice` or `Bob`.
@@ -320,7 +320,7 @@ given FC matches this will not and vice versa.
 Variable Binding: The `<<` Operator
 -----------------------------------
 
-Any patterns and some FC can be binded to a name using the `<<`
+Any patterns and some FCs can be binded to a name using the `<<`
 operator.
 
 .. code-block:: python
