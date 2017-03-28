@@ -7,7 +7,7 @@ pyknow
     :show-inheritance:
 
 
-pyknow.activation
+pyknow.abstract
 -----------------
 
 .. automodule:: pyknow.abstract
@@ -29,6 +29,15 @@ pyknow.agenda
 -------------
 
 .. automodule:: pyknow.agenda
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+pyknow.conditionalelement
+-------------------------
+
+.. automodule:: pyknow.conditionalelement
     :members:
     :undoc-members:
     :show-inheritance:
@@ -56,6 +65,15 @@ pyknow.fact
 -----------
 
 .. automodule:: pyknow.fact
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+pyknow.fieldconstraint
+----------------------
+
+.. automodule:: pyknow.fieldconstraint
     :members:
     :undoc-members:
     :show-inheritance:

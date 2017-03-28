@@ -1,4 +1,4 @@
-__all__ = ['AND', 'OR', 'NOT', 'EXISTS', 'FORALL']
+__all__ = ['AND', 'OR', 'NOT', 'TEST', 'EXISTS', 'FORALL']
 
 
 class ConditionalElement(tuple):

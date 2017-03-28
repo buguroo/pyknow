@@ -12,16 +12,16 @@ among them.
 
      "CE" [label="Conditional Element (CE)"];
      "Fact" [label="Fact"];
-     "PCE" [label="Pattern Conditional Element (PCE)"];
+     "FC" [label="Field Constraint (FC)"];
      "Pattern" [label="Pattern", shape="box"];
 
 
      "CE" -> "CE" [label="contains"];
      "CE" -> "Pattern" [label="contains"];
 
-     "PCE" -> "PCE" [label="some of them contains"];
+     "FC" -> "FC" [label="some of them contains"];
 
-     "Pattern" -> "PCE" [label="contains"]
+     "Pattern" -> "FC" [label="contains"]
      "Rule" -> "CE" [label="contains"];
      "Rule" -> "Pattern" [label="contains"];
 
@@ -65,15 +65,15 @@ The following diagram shows the rules of composition of a rule:
 
    digraph relation {
      "CE" [label="Conditional Element (CE)\nAND, OR, NOT"];
-     "CPCE" [label="Composable PCE\n&, \|, ~", shape="box"];
-     "PCE" [label="Pattern Conditional Element (PCE)\nL(), W(), P()"];
+     "CFC" [label="Composable FC\n&, \|, ~", shape="box"];
+     "FC" [label="Field Constraint (FC)\nL(), W(), P()"];
      "Pattern" [label="Pattern", shape="box"];
 
      "CE" -> "CE" [label="contains"];
      "CE" -> "Pattern" [label="contains"];
-     "CPCE" -> "PCE" [label="contains"];
-     "Pattern" -> "PCE" [label="contains"]
-     "Pattern" -> "CPCE" [label="contains"]
+     "CFC" -> "FC" [label="contains"];
+     "Pattern" -> "FC" [label="contains"]
+     "Pattern" -> "CFC" [label="contains"]
      "Rule" -> "CE" [label="contains"];
      "Rule" -> "Pattern" [label="contains"];
 
@@ -95,23 +95,6 @@ before rules with a lower one.
 
    @Rule(salience=0)
    def r2():
-       pass
-
-where
-+++++
-
-Callable or list of callables that will be called if the rule's pattern match.
-
-The callable parameters are analyzed and if they match with a binded
-value of the pattern, they will be passed along.
-
-.. code-block:: python
-   :caption: Will match only for facts where `x` + `y` equals 42.
-
-   @Rule(Fact(x='x' << W(),
-              y='y' << W())
-         where=lambda x, y: x + y == 42)
-   def _(x, y):
        pass
 
 
@@ -170,11 +153,73 @@ the given pattern.
        pass
 
 
-Pattern Conditional Elements: PCE for sort
-------------------------------------------
+TEST
+++++
 
-`LiteralPCE` a.k.a. L()
-+++++++++++++++++++++++
+Check the received callable against the current binded values. If the
+execution returns `True` the evaluation will continue and stops
+otherwise.
+
+.. code-block:: python
+   :caption: Match for all numbers `a`, `b`, `c` where a > b > c
+
+   @Rule(Number('a' << W()),
+         Number('b' << W()),
+         TEST(lambda a, b: a > b),
+         Number('c' << W()),
+         TEST(lambda b, c: b > c))
+   def _(a, b, c):
+       pass
+
+
+EXISTS
+++++++
+
+This CE receives a pattern and matches if one or more facts matches this
+pattern. This will match only once while one or more matching facts
+exists and will stop matching when there is no matching facts.
+
+.. code-block:: python
+   :caption: Match once when one or more Color exists
+
+   @Rule(EXISTS(Color()))
+   def _():
+       pass
+
+
+FORALL
+++++++
+
+The FORALL conditional element provides a mechanism for determining if a
+group of specified CEs is satisfied for every occurence of another
+specified CE.
+
+.. code-block:: python
+   :caption: Match when for every Student fact there is a Reading, Writing and Arithmetic fact with the same name.
+
+   @Rule(FORALL(Student(W('name')),
+                Reading(W('name')),
+                Writing(W('name')),
+                Arithmetic(W('name')))
+   def all_students_passed():
+       pass
+
+
+.. note::
+
+   All binded variables captured inside a `FORALL` clause won't be
+   passed as context to the RHS of the rule.
+   
+.. note::
+
+   Any time the rule is activated the matching fact is the InitialFact.
+
+
+Field Constraints: FC for sort
+------------------------------
+
+L (Literal Field Constraint)
+++++++++++++++++++++++++++++
 
 This element performs a exact match with the given value. The matching
 is done using the equality operator `==`.
@@ -188,12 +233,12 @@ is done using the equality operator `==`.
 
 .. note::
 
-   This is the default PCE used when no PCE is given as a value in a
+   This is the default FC used when no FC is given as a value in a
    pattern.
 
 
-`WildcardPCE` a.k.a. W()
-++++++++++++++++++++++++
+W (Wildcard Field Constraint)
++++++++++++++++++++++++++++++
 
 This element matches with **any** value.
 
@@ -209,12 +254,12 @@ This element matches with **any** value.
    This element **only** match if the element exist.
 
 
-`PredicatePCE` a.k.a. P()
-+++++++++++++++++++++++++
+P (Predicate Field Constraint)
+++++++++++++++++++++++++++++++
 
 The match of this element is the result of apply the given callable to
-the fact extracted value. If the callable returns `True` the PCE will
-match, in other case the PCE will not match.
+the fact extracted value. If the callable returns `True` the FC will
+match, in other case the FC will not match.
 
 
 .. code-block:: python
@@ -225,17 +270,17 @@ match, in other case the PCE will not match.
        pass
 
 
-Composing PCEs: `&`, `|` and `~`
---------------------------------
+Composing FCs: `&`, `|` and `~`
+-------------------------------
 
-All PCE can be composed together using the composition operators `&`,
+All FC can be composed together using the composition operators `&`,
 `|` and `~`.
 
 
-`ANDPCE()` a.k.a. `&`
+`ANDFC()` a.k.a. `&`
 +++++++++++++++++++++
 
-The composed PCE match if all the given PCE match.
+The composed FC match if all the given FC match.
 
 .. code-block:: python
    :caption: Match if key `x` of `Point` is a value between 0 and 255.
@@ -245,10 +290,10 @@ The composed PCE match if all the given PCE match.
        pass
 
 
-`ORPCE()` a.k.a. `|`
+`ORFC()` a.k.a. `|`
 ++++++++++++++++++++
 
-The composed PCE match if any of the given PCE matches.
+The composed FC match if any of the given FC matches.
 
 .. code-block:: python
    :caption: Match if `name` is either `Alice` or `Bob`.
@@ -258,11 +303,11 @@ The composed PCE match if any of the given PCE matches.
        pass
 
 
-`NOTPCE()` a.k.a. `~`
+`NOTFC()` a.k.a. `~`
 +++++++++++++++++++++
 
-This composed PCE negates the given PCE, reversing the logic. If the
-given PCE matches this will not and vice versa.
+This composed FC negates the given FC, reversing the logic. If the
+given FC matches this will not and vice versa.
 
 .. code-block:: python
    :caption: Match if `name` is not `Charlie`.
@@ -275,7 +320,7 @@ given PCE matches this will not and vice versa.
 Variable Binding: The `<<` Operator
 -----------------------------------
 
-Any patterns and some PCE can be binded to a name using the `<<`
+Any patterns and some FC can be binded to a name using the `<<`
 operator.
 
 .. code-block:: python
