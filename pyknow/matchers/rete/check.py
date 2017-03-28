@@ -4,9 +4,9 @@ from functools import singledispatch
 import dis
 import inspect
 
-from pyknow.rule import PatternConditionalElement
-from pyknow.rule import LiteralPCE, PredicatePCE, WildcardPCE
-from pyknow.rule import ANDPCE, ORPCE, NOTPCE
+from pyknow.fieldconstraint import FieldConstraint
+from pyknow.fieldconstraint import L, P, W
+from pyknow.fieldconstraint import ANDFC, ORFC, NOTFC
 from .abstract import Check
 from pyknow.watchers import MATCH
 
@@ -65,8 +65,8 @@ class FeatureCheck(Check,
     _instances = dict()
 
     def __new__(cls, what, how):
-        if not isinstance(how, PatternConditionalElement):
-            how = LiteralPCE(how)
+        if not isinstance(how, FieldConstraint):
+            how = L(how)
 
         check_function = cls.get_check_function(how, what)
 
@@ -104,9 +104,9 @@ class FeatureCheck(Check,
     @singledispatch
     @staticmethod
     def get_check_function(pce, what=None):
-        raise TypeError("Unknown PCE type.")
+        raise TypeError("Unknown FieldConstraint type.")
 
-    @get_check_function.register(LiteralPCE)
+    @get_check_function.register(L)
     def _(pce, what=None):
         def equal_literal(actual, expected):
             if expected.value == actual:
@@ -117,12 +117,12 @@ class FeatureCheck(Check,
             else:
                 return False
 
-        return CheckFunction(key_a=LiteralPCE,
+        return CheckFunction(key_a=L,
                              key_b=(pce.value, pce.__bind__),
                              expected=pce,
                              check=equal_literal)
 
-    @get_check_function.register(PredicatePCE)
+    @get_check_function.register(P)
     def _(pce, what=None):
         def match_predicate(actual, expected):
             if expected.match(actual):
@@ -133,13 +133,13 @@ class FeatureCheck(Check,
             else:
                 return False
 
-        return CheckFunction(key_a=PredicatePCE,
+        return CheckFunction(key_a=P,
                              key_b=(tuple(dis.get_instructions(pce.match)),
                                     pce.__bind__),
                              expected=pce,
                              check=match_predicate)
 
-    @get_check_function.register(WildcardPCE)
+    @get_check_function.register(W)
     def _(pce, what=None):
         def wildcard_match(actual, expected):
             if expected.__bind__ is None:
@@ -147,12 +147,12 @@ class FeatureCheck(Check,
             else:
                 return {expected.__bind__: actual}
 
-        return CheckFunction(key_a=WildcardPCE,
+        return CheckFunction(key_a=W,
                              key_b=pce.__bind__,
                              expected=pce,
                              check=wildcard_match)
 
-    @get_check_function.register(NOTPCE)
+    @get_check_function.register(NOTFC)
     def _(pce, what=None):
         def not_equal(actual, expected):
             subresult = expected(actual, is_fact=False)
@@ -165,12 +165,12 @@ class FeatureCheck(Check,
 
         key_b = FeatureCheck(what, pce[0])
 
-        return CheckFunction(key_a=NOTPCE,
+        return CheckFunction(key_a=NOTFC,
                              key_b=key_b,
                              expected=key_b,
                              check=not_equal)
 
-    @get_check_function.register(ANDPCE)
+    @get_check_function.register(ANDFC)
     def _(pce, what=None):
         def and_match(actual, expected):
             value = dict()
@@ -193,12 +193,12 @@ class FeatureCheck(Check,
 
         key_b = tuple(FeatureCheck(what, x) for x in pce)
 
-        return CheckFunction(key_a=ANDPCE,
+        return CheckFunction(key_a=ANDFC,
                              key_b=key_b,
                              expected=key_b,
                              check=and_match)
 
-    @get_check_function.register(ORPCE)
+    @get_check_function.register(ORFC)
     def _(pce, what=None):
         def or_match(actual, expected):
             for subcheck in expected:
@@ -210,7 +210,7 @@ class FeatureCheck(Check,
 
         key_b = tuple(FeatureCheck(what, x) for x in pce)
 
-        return CheckFunction(key_a=ORPCE,
+        return CheckFunction(key_a=ORFC,
                              key_b=key_b,
                              expected=key_b,
                              check=or_match)

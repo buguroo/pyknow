@@ -4,7 +4,7 @@ PyKnow: Expert Systems for Python
 Pyknow is a Python library for building expert systems strongly inspired
 by `CLIPS <clipsrules.sourceforge.net>`_.
 
-You can `some examples on GitHub
+You can find `some examples on GitHub
 <https://github.com/buguroo/pyknow/tree/develop/docs/examples>`_.
 
 User Guide

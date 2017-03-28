@@ -1,23 +1,13 @@
-"""
-Definitions of clips' ``Pattern Conditional Element``.
-
-See :ref:conditional_elements
-
-"""
-from collections import OrderedDict
-from functools import lru_cache
 from itertools import chain
-import operator as op
 
-from pyknow.rule import PatternConditionalElement, LiteralPCE
-from pyknow.rule import AND, OR, NOT, ComposableCE, Bindable
+from pyknow.pattern import Bindable
+from pyknow.conditionalelement import OperableCE
+from pyknow.conditionalelement import ConditionalElement
 
 
-class Fact(ComposableCE, Bindable, dict):
-    """
-    Base Fact class
+class Fact(OperableCE, Bindable, dict):
+    """Base Fact class"""
 
-    """
     def __init__(self, *args, **kwargs):
         self.update(dict(chain(enumerate(args), kwargs.items())))
 
@@ -25,20 +15,16 @@ class Fact(ComposableCE, Bindable, dict):
         for k, v in mapping.items():
             self[k] = v
 
-    @staticmethod
-    def arg_to_ce(arg):
-        if not isinstance(arg, PatternConditionalElement):
-            return LiteralPCE(arg)
-        else:
-            return arg
-
     def copy(self):
         args = [v for k, v in self.items() if isinstance(k, int)]
         kwargs = {k: v for k, v in self.items() if not isinstance(k, int)}
         return self.__class__(*args, **kwargs)
 
+    def has_field_constraints(self):
+        return any(isinstance(v, ConditionalElement) for v in self.values())
+
     @staticmethod
-    def isspecial(key):
+    def is_special(key):
         return (isinstance(key, str)
                 and key.startswith('__')
                 and key.endswith('__'))
@@ -77,7 +63,7 @@ class Fact(ComposableCE, Bindable, dict):
             ", ".join(
                 (repr(v) if isinstance(k, int) else "{}={!r}".format(k, v)
                  for k, v in self.items()
-                 if not self.isspecial(k))))
+                 if not self.is_special(k))))
 
     def __hash__(self):
         try:
@@ -95,6 +81,4 @@ class InitialFact(Fact):
     """
     InitialFact
     """
-
-    # pylint: disable=too-few-public-methods
     pass

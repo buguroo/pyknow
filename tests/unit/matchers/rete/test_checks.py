@@ -10,14 +10,14 @@ def test_featurecheck_exists():
 
 def test_featurecheck_convert_nonPCE_to_PCE():
     from pyknow.matchers.rete.check import FeatureCheck
-    from pyknow.rule import LiteralPCE 
+    from pyknow import L
 
     def testfunc():
         pass
 
     fc = FeatureCheck('somekey', testfunc)
 
-    assert fc.how == LiteralPCE(testfunc)
+    assert fc.how == L(testfunc)
 
 
 def test_featurecheck_is_borg_basic_literal():

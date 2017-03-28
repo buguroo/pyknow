@@ -3,7 +3,6 @@ import abc
 import logging
 
 from pyknow import watchers
-from pyknow.activation import Activation
 
 
 class Matcher(metaclass=abc.ABCMeta):

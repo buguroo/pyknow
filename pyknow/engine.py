@@ -12,7 +12,7 @@ from pyknow import abstract
 from pyknow.agenda import Agenda
 from pyknow.fact import InitialFact
 from pyknow.factlist import FactList
-from pyknow.rule import Rule, ConditionalElement
+from pyknow.rule import Rule
 from pyknow import watchers
 
 logging.basicConfig()
@@ -185,16 +185,16 @@ class KnowledgeEngine:
         """
         Internal declaration method. Used for ``declare`` and ``deffacts``
         """
-        for fact in facts:
-            if any(isinstance(v, ConditionalElement) for v in fact.values()):
-                raise TypeError(
-                    "Declared facts cannot contain conditional elements")
-            else:
+        if any(f.has_field_constraints() for f in facts):
+            raise TypeError(
+                "Declared facts cannot contain conditional elements")
+        else:
+            for fact in facts:
                 self.facts.declare(fact)
 
-        if not self.running:
-            added, removed = self.get_activations()
-            self.strategy.update_agenda(self.agenda, added, removed)
+            if not self.running:
+                added, removed = self.get_activations()
+                self.strategy.update_agenda(self.agenda, added, removed)
 
     def declare(self, *facts):
         """

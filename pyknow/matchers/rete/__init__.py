@@ -16,6 +16,8 @@ from .check import TypeCheck, FactCapture, FeatureCheck
 from .nodes import BusNode, ConflictSetNode, FeatureTesterNode
 from .utils import prepare_rule, extract_facts, generate_checks, wire_rule
 from pyknow import OR
+from pyknow.rule import Rule
+from pyknow.fact import InitialFact
 from pyknow.abstract import Matcher
 
 
@@ -88,6 +90,12 @@ class ReteMatcher(Matcher):
         the RETE network starting at `root_node`.
 
         """
+        # Adds a dummy rule with InitialFact as LHS for always generate
+        # the alpha part matching InitialFact(). This is needed for the
+        # CE using InitialFact
+        ruleset = ruleset.copy()
+        ruleset.add(Rule(InitialFact()))
+
         # Generate a dictionary with rules and the set of facts of the
         # rule.
         rule_facts = {rule: extract_facts(rule) for rule in ruleset}
@@ -121,10 +129,10 @@ class ReteMatcher(Matcher):
 
         sorted_rules = sorted(ruleset, key=weighted_rule_sort, reverse=True)
 
+        fact_terminal_nodes = dict()
         # For rule in rank order and for each rule fact also in rank
         # order, build the alpha brank looking for an existing node
         # first.
-        fact_terminal_nodes = dict()
         for rule in sorted_rules:
             for fact in rule_facts[rule]:
                 current_node = root_node

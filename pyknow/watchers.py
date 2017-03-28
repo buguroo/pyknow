@@ -10,12 +10,13 @@ and all of them.
 """
 import logging
 
+__all__ = ['watch', 'unwatch']
+
 logging.basicConfig()
 
 
 def define_watcher(name):
     watcher = logging.getLogger('.'.join((__name__, name)))
-    watcher.setLevel(logging.CRITICAL)
     return watcher
 
 
@@ -23,15 +24,27 @@ def watch(*what, level=logging.DEBUG):
     """
     Enable watchers.
 
-    Defaults to enable all watchers, accepts a list of watchers
-    to enable.
+    Defaults to enable all watchers, accepts a list names of watchers to
+    enable.
 
     """
     if not what:
         what = ALL
 
-    for watcher in what:
+    for watcher_name in what:
+        watcher = globals()[watcher_name]
         watcher.setLevel(level)
+
+
+def unwatch(*what):
+    """
+    Disable watchers.
+
+    Defaults to enable all watchers, accepts a list names of watchers to
+    enable.
+
+    """
+    watch(*what, level=logging.CRITICAL)
 
 
 RULES = define_watcher('RULES')
@@ -41,6 +54,4 @@ AGENDA = define_watcher('AGENDA')
 MATCH = define_watcher('MATCH')
 MATCHER = define_watcher('MATCHER')
 
-ALL = tuple(v for k, v in globals().items() if k.isupper())
-__all__ = (tuple(k for k, v in globals().items() if k.isupper())
-           + ('ALL', 'watch'))
+ALL = tuple(k for k in globals() if k.isupper())

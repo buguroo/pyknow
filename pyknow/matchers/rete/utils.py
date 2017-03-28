@@ -6,10 +6,12 @@ from .check import WhereCheck
 from .dnf import dnf
 from .nodes import ConflictSetNode, NotNode, OrdinaryMatchNode
 from .nodes import FeatureTesterNode, WhereNode
-from pyknow import Rule, InitialFact, NOT, OR, Fact, AND
-from pyknow.rule import ANDPCE, ORPCE, NOTPCE
-from pyknow.rule import ConditionalElement
-from pyknow.rule import LiteralPCE, PredicatePCE, WildcardPCE
+from pyknow.conditionalelement import ConditionalElement
+from pyknow.conditionalelement import NOT, OR, AND, TEST, EXISTS, FORALL
+from pyknow.fact import InitialFact, Fact
+from pyknow.fieldconstraint import ANDFC, ORFC, NOTFC
+from pyknow.fieldconstraint import L, P, W
+from pyknow.rule import Rule
 from pyknow.watchers import MATCH
 
 
@@ -42,7 +44,7 @@ def _(exp):
         *[prepare_rule(e) for e in dnf_rule])
     if not prep_rule:
         return prep_rule.new_conditions(InitialFact())
-    elif isinstance(prep_rule[0], NOT):
+    elif isinstance(prep_rule[0], NOT) or len(extract_facts(prep_rule)) == 0:
         return prep_rule.new_conditions(InitialFact(), *prep_rule)
     else:
         return dnf(prep_rule)
@@ -74,6 +76,8 @@ def extract_facts(rule):
     def _extract_facts(ce):
         if isinstance(ce, Fact):
             yield ce
+        elif isinstance(ce, TEST):
+            pass
         else:
             for e in ce:
                 yield from _extract_facts(e)
@@ -111,35 +115,95 @@ def wire_rule(rule, alpha_terminals, lhs=None):
     def _wire_rule(elem):
         raise TypeError("Unknown type %s" % type(elem))
 
+    @_wire_rule.register(TEST)
+    def _(elem):
+        return WhereNode(WhereCheck(elem[0]))
+
+    @_wire_rule.register(FORALL)
+    def _(elem):
+        leader = elem[0]
+        followers = elem[1:]
+
+        initial_fact_node = _wire_rule(InitialFact())
+        leader_node = _wire_rule(leader)
+        followers_node = _wire_rule(AND(*followers))
+        not_node_1 = NotNode(SameContextCheck())
+        not_node_2 = NotNode(SameContextCheck())
+
+        # NotNode1
+        followers_node.add_child(not_node_1, not_node_1.activate_right)
+        leader_node.add_child(not_node_1, not_node_1.activate_left)
+
+        # NotNode2
+        not_node_1.add_child(not_node_2, not_node_2.activate_right)
+        initial_fact_node.add_child(not_node_2, not_node_2.activate_left)
+
+        return not_node_2
+
+    @_wire_rule.register(EXISTS)
+    def _(elem):
+        # Create new nodes
+        condition_node = _wire_rule(elem[0])
+        initial_fact_node = _wire_rule(InitialFact())
+        not_node_1 = NotNode(SameContextCheck())
+        not_node_2 = NotNode(SameContextCheck())
+
+        # NotNode1
+        condition_node.add_child(not_node_1, not_node_1.activate_right)
+        initial_fact_node.add_child(not_node_1, not_node_1.activate_left)
+
+        # NotNode2
+        initial_fact_node.add_child(not_node_2, not_node_2.activate_left)
+        not_node_1.add_child(not_node_2, not_node_2.activate_right)
+
+        return not_node_2
+
     @_wire_rule.register(Rule)
     @_wire_rule.register(AND)
     def _(elem):
-        if len(elem) == 1 and isinstance(elem[0], Fact):
-            return alpha_terminals[elem[0]]
+        if len(elem) == 1:
+            if isinstance(elem[0], Fact):
+                return alpha_terminals[elem[0]]
+            else:
+                return _wire_rule(elem[0])
         elif len(elem) > 1:
             current_node = None
             for f, s in zip(elem, elem[1:]):
-                if isinstance(s, NOT):
-                    node_cls = NotNode
-                else:
-                    node_cls = OrdinaryMatchNode
+                if isinstance(s, TEST):
+                    if current_node is None:
+                        current_node = _wire_rule(f)
 
-                if current_node is None:
-                    current_node = node_cls(SameContextCheck())
-                    left_branch = _wire_rule(f)
-                    right_branch = _wire_rule(s)
+                    # A TestNode after the previous node
+                    new_node = _wire_rule(s)
+                    current_node.add_child(new_node, new_node.activate)
+                    current_node = new_node
                 else:
-                    left_branch = current_node
-                    right_branch = _wire_rule(s)
-                    current_node = node_cls(SameContextCheck())
+                    if isinstance(s, NOT):
+                        node_cls = NotNode
+                    else:
+                        node_cls = OrdinaryMatchNode
 
-                left_branch.add_child(current_node,
-                                      current_node.activate_left)
-                right_branch.add_child(current_node,
-                                       current_node.activate_right)
+                    if current_node is None:
+                        current_node = node_cls(SameContextCheck())
+                        left_branch = _wire_rule(f)
+                        right_branch = _wire_rule(s)
+                    else:
+                        left_branch = current_node
+                        right_branch = _wire_rule(s)
+                        current_node = node_cls(SameContextCheck())
+
+                    left_branch.add_child(current_node,
+                                          current_node.activate_left)
+                    right_branch.add_child(current_node,
+                                           current_node.activate_right)
             return current_node
         else:
             raise RuntimeError("Invalid rule! %r" % elem)
+
+    @_wire_rule.register(OR)
+    def _(elem):
+        raise RuntimeError(
+            "You can't use an OR clause inside FORALL or EXISTS")
 
     @_wire_rule.register(Fact)
     def _(elem):
@@ -151,12 +215,6 @@ def wire_rule(rule, alpha_terminals, lhs=None):
 
     # Build beta network
     last_node = _wire_rule(lhs)
-
-    # Add all (where) tests to the end of the beta network, before the CSN
-    for test in rule.where:
-        test_node = WhereNode(WhereCheck(test))
-        last_node.add_child(test_node, test_node.activate)
-        last_node = test_node
 
     # Add a new child to the last node to trigger the rule
     conflict_set_node = ConflictSetNode(rule)

@@ -5,7 +5,9 @@ from collections import OrderedDict
 from functools import singledispatch
 from itertools import chain, product
 
-from pyknow.rule import AND, OR, NOT, Rule, ORPCE, NOTPCE, ANDPCE
+from pyknow.conditionalelement import AND, OR, NOT
+from pyknow.fieldconstraint import ORFC, NOTFC, ANDFC
+from pyknow.rule import Rule
 from pyknow.fact import Fact
 
 
@@ -74,11 +76,11 @@ def _(exp):
 @dnf.register(Fact)
 def _(exp):
     fact_class = exp.__class__
-    if any(isinstance(v, ORPCE) for v in exp.values()):
+    if any(isinstance(v, ORFC) for v in exp.values()):
         and_part = OrderedDict()
         or_part = OrderedDict()
         for k, v in exp.items():
-            if isinstance(v, ORPCE):
+            if isinstance(v, ORFC):
                 or_part[k] = v
                 and_part[k] = None
             else:
@@ -96,30 +98,30 @@ def _(exp):
         return fact_class.from_iter(((k, dnf(v)) for k, v in exp.items()))
 
 
-@dnf.register(NOTPCE)
+@dnf.register(NOTFC)
 def _(exp):
-    if isinstance(exp[0], NOTPCE):  # Double negation
+    if isinstance(exp[0], NOTFC):  # Double negation
         return dnf(exp[0][0])
-    elif isinstance(exp[0], ORPCE):  # De Morgan's law (ORPCE)
-        return ANDPCE(*[NOTPCE(dnf(x)) for x in exp[0]])
-    elif isinstance(exp[0], ANDPCE):  # De Morgan's law (ANDPCE)
-        return ORPCE(*[NOTPCE(dnf(x)) for x in exp[0]])
+    elif isinstance(exp[0], ORFC):  # De Morgan's law (ORFC)
+        return ANDFC(*[NOTFC(dnf(x)) for x in exp[0]])
+    elif isinstance(exp[0], ANDFC):  # De Morgan's law (ANDFC)
+        return ORFC(*[NOTFC(dnf(x)) for x in exp[0]])
     else:  # `exp` is already dnf. We have nothing to do.
         return exp
 
 
-@dnf.register(ANDPCE)
+@dnf.register(ANDFC)
 def _(exp):
     if len(exp) == 1:
         return dnf(exp[0])
-    elif any(isinstance(e, ORPCE) for e in exp):  # Distributive property
+    elif any(isinstance(e, ORFC) for e in exp):  # Distributive property
         and_part = []
         or_part = []
         for e in exp:
-            if isinstance(e, ORPCE):
+            if isinstance(e, ORFC):
                 or_part.extend(e)
             else:
                 and_part.append(e)
-        return ORPCE(*[dnf(ANDPCE(*(and_part + [dnf(e)]))) for e in or_part])
+        return ORFC(*[dnf(ANDFC(*(and_part + [dnf(e)]))) for e in or_part])
     else:
-        return ANDPCE(*[dnf(x) for x in unpack_exp(exp, ANDPCE)])
+        return ANDFC(*[dnf(x) for x in unpack_exp(exp, ANDFC)])

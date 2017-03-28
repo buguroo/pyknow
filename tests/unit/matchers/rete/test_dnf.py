@@ -6,8 +6,7 @@ Tests on Rule DNF
 
 
 def test_or_inside_and():
-    from pyknow.rule import Rule, AND, OR
-    from pyknow.fact import Fact
+    from pyknow import Fact, Rule, AND, OR
     from pyknow.matchers.rete.dnf import dnf
 
     input_ = Rule(AND(Fact(a=1), OR(Fact(a=2), Fact(a=3))))
@@ -16,8 +15,7 @@ def test_or_inside_and():
 
 
 def test_and_inside_or():
-    from pyknow.rule import Rule, AND, OR
-    from pyknow.fact import Fact
+    from pyknow import Fact, Rule, AND, OR
     from pyknow.matchers.rete.dnf import dnf
 
     input_ = Rule(OR(AND(Fact(a=1), Fact(a=2)), AND(Fact(a=3), Fact(a=4))))
@@ -26,8 +24,7 @@ def test_and_inside_or():
 
 
 def test_and_inside_and():
-    from pyknow.rule import Rule, AND
-    from pyknow.fact import Fact
+    from pyknow import Fact, Rule, AND
     from pyknow.matchers.rete.dnf import dnf
 
     input_ = AND(Fact(a=1), AND(Fact(a=3), Fact(a=4)))
@@ -36,8 +33,7 @@ def test_and_inside_and():
 
 
 def test_or_inside_or():
-    from pyknow.rule import Rule, OR
-    from pyknow.fact import Fact
+    from pyknow import Fact, Rule, OR
     from pyknow.matchers.rete.dnf import dnf
 
     input_ = Rule(OR(Fact(a=1), OR(Fact(a=3), Fact(a=4))))
@@ -46,8 +42,7 @@ def test_or_inside_or():
 
 
 def test_or_and_fact_inside_or():
-    from pyknow.rule import OR, Rule
-    from pyknow.fact import Fact
+    from pyknow import Fact, OR, Rule
     from pyknow.matchers.rete.dnf import dnf
 
     input_ = Rule(OR(Fact(a=1), OR(Fact(a=2), Fact(a=3))))
@@ -56,8 +51,7 @@ def test_or_and_fact_inside_or():
 
 
 def test_or_inside_or_inside_and():
-    from pyknow.rule import OR, AND, Rule
-    from pyknow.fact import Fact
+    from pyknow import Fact, OR, AND, Rule
     from pyknow.matchers.rete.dnf import dnf
 
     input_ = Rule(AND(Fact(b=1), OR(Fact(a=1), OR(Fact(a=3), Fact(a=4)))))
@@ -69,8 +63,7 @@ def test_or_inside_or_inside_and():
 
 
 def test_and_inside_rule():
-    from pyknow.rule import Rule, AND
-    from pyknow.fact import Fact
+    from pyknow import Fact, Rule, AND
     from pyknow.matchers.rete.dnf import dnf
 
     input_ = Rule(Fact(a=1), AND(Fact(b=2), Fact(c=3)))
@@ -81,119 +74,114 @@ def test_and_inside_rule():
 
 
 def test_or_inside_fact():
-    from pyknow.rule import OR, Rule, LiteralPCE
-    from pyknow.fact import Fact
+    from pyknow import Fact, OR, Rule, L
     from pyknow.matchers.rete.dnf import dnf
 
-    input_ = Rule(Fact(a=LiteralPCE(1) | LiteralPCE(2),
+    input_ = Rule(Fact(a=L(1) | L(2),
                        b=3))
-    output = Rule(OR(Fact(a=LiteralPCE(1), b=3),
-                     Fact(a=LiteralPCE(2), b=3)))
+    output = Rule(OR(Fact(a=L(1), b=3),
+                     Fact(a=L(2), b=3)))
 
     result = dnf(input_)
     assert set(result[0]) == set(output[0])
 
 
 def test_multiple_or_inside_fact():
-    from pyknow.rule import OR, Rule, LiteralPCE
-    from pyknow.fact import Fact
+    from pyknow import Fact, OR, Rule, L
     from pyknow.matchers.rete.dnf import dnf
 
-    input_ = Rule(Fact(a=LiteralPCE(1) | LiteralPCE(2),
-                       b=LiteralPCE(3) | LiteralPCE(4)))
-    output = Rule(OR(Fact(a=LiteralPCE(1), b=LiteralPCE(3)),
-                     Fact(a=LiteralPCE(1), b=LiteralPCE(4)),
-                     Fact(a=LiteralPCE(2), b=LiteralPCE(3)),
-                     Fact(a=LiteralPCE(2), b=LiteralPCE(4))))
+    input_ = Rule(Fact(a=L(1) | L(2),
+                       b=L(3) | L(4)))
+    output = Rule(OR(Fact(a=L(1), b=L(3)),
+                     Fact(a=L(1), b=L(4)),
+                     Fact(a=L(2), b=L(3)),
+                     Fact(a=L(2), b=L(4))))
 
     result = dnf(input_)
     assert set(result[0]) == set(output[0])
 
 
 def test_double_not_inside_fact():
-    from pyknow.rule import OR, Rule, LiteralPCE
-    from pyknow.fact import Fact
+    from pyknow import Fact, OR, Rule, L
     from pyknow.matchers.rete.dnf import dnf
 
-    input_ = Rule(Fact(a=~~LiteralPCE(1)))
-    output = Rule(Fact(a=LiteralPCE(1)))
+    input_ = Rule(Fact(a=~~L(1)))
+    output = Rule(Fact(a=L(1)))
 
     result = dnf(input_)
     assert result == output
 
 
 def test_not_and_inside_fact():
-    from pyknow.rule import OR, Rule, LiteralPCE
-    from pyknow.fact import Fact
+    from pyknow import Fact, OR, Rule, L
     from pyknow.matchers.rete.dnf import dnf
 
-    input_ = Rule(Fact(a=~(LiteralPCE(1) & LiteralPCE(2))))
-    output = Rule(OR(Fact(a=~LiteralPCE(1)), Fact(a=~LiteralPCE(2))))
+    input_ = Rule(Fact(a=~(L(1) & L(2))))
+    output = Rule(OR(Fact(a=~L(1)), Fact(a=~L(2))))
 
     result = dnf(input_)
     assert result == output
 
 
 def test_not_or_inside_fact():
-    from pyknow.rule import OR, Rule, LiteralPCE, ANDPCE, NOTPCE
-    from pyknow.fact import Fact
+    from pyknow import Fact, OR, Rule, L
+    from pyknow.fieldconstraint import ANDFC, NOTFC
     from pyknow.matchers.rete.dnf import dnf
 
-    input_ = Rule(Fact(a=~(LiteralPCE(1) | LiteralPCE(2))))
-    output = Rule(Fact(a=ANDPCE(NOTPCE(LiteralPCE(1)),
-                                NOTPCE(LiteralPCE(2)))))
+    input_ = Rule(Fact(a=~(L(1) | L(2))))
+    output = Rule(Fact(a=ANDFC(NOTFC(L(1)),
+                                NOTFC(L(2)))))
 
     result = dnf(input_)
     assert result == output
 
 
 def test_and_inside_and_inside_fact():
-    from pyknow.rule import OR, Rule, LiteralPCE, ANDPCE
-    from pyknow.fact import Fact
+    from pyknow import Fact, OR, Rule, L
+    from pyknow.fieldconstraint import ANDFC
     from pyknow.matchers.rete.dnf import dnf
 
-    input_ = Rule(Fact(a=LiteralPCE(1) & (LiteralPCE(2) & LiteralPCE(3))))
-    output = Rule(Fact(a=ANDPCE(LiteralPCE(1), LiteralPCE(2), LiteralPCE(3))))
+    input_ = Rule(Fact(a=L(1) & (L(2) & L(3))))
+    output = Rule(Fact(a=ANDFC(L(1), L(2), L(3))))
 
     result = dnf(input_)
     assert result == output
 
 
 def test_or_inside_or_inside_fact():
-    from pyknow.rule import OR, Rule, LiteralPCE
-    from pyknow.fact import Fact
+    from pyknow import Fact, OR, Rule, L
     from pyknow.matchers.rete.dnf import dnf
 
-    input_ = Rule(Fact(a=LiteralPCE(1) | (LiteralPCE(2) | LiteralPCE(3))))
-    output = Rule(OR(Fact(a=LiteralPCE(1)),
-                     Fact(a=LiteralPCE(2)),
-                     Fact(a=LiteralPCE(3))))
+    input_ = Rule(Fact(a=L(1) | (L(2) | L(3))))
+    output = Rule(OR(Fact(a=L(1)),
+                     Fact(a=L(2)),
+                     Fact(a=L(3))))
 
     result = dnf(input_)
     assert result == output
 
 
 def test_or_inside_and_inside_fact():
-    from pyknow.rule import OR, Rule, LiteralPCE, ANDPCE
-    from pyknow.fact import Fact
+    from pyknow import Fact, OR, Rule, L
+    from pyknow.fieldconstraint import ANDFC
     from pyknow.matchers.rete.dnf import dnf
 
-    input_ = Rule(Fact(a=LiteralPCE(1) & (LiteralPCE(2) | LiteralPCE(3))))
-    output = Rule(OR(Fact(a=ANDPCE(LiteralPCE(1), LiteralPCE(2))),
-                     Fact(a=ANDPCE(LiteralPCE(1), LiteralPCE(3)))))
+    input_ = Rule(Fact(a=L(1) & (L(2) | L(3))))
+    output = Rule(OR(Fact(a=ANDFC(L(1), L(2))),
+                     Fact(a=ANDFC(L(1), L(3)))))
 
     result = dnf(input_)
     assert result == output
 
 
 def test_and_inside_or_inside_fact():
-    from pyknow.rule import OR, Rule, LiteralPCE, ANDPCE
-    from pyknow.fact import Fact
+    from pyknow import Fact, OR, Rule, L
+    from pyknow.fieldconstraint import ANDFC
     from pyknow.matchers.rete.dnf import dnf
 
-    input_ = Rule(Fact(a=LiteralPCE(1) | (LiteralPCE(2) & LiteralPCE(3))))
-    output = Rule(OR(Fact(a=LiteralPCE(1)),
-                     Fact(a=ANDPCE(LiteralPCE(2), LiteralPCE(3)))))
+    input_ = Rule(Fact(a=L(1) | (L(2) & L(3))))
+    output = Rule(OR(Fact(a=L(1)),
+                     Fact(a=ANDFC(L(2), L(3)))))
 
     result = dnf(input_)
     assert result == output
