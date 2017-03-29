@@ -4,25 +4,19 @@ Factlist related tests
 # pylint: disable=invalid-name
 
 
-def test_factlist_has_facts():
-    """ Factlist object has a fact list """
-    from pyknow.factlist import FactList
-    assert hasattr(FactList(), "facts")
-
-
-def test_factlist_facts_are_ordereddict():
+def test_factlist_is_ordereddict():
     """ Fact list on FactList object is an OrderedDict """
 
     from pyknow.factlist import FactList
     from collections import OrderedDict
-    assert isinstance(getattr(FactList(), "facts"), OrderedDict)
+    assert issubclass(FactList, OrderedDict)
 
 
 def test_factlist_facts_idx_starts_zero():
     """ Factlist idx starts at zero """
 
     from pyknow.factlist import FactList
-    assert getattr(FactList(), "_fidx") == 0
+    assert getattr(FactList(), "last_index") == 0
 
 
 def test_factlist_declare_raises_valueError():
@@ -40,11 +34,11 @@ def test_factlist_declare():
     from pyknow.factlist import FactList
     from pyknow import Fact
     flist = FactList()
-    assert getattr(flist, "_fidx") == 0
-    assert not flist.facts
+    assert getattr(flist, "last_index") == 0
+    assert not flist
     flist.declare(Fact())
-    assert getattr(flist, "_fidx") == 1
-    assert isinstance(flist.facts[0], Fact)
+    assert getattr(flist, "last_index") == 1
+    assert isinstance(flist[0], Fact)
 
 
 def test_factlist_retract():
@@ -53,28 +47,13 @@ def test_factlist_retract():
     from pyknow.factlist import FactList
     from pyknow import Fact
     flist = FactList()
-    assert getattr(flist, "_fidx") == 0
-    assert not flist.facts
+    assert getattr(flist, "last_index") == 0
+    assert not flist
     flist.declare(Fact())
-    assert getattr(flist, "_fidx") == 1
-    assert isinstance(flist.facts[0], Fact)
+    assert getattr(flist, "last_index") == 1
+    assert isinstance(flist[0], Fact)
     assert flist.retract(0) == 0
-    assert not flist.facts
-
-
-def test_factlist_retract_matching():
-    """ Test retract_matching method """
-
-    from pyknow.factlist import FactList
-    from pyknow import Fact
-    flist = FactList()
-    assert getattr(flist, "_fidx") == 0
-    assert not flist.facts
-    flist.declare(Fact())
-    assert getattr(flist, "_fidx") == 1
-    assert isinstance(flist.facts[0], Fact)
-    assert flist.retract_matching(Fact()) == [0]
-    assert not flist.facts
+    assert not flist
 
 
 def test_factlist_changes():
@@ -82,16 +61,14 @@ def test_factlist_changes():
 
     from pyknow.factlist import FactList
     from pyknow import Fact
+
     flist = FactList()
 
-
-    f0 = Fact(a=1)
-    flist.declare(f0)
+    f0 = flist.declare(Fact(a=1))
     assert flist.changes[0] == [f0]
 
-    f1 = Fact(b=1)
-    flist.declare(f1)
+    f1 = flist.declare(Fact(b=1))
     assert flist.changes[0] == [f1]
 
-    flist.retract_matching(Fact(b=1))
+    flist.retract(f1)
     assert flist.changes[1] == [f1]

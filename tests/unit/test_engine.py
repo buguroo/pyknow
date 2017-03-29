@@ -266,7 +266,7 @@ def test_KnowledgeEngine_reset():
     ke.deffacts(Fact(foo=1, bar=2))
     ke.reset()
 
-    assert len(ke.facts.facts) == 3
+    assert len(ke.facts) == 3
 
     ke = KnowledgeEngine()
     ke.deffacts(Fact(foo=1))
@@ -274,14 +274,14 @@ def test_KnowledgeEngine_reset():
     ke.deffacts(Fact(foo=1, bar=2))
     ke.reset()
 
-    assert len(ke.facts.facts) == 3
+    assert len(ke.facts) == 3
 
     ke = KnowledgeEngine()
     ke.deffacts(Fact(foo=1))
     ke.declare(Fact(foo=9))
     ke.reset()
 
-    assert len(ke.facts.facts) == 2
+    assert len(ke.facts) == 2
 
 
 @pytest.mark.slow

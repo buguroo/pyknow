@@ -77,20 +77,33 @@ class KnowledgeEngine:
         `modifiers` must be a Mapping object containing keys and values
         to be changed.
 
-        """
+        To allow modifying positional facts, the user can pass a string
+        containing the symbol "_" followed by the numeric index
+        (starting with 0). Ex::
 
+            >>> ke.modify(my_fact, _0="hello", _1="world", other_key="!")
+
+        """
         self.retract(declared_fact)
 
         newfact = declared_fact.copy()
-        newfact.update(modifiers)
-        self.declare(newfact)
+
+        def _get_real_modifiers():
+            for k, v in modifiers.items():
+                if k.startswith('_') and k[1:].isnumeric():
+                    yield (int(k[1:]), v)
+                else:
+                    yield (k, v)
+
+        newfact.update(dict(_get_real_modifiers()))
+        return self.declare(newfact)
 
     def get_rules(self):
         """
         When instanced as a knowledge-base, this will return
         each of the rules that are assigned to it (the rule-base).
-        """
 
+        """
         def _rules():
             for _, obj in getmembers(self):
                 if isinstance(obj, Rule):
@@ -189,12 +202,15 @@ class KnowledgeEngine:
             raise TypeError(
                 "Declared facts cannot contain conditional elements")
         else:
+            last_inserted = None
             for fact in facts:
-                self.facts.declare(fact)
+                last_inserted = self.facts.declare(fact)
 
             if not self.running:
                 added, removed = self.get_activations()
                 self.strategy.update_agenda(self.agenda, added, removed)
+
+            return last_inserted
 
     def declare(self, *facts):
         """
@@ -205,6 +221,6 @@ class KnowledgeEngine:
             This updates the agenda.
         """
 
-        if not self.running:
-            warnings.warn("Declaring fact while not run()")
-        self.__declare(*facts)
+        if not self.facts:
+            warnings.warn("Declaring fact before reset()")
+        return self.__declare(*facts)

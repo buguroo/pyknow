@@ -9,12 +9,12 @@ Also see `retrieving the fact-list \
           programming manual
 """
 
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 from pyknow.fact import Fact
 from pyknow import watchers
 
 
-class FactList:
+class FactList(OrderedDict):
     """
     Contains a list of facts (``asserted`` data).
 
@@ -28,17 +28,24 @@ class FactList:
     """
 
     def __init__(self):
-        self.facts = OrderedDict()
-        self._ifacts = dict()
-        self.last_read = OrderedDict()
-        self._fidx = 0
+        super().__init__()
+        self.last_index = 0
+        self.reference_counter = Counter()
         self.added = list()
         self.removed = list()
+        self.duplication = False
 
-    def __repr__(self):
+    def __str__(self):
         return "\n".join(
             "%s: %r" % (fact, fact)
-            for idx, fact in self.facts.items())
+            for idx, fact in self.items())
+
+    @staticmethod
+    def _get_fact_id(fact):
+        return frozenset([fact.__class__]
+                         + [(k, v)
+                            for k, v in fact.items()
+                            if not fact.is_special(k)])
 
     def declare(self, fact):
         """
@@ -59,20 +66,28 @@ class FactList:
         if not isinstance(fact, Fact):
             raise ValueError('The fact must descend the Fact class.')
 
-        if fact not in self.facts.values():
-            # TODO: check now we have __factid__
-            idx = self._fidx
+        fact_id = self._get_fact_id(fact)
+
+        if (self.duplication
+                or fact_id not in self.reference_counter.elements()):
+            # Assign the ID to the fact
+            idx = self.last_index
             fact.__factid__ = idx
-            self.facts[idx] = fact
-            self._ifacts[fact] = idx
-            self._fidx += 1
+
+            # Insert the fact in the factlist
+            self[idx] = fact
+
+            self.last_index += 1
+
             self.added.append(fact)
+            self.reference_counter[fact_id] += 1
+
             watchers.FACTS.info(" ==> %s: %r", fact, fact)
-            return idx
+            return fact
         else:
             return None
 
-    def retract(self, idx):
+    def retract(self, idx_or_fact):
         """
         Retract a previously asserted fact.
 
@@ -85,44 +100,26 @@ class FactList:
         :throws IndexError: If the fact's index providen does not exist
         """
 
-        if idx not in self.facts:
+        if isinstance(idx_or_fact, int):
+            idx = idx_or_fact
+        else:
+            idx = idx_or_fact.__factid__
+
+        if idx not in self:
             raise IndexError('Fact not found.')
 
-        fact = self.facts[idx]
+        fact = self[idx]
+
+        # Decrement value reference counter
+        fact_id = self._get_fact_id(fact)
+        self.reference_counter[fact_id] -= 1
 
         watchers.FACTS.info(" <== %s: %r", fact, fact)
         self.removed.append(fact)
 
-        del self.facts[idx]
-        del self._ifacts[fact]
+        del self[idx]
 
         return idx
-
-    def retract_matching(self, fact):
-        """
-        Retract all matching facts
-
-        :return: list of indexes of the facts retracted
-        :throws ValueError: If no fact matches in the factlist
-        """
-
-        def search_matching(model_fact):
-            model_fact_set = set(model_fact.items())
-
-            for fact in self.facts.values():
-                this_fact_set = {(k, v)
-                                 for k, v in fact.items()
-                                 if not (isinstance(k, str)
-                                         and k.startswith('__')
-                                         and k.endswith('__'))}
-                if model_fact_set == this_fact_set:
-                    yield fact.__factid__
-
-        retracted = [self.retract(f) for f in search_matching(fact)]
-        if retracted:
-            return retracted
-        else:
-            raise ValueError("No matching fact.")
 
     @property
     def changes(self):
@@ -134,6 +131,3 @@ class FactList:
         finally:
             self.added = list()
             self.removed = list()
-
-    def __getitem__(self, item):
-        return self.facts[item]
