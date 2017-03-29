@@ -5,11 +5,10 @@ python:
     - "3.6"
 install:
     - pip install -r requirements/develop.txt
+    - pip install --user codecov
     - python setup.py develop
 script:
   - pycodestyle --show-source --show-pep8 pyknow
-  - coverage erase
-  - coverage run -p --branch $(which py.test) -m 'not wip' -v tests/unit
+  - py.test -m 'not wip' -v tests/unit
 after_success:
-  - coverage combine
-  - coverage report
+  - codecov
