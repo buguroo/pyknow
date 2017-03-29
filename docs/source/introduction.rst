@@ -17,8 +17,8 @@ Features
 * Matcher based on the RETE algorithm.
 
 
-Differences between CLIPS and PyKnow
-------------------------------------
+Difference between CLIPS and PyKnow
+-----------------------------------
 
 #. CLIPS is a programming language, PyKnow is a Python library. This
    imposes some limitations on the constructions we can do (specially on

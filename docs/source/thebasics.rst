@@ -344,8 +344,8 @@ For a KnowledgeEngine to run, this things must happen:
 #. The **run** method must be called. This starts the cycle of execution.
 
 
-Differences between `DefFacts` and `declare`
-++++++++++++++++++++++++++++++++++++++++++++
+Difference between `DefFacts` and `declare`
++++++++++++++++++++++++++++++++++++++++++++
 
 Both are used to declare facts on the engine instance, but:
 
