@@ -89,7 +89,7 @@ Rules
 
 In PyKnow a **rule** is a callable, decorated with `Rule`.
 
-The rule has two components, the LHS (left-hand-side) and the RHS
+Rules have two components, LHS (left-hand-side) and RHS
 (right-hand-side).
 
 * The *LHS* describes (using **patterns**) the conditions on which the rule
