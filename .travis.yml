@@ -1,12 +1,19 @@
 language: python
-python: 3.4
-env:
-  - TOX_ENV=py34
+python:
+    - "3.4"
+    - "3.5"
+    - "3.6"
 install:
-  - pip install -r requirements/tox.txt
-  - pip install coveralls
+    - pip install -r requirements/develop.txt
+    - pip install coveralls
+    - python setup.py develop
 script:
-  - tox -e $TOX_ENV
+  - pydocstyle --show-source --show-pep8 pyknow
+  - cd docs/
+  - sphinx-build -W -b html -d /tmp/doctress . /tmp/html
+  - cd ..
+  - coverage erase
+  - coverage run -p --branch $(which py.test) -m 'not wip' -v tests/unit
 after_success:
   - coverage combine
   - coverage report
