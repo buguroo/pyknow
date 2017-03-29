@@ -10,7 +10,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(HERE, 'README.rst')).read()
 NEWS = open(os.path.join(HERE, 'TODO.rst')).read()
 
-VERSION = '0.1.8'
+VERSION = '1.0.0'
 
 setup(name='pyknow',
       version=VERSION,
@@ -18,6 +18,8 @@ setup(name='pyknow',
       long_description=README + '\n\n' + NEWS,
       classifiers=[
           'Programming Language :: Python :: 3.4',
+          'Programming Language :: Python :: 3.5',
+          'Programming Language :: Python :: 3.6',
       ],
       keywords='knowledge-based inference engine',
       author='Roberto Abdelkader Martínez Pérez',

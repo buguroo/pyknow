@@ -13,29 +13,18 @@ class Agenda:
     """
     def __init__(self):
         self.activations = deque()
-        self.executed = set()
+
+    def __repr__(self):  # pragma: no cover
+        return "\n".join(
+            "{idx}: {rule} {facts}".format(idx=idx,
+                                           rule=act.rule.__name__,
+                                           facts=act.facts)
+            for idx, act in enumerate(self.activations))
 
     def get_next(self):
-        """
-        Returns the next activation, removes it from
-        activations list and adds it to executed activations list
+        """Returns the next activation, removes it from activations list."""
 
-        """
         try:
-            act = self.activations.popleft()
-            self.executed.add(act)
-            return act
+            return self.activations.popleft()
         except IndexError:
             return None
-
-    def remove_from_fact(self, fact):
-        """
-        Remove a matching activation against a specific fact
-
-        """
-        activations_to_remove = []
-        for activation in self.activations:
-            if activation.facts == (fact,):
-                activations_to_remove.append(activation)
-        for activation in activations_to_remove:
-            self.activations.remove(activation)

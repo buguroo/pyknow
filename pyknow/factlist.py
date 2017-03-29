@@ -9,12 +9,12 @@ Also see `retrieving the fact-list \
           programming manual
 """
 
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 from pyknow.fact import Fact
-from pyknow.watchers import FACT_WATCHER
+from pyknow import watchers
 
 
-class FactList:
+class FactList(OrderedDict):
     """
     Contains a list of facts (``asserted`` data).
 
@@ -28,8 +28,24 @@ class FactList:
     """
 
     def __init__(self):
-        self.facts = OrderedDict()
-        self._fidx = 0
+        super().__init__()
+        self.last_index = 0
+        self.reference_counter = Counter()
+        self.added = list()
+        self.removed = list()
+        self.duplication = False
+
+    def __str__(self):  # pragma: no cover
+        return "\n".join(
+            "%s: %r" % (fact, fact)
+            for idx, fact in self.items())
+
+    @staticmethod
+    def _get_fact_id(fact):
+        return frozenset([fact.__class__]
+                         + [(k, v)
+                            for k, v in fact.items()
+                            if not fact.is_special(k)])
 
     def declare(self, fact):
         """
@@ -50,16 +66,28 @@ class FactList:
         if not isinstance(fact, Fact):
             raise ValueError('The fact must descend the Fact class.')
 
-        if fact not in self.facts.values():
-            idx = self._fidx
-            self.facts[idx] = fact
-            self._fidx += 1
-            FACT_WATCHER.debug("Declared fact: %s at %s", fact, idx)
-            return idx
+        fact_id = self._get_fact_id(fact)
+
+        if (self.duplication
+                or fact_id not in self.reference_counter.elements()):
+            # Assign the ID to the fact
+            idx = self.last_index
+            fact.__factid__ = idx
+
+            # Insert the fact in the factlist
+            self[idx] = fact
+
+            self.last_index += 1
+
+            self.added.append(fact)
+            self.reference_counter[fact_id] += 1
+
+            watchers.FACTS.info(" ==> %s: %r", fact, fact)
+            return fact
         else:
             return None
 
-    def retract(self, idx):
+    def retract(self, idx_or_fact):
         """
         Retract a previously asserted fact.
 
@@ -72,25 +100,34 @@ class FactList:
         :throws IndexError: If the fact's index providen does not exist
         """
 
-        if idx not in self.facts:
+        if isinstance(idx_or_fact, int):
+            idx = idx_or_fact
+        else:
+            idx = idx_or_fact.__factid__
+
+        if idx not in self:
             raise IndexError('Fact not found.')
 
-        del self.facts[idx]
-        FACT_WATCHER.debug("Retracted fact %s", idx)
+        fact = self[idx]
+
+        # Decrement value reference counter
+        fact_id = self._get_fact_id(fact)
+        self.reference_counter[fact_id] -= 1
+
+        watchers.FACTS.info(" <== %s: %r", fact, fact)
+        self.removed.append(fact)
+
+        del self[idx]
+
         return idx
 
-    def retract_matching(self, fact):
+    @property
+    def changes(self):
         """
-        Retract all matching facts
-
-        :return: list of indexes of the facts retracted
-        :throws ValueError: If no fact matches in the factlist
+        Return a tuple with the removed and added facts since last run.
         """
-
-        facts = [idx for idx, value in self.facts.items() if fact == value]
-        if not facts:
-            raise ValueError("No matching fact")
-        return [self.retract(fact) for fact in facts]
-
-    def __repr__(self):
-        return str(self.facts.values())
+        try:
+            return self.added, self.removed
+        finally:
+            self.added = list()
+            self.removed = list()

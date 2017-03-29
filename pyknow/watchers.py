@@ -10,25 +10,47 @@ and all of them.
 """
 import logging
 
+__all__ = ['watch', 'unwatch']
+
 logging.basicConfig()
-RULE_WATCHER = logging.getLogger('rule')
-FACT_WATCHER = logging.getLogger('fact')
-AGENDA_WATCHER = logging.getLogger('agenda')
-
-RULE_WATCHER.setLevel(logging.CRITICAL)
-FACT_WATCHER.setLevel(logging.CRITICAL)
-AGENDA_WATCHER.setLevel(logging.CRITICAL)
 
 
-def watch(what=False):
+def define_watcher(name):
+    return logging.getLogger('.'.join((__name__, name)))
+
+
+def watch(*what, level=logging.DEBUG):
     """
     Enable watchers.
 
-    Defaults to enable all watchers, accepts a list of watchers
-    to enable.
+    Defaults to enable all watchers, accepts a list names of watchers to
+    enable.
 
     """
     if not what:
-        what = [RULE_WATCHER, FACT_WATCHER, AGENDA_WATCHER]
-    for watcher in what:
-        watcher.setLevel(logging.DEBUG)
+        what = ALL
+
+    for watcher_name in what:
+        watcher = globals()[watcher_name]
+        watcher.setLevel(level)
+
+
+def unwatch(*what):
+    """
+    Disable watchers.
+
+    Defaults to enable all watchers, accepts a list names of watchers to
+    enable.
+
+    """
+    watch(*what, level=logging.CRITICAL)
+
+
+RULES = define_watcher('RULES')
+ACTIVATIONS = define_watcher('ACTIVATIONS')
+FACTS = define_watcher('FACTS')
+AGENDA = define_watcher('AGENDA')
+MATCH = define_watcher('MATCH')
+MATCHER = define_watcher('MATCHER')
+
+ALL = tuple(k for k in globals() if k.isupper() and k != 'ALL')

@@ -35,6 +35,7 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
+    'sphinx.ext.graphviz',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -51,7 +52,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'pyknow'
-copyright = u'2016, Roberto Abdelkadder Martinez, David Francos Cuartero'
+copyright = u'2017, buguroo'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

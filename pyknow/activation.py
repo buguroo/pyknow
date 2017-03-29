@@ -2,10 +2,11 @@
 Activations represent rules that matches against a specific factlist.
 
 """
+from functools import lru_cache
+from collections.abc import Iterable
 
-# pylint: disable=too-few-public-methods
-
-from pyknow.match import Context
+from pyknow.rule import Rule
+from pyknow.fact import Fact
 
 
 class Activation:
@@ -13,29 +14,26 @@ class Activation:
     Activation object
     """
     def __init__(self, rule, facts, context=None):
-        from pyknow.rule import Rule
-        if rule:
-            if not isinstance(rule, Rule):
-                raise ValueError("Rule must be a Rule object")
-        if not isinstance(facts, tuple):
-            raise ValueError("Facts must be tuple")
         self.rule = rule
-        self.facts = facts
-        self.context = context
+        self.facts = set(facts)
+        if context is None:
+            self.context = dict()
+        else:
+            self.context = context
 
-    def __add__(self, other):
-        facts = set(self.facts + other.facts)
-        contexts = (self.context, other.context)
-        context = sum((a for a in contexts if a), Context())
-        return Activation(rule=self.rule, facts=tuple(facts),
-                          context=context)
-
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return "Activation(rule={}, facts={}, context={})".format(
             self.rule, self.facts, self.context)
 
     def __eq__(self, other):
-        return self.rule == other.rule and self.facts == other.facts
+        try:
+            return (self.context == other.context
+                    and self.facts == other.facts
+                    and self.rule == other.rule)
+        except AttributeError:
+            return False
 
     def __hash__(self):
-        return hash((self.rule, self.facts))
+        return hash((self.rule,
+                     frozenset(self.facts),
+                     frozenset(self.context.items())))
