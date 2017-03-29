@@ -225,7 +225,7 @@ For a KnowledgeEngine to run, this things must happen:
 
 #. The class must be instantiated, of course.
 
-#. The method **reset** must be called:
+#. The **reset** method must be called:
 
    * This declares the special fact *InitialFact*. Necessary for some
      rules to work properly.
@@ -233,7 +233,7 @@ For a KnowledgeEngine to run, this things must happen:
    * Declare all facts yielded by the methods decorated with
      `@DefFacts`.
 
-#. The method **run** must be called. This starts the cycle of execution.
+#. The **run** method must be called. This starts the cycle of execution.
 
 
 Differences between `DefFacts` and `declare`
