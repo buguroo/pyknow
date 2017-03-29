@@ -51,13 +51,13 @@ class Fact(OperableCE, Bindable, dict):
         obj.update(dict(pairs))
         return obj
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         if self.__factid__ is None:
             return "<Undeclared Fact> %r" % self
         else:
             return "<f-%d>" % self.__factid__
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return "{}({})".format(
             self.__class__.__name__,
             ", ".join(

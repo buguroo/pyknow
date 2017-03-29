@@ -7,7 +7,7 @@ class ConditionalElement(tuple):
     def __new__(cls, *args):
         return super(ConditionalElement, cls).__new__(cls, args)
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return "%s%s" % (self.__class__.__name__, super().__repr__())
 
 

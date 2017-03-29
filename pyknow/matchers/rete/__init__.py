@@ -117,7 +117,7 @@ class ReteMatcher(Matcher):
             elif isinstance(check, FeatureCheck):
                 return check_rank[check]
             else:
-                raise TypeError("Unknown check type.")
+                raise TypeError("Unknown check type.")  # pragma: no cover
 
         def weighted_rule_sort(rule):
             """Sort rules by the average weight of its checks."""
@@ -175,7 +175,7 @@ class ReteMatcher(Matcher):
             else:
                 wire_rule(rule, alpha_terminals, lhs=rule)
 
-    def print_network(self):
+    def print_network(self):  # pragma: no cover
         """
         Generate a graphviz compatible graph.
 
@@ -203,6 +203,6 @@ class ReteMatcher(Matcher):
         return "digraph {\n %s \n}" % ("\n".join(
             gen_edges(self.root_node)))
 
-    def show_network(self):
+    def show_network(self):  # pragma: no cover
         from graphviz import Source
         return Source(self.print_network())

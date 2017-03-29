@@ -54,7 +54,7 @@ class L(Bindable, FieldConstraint):
     def value(self):
         return self[0]
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return "L(%r)" % self.value
 
 
@@ -65,7 +65,7 @@ class W(Bindable, FieldConstraint):
         obj.__bind__ = __bind__
         return obj
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return "W()" if self.__bind__ is None else "W(%r)" % self.__bind__
 
 

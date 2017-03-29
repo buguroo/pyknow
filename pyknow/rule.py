@@ -74,7 +74,7 @@ class Rule(ConditionalElement):
         else:
             return self._wrapped(self._wrapped_self, *args, **kwargs)
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return "%s => %r" % (super().__repr__(), self._wrapped)
 
     def __get__(self, instance, owner):

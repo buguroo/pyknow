@@ -23,3 +23,16 @@ def test_activation_facts_only_iterable():
 
     with pytest.raises(TypeError):
         Activation(rule=Rule(), facts=None)
+
+
+def test_activation_eq():
+    from pyknow.activation import Activation
+
+    assert Activation(None, []) == Activation(None, [])
+    assert (None, []) != Activation(None, [])
+
+
+def test_activation_in_set():
+    from pyknow.activation import Activation
+
+    assert Activation(None, []) in {Activation(None, [])}

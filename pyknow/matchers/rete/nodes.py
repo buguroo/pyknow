@@ -296,7 +296,7 @@ class ConflictSetNode(mixins.AnyChild,
 
         return res
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return "%s: %s" % (self.__class__.__name__, self.rule.__name__)
 
 

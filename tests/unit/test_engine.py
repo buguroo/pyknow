@@ -190,6 +190,15 @@ def test_KnowledgeEngine_reset_resets_facts():
     assert ke.facts is not None
 
 
+def test_KnowledgeEngine_reset_declare_initialfact():
+    from pyknow.engine import KnowledgeEngine
+
+    ke = KnowledgeEngine()
+    ke.reset()
+
+    assert len(ke.facts) == 1
+
+
 def test_KnowledgeEngine_run_1_fires_activation():
     from pyknow.engine import KnowledgeEngine
     from pyknow import Rule
@@ -790,3 +799,71 @@ def test_declare_raises_typeerror_if_conditionalelement_found():
 
     with pytest.raises(TypeError):
         ke.declare(Fact(L(1) & L(2)))
+
+
+def test_retract_while_not_running_remove_activations():
+    from pyknow import KnowledgeEngine, Rule
+
+    class KE(KnowledgeEngine):
+        @Rule()
+        def r1(self):
+            pass
+
+    ke = KE()
+    ke.reset()
+    assert len(ke.agenda.activations) == 1
+    ke.retract(0)
+    assert len(ke.agenda.activations) == 0
+
+
+def test_halt_stops_execution():
+    from pyknow import KnowledgeEngine, Rule
+
+    class KE(KnowledgeEngine):
+        @Rule(salience=1)
+        def runfirst(self):
+            self.halt()
+
+        @Rule()
+        def runsecond(self):
+            assert False
+
+    ke = KE()
+    ke.reset()
+    ke.run()
+
+
+def test_matcher_must_be_Matcher():
+    from pyknow import KnowledgeEngine
+
+    class KE(KnowledgeEngine):
+        __matcher__ = None
+
+    with pytest.raises(TypeError):
+        KE()
+
+
+def test_strategy_must_be_Strategy():
+    from pyknow import KnowledgeEngine
+
+    class KE(KnowledgeEngine):
+        __strategy__ = False
+
+    with pytest.raises(TypeError):
+        KE()
+
+
+def test_modify_retracts_and_declare():
+    from pyknow import KnowledgeEngine, Fact
+
+    ke = KnowledgeEngine()
+
+    f1 = ke.declare(Fact())
+    assert len(ke.facts) == 1
+
+    f2 = ke.modify(f1, _0='test_pos', key='test_key')
+    assert f1 != f2
+    assert len(ke.facts) == 1
+    assert f2.__factid__ in ke.facts
+    assert f2[0] == 'test_pos'
+    assert f2['key'] == 'test_key'

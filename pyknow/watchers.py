@@ -16,8 +16,7 @@ logging.basicConfig()
 
 
 def define_watcher(name):
-    watcher = logging.getLogger('.'.join((__name__, name)))
-    return watcher
+    return logging.getLogger('.'.join((__name__, name)))
 
 
 def watch(*what, level=logging.DEBUG):
@@ -54,4 +53,4 @@ AGENDA = define_watcher('AGENDA')
 MATCH = define_watcher('MATCH')
 MATCHER = define_watcher('MATCHER')
 
-ALL = tuple(k for k in globals() if k.isupper())
+ALL = tuple(k for k in globals() if k.isupper() and k != 'ALL')

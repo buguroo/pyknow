@@ -37,15 +37,17 @@ class KnowledgeEngine:
         self.facts = FactList()
         self.agenda = Agenda()
 
-        if not issubclass(self.__matcher__, abstract.Matcher):
-            raise TypeError("__matcher__ must be a subclass of Matcher")
-        else:
+        if (isinstance(self.__matcher__, type)
+                and issubclass(self.__matcher__, abstract.Matcher)):
             self.matcher = self.__matcher__(self)
-
-        if not issubclass(self.__strategy__, abstract.Strategy):
-            raise TypeError("__strategy__ must be a subclass of Strategy")
         else:
+            raise TypeError("__matcher__ must be a subclass of Matcher")
+
+        if (isinstance(self.__strategy__, type)
+                and issubclass(self.__strategy__, abstract.Strategy)):
             self.strategy = self.__strategy__()
+        else:
+            raise TypeError("__strategy__ must be a subclass of Strategy")
 
     def modify(self, declared_fact, **modifiers):
         """
@@ -103,13 +105,6 @@ class KnowledgeEngine:
         """
         return self.matcher.changes(*self.facts.changes)
 
-    def __retract(self, idx):
-        idx = self.facts.retract(idx)
-        self.agenda.remove_from_fact(idx)
-        if not self.running:
-            added, removed = self.get_activations()
-            self.strategy.update_agenda(self.agenda, added, removed)
-
     def retract(self, idx_or_declared_fact):
         """
         Retracts a specific fact, using its index
@@ -117,7 +112,11 @@ class KnowledgeEngine:
         .. note::
             This updates the agenda
         """
-        self.__retract(idx_or_declared_fact)
+        self.facts.retract(idx_or_declared_fact)
+
+        if not self.running:
+            added, removed = self.get_activations()
+            self.strategy.update_agenda(self.agenda, added, removed)
 
     def run(self, steps=float('inf')):
         """

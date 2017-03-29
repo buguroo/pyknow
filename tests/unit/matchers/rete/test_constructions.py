@@ -280,3 +280,73 @@ def test_FORALL_1():
     t.declare(Fact(key_c=2))
     t.run()
     assert executed == 3
+
+
+def test_fact_capture():
+    from pyknow import KnowledgeEngine, Rule, Fact
+
+    executed = None
+
+    class KE(KnowledgeEngine):
+        @Rule('myfact' << Fact())
+        def r1(self, myfact):
+            nonlocal executed
+            executed = myfact
+
+    ke = KE()
+    ke.reset()
+    f1 = ke.declare(Fact('data'))
+    ke.run()
+    assert executed is f1
+
+
+def test_OR_not_allow_inside_FORALL_nor_EXISTS():
+    from pyknow import KnowledgeEngine, Fact, Rule, FORALL, EXISTS, OR
+
+    class KE(KnowledgeEngine):
+        @Rule(EXISTS(OR(Fact(), Fact())))
+        def r1(self):
+            pass
+
+    with pytest.raises(SyntaxError):
+        KE()
+
+    class KE(KnowledgeEngine):
+        @Rule(EXISTS(OR(Fact(), Fact())))
+        def r1(self):
+            pass
+
+    with pytest.raises(SyntaxError):
+        KE()
+
+
+def test_ANDNOT_reactivation():
+    from pyknow import KnowledgeEngine, Fact, Rule, NOT, W
+
+    class KE(KnowledgeEngine):
+        @Rule(Fact(x='x' << W()),
+              NOT(Fact(y='x' << W())))
+        def r1(self):
+            pass
+
+    ke = KE()
+    ke.reset()
+    assert not ke.agenda.activations
+
+    f1 = ke.declare(Fact(x=1))
+    assert ke.agenda.activations
+
+    ke.retract(f1)
+    assert not ke.agenda.activations
+
+    f2 = ke.declare(Fact(y=1))
+    assert not ke.agenda.activations
+
+    f3 = ke.declare(Fact(x=1))
+    assert not ke.agenda.activations
+
+    f4 = ke.declare(Fact(x=2))
+    assert ke.agenda.activations
+
+    ke.retract(f4)
+    assert not ke.agenda.activations

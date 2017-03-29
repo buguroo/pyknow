@@ -97,7 +97,7 @@ def generate_checks(fact):
             # Special fact feature
             if key == '__bind__':
                 yield FactCapture(value)
-            else:
+            else:  # pragma: no cover
                 warnings.warn(
                     "Unknown special symbol '%s' inside pattern" % key)
         else:
@@ -166,7 +166,7 @@ def wire_rule(rule, alpha_terminals, lhs=None):
                 return alpha_terminals[elem[0]]
             else:
                 return _wire_rule(elem[0])
-        elif len(elem) > 1:
+        else:  # > 1. Because < 1 is not possible at this point.
             current_node = None
             for f, s in zip(elem, elem[1:]):
                 if isinstance(s, TEST):
@@ -197,12 +197,10 @@ def wire_rule(rule, alpha_terminals, lhs=None):
                     right_branch.add_child(current_node,
                                            current_node.activate_right)
             return current_node
-        else:
-            raise RuntimeError("Invalid rule! %r" % elem)
 
     @_wire_rule.register(OR)
     def _(elem):
-        raise RuntimeError(
+        raise SyntaxError(
             "You can't use an OR clause inside FORALL or EXISTS")
 
     @_wire_rule.register(Fact)

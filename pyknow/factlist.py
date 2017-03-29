@@ -35,7 +35,7 @@ class FactList(OrderedDict):
         self.removed = list()
         self.duplication = False
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return "\n".join(
             "%s: %r" % (fact, fact)
             for idx, fact in self.items())

@@ -39,6 +39,14 @@ def test_prepare_rule__and_starting_with_not():
                                                      NOT(Fact(2)),
                                                      Fact(3)))]
 
+def test_prepare_rule__and_inside_rule():
+    from pyknow import Rule, AND, Fact
+
+    rule = Rule(AND(Fact(1), Fact(2)))(lambda:None)
+
+    assert list(utils.prepare_rule(rule)) == [Fact(1), Fact(2)]
+
+
 def test_prepare_rule__or_starting_with_not():
     from pyknow import Rule, InitialFact, NOT, Fact, OR, AND
 
@@ -55,3 +63,16 @@ def test_extract_facts():
     rule = Rule(OR(AND(Fact(1), NOT(Fact(2))), Fact(3)))
 
     assert utils.extract_facts(rule) == {Fact(1), Fact(2), Fact(3)}
+
+
+def test_illegal_CE():
+    from pyknow import Rule, KnowledgeEngine
+    from pyknow.conditionalelement import ConditionalElement
+
+    class KE(KnowledgeEngine):
+        @Rule(ConditionalElement())
+        def r1():
+            pass
+
+    with pytest.raises(TypeError):
+        KE()

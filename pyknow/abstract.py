@@ -10,7 +10,7 @@ class Matcher(metaclass=abc.ABCMeta):
         self.engine = engine
 
     @abc.abstractmethod
-    def changes(self, adding=None, deleting=None):
+    def changes(self, adding=None, deleting=None):  # pragma: no cover
         """
         Main interface with the matcher.
 
@@ -21,7 +21,7 @@ class Matcher(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def reset(self):
+    def reset(self):  # pragma: no cover
         """Reset the matcher memory."""
         pass
 
@@ -32,7 +32,7 @@ class Strategy(metaclass=abc.ABCMeta):
         self.resolved = dict()
 
     @abc.abstractmethod
-    def _update_agenda(self, agenda, added, removed):
+    def _update_agenda(self, agenda, added, removed):  # pragma: no cover
         pass
 
     def update_agenda(self, agenda, added, removed):

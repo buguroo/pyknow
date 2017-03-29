@@ -65,3 +65,12 @@ def test_deffacts_can_decorate_methods():
 
     t = Test()
     assert list(t.mygenerator()) == [Fact()]
+
+
+def test_deffacts_without_parenthesis():
+    from pyknow import DefFacts
+
+    with pytest.raises(SyntaxError):
+        @DefFacts
+        def mygenerator(self):
+            yield Fact()

@@ -33,7 +33,7 @@ class TypeCheck(Check, namedtuple('_TypeCheck', ['fact_type'])):
 
         return res
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return "type() == %s" % self.fact_type.__name__
 
 
@@ -54,7 +54,7 @@ class FactCapture(Check, namedtuple('_FactCapture', ['bind'])):
         MATCH.info("%r <= %s", self.__bind__, fact)
         return {self.__bind__: fact}
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return "%s <= <Fact>" % (self.__bind__)
 
 
@@ -98,7 +98,7 @@ class FeatureCheck(Check,
 
         return res
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return "%s (%s) %s" % (self.what, self.check.__name__, self.expected)
 
     @singledispatch
@@ -244,7 +244,7 @@ class WhereCheck(Check, namedtuple('_WhereCheck', ['test'])):
         return cls._instances[test]
 
     def __call__(self, context):
-        parameters = {k: context[k] for k in self.parameters}
+        parameters = {k: context.get(k) for k in self.parameters}
         res = self.test(**parameters)
 
         log = MATCH.info if res else MATCH.debug

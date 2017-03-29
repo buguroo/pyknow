@@ -12,7 +12,7 @@ class Node(metaclass=abc.ABCMeta):
         self._reset()  # Reset it's OWN memory.
 
     @abc.abstractmethod
-    def add_child(self, child, callback):
+    def add_child(self, child, callback):  # pragma: no cover
         """Add a child to `self.children` if necessary."""
         pass
 
@@ -24,11 +24,11 @@ class Node(metaclass=abc.ABCMeta):
             child.node.reset()
 
     @abc.abstractmethod
-    def _reset(self):
+    def _reset(self):  # pragma: no cover
         """Reset this node's memory."""
         pass
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return self.__class__.__name__
 
 
@@ -41,7 +41,7 @@ class OneInputNode(Node):
         return self._activate(token.copy())
 
     @abc.abstractproperty
-    def _activate(self, token):
+    def _activate(self, token):  # pragma: no cover
         """Node activation routine."""
         pass
 
@@ -55,7 +55,7 @@ class TwoInputNode(Node):
         return self._activate_left(token.copy())
 
     @abc.abstractproperty
-    def _activate_left(self, token):
+    def _activate_left(self, token):  # pragma: no cover
         """Node left activation routine."""
         pass
 
@@ -65,17 +65,17 @@ class TwoInputNode(Node):
         return self._activate_right(token.copy())
 
     @abc.abstractproperty
-    def _activate_right(self, token):
+    def _activate_right(self, token):  # pragma: no cover
         """Node right activation routine."""
         pass
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return self.__class__.__name__
 
 
 class Check(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def __call__(self, fact):
+    def __call__(self, fact):  # pragma: no cover
         """
         Given a `Fact` or a subclass of `Fact`, return:
 
@@ -87,5 +87,5 @@ class Check(metaclass=abc.ABCMeta):
         """
         pass
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return self.__class__.__name__
