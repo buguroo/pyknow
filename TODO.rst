@@ -1,4 +1,3 @@
 TODO
 ====
 
-* Document new API.
