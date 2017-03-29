@@ -9,6 +9,6 @@ install:
     - python setup.py develop
 script:
   - pycodestyle --show-source --show-pep8 pyknow
-  - py.test -m 'not wip' -v tests/unit
+  - coverage run $(which py.test) -m 'not wip' -v tests/unit
 after_success:
   - codecov
