@@ -140,7 +140,7 @@ For a `Rule` to be useful, it must be a method of a `KnowledgeEngine` subclass.
 
 
 `Facts` vs `Patterns`
----------------------
++++++++++++++++++++++
 
 The difference between `Facts` and `Patterns` is small. In fact,
 `Patterns` are just `Facts` containing **Pattern Conditional Elements**
@@ -166,10 +166,35 @@ will receive a nice exception back.
    TypeError: Declared facts cannot contain conditional elements
 
 
+DefFacts
+--------
+
+Most of the time expert systems needs a set of facts to be present for
+the system to work. This is the purpose of the `DefFacts` decorator.
+
+
+.. code-block:: python
+
+   @DefFacts()
+   def needed_data():
+       yield Fact(best_color="red")
+       yield Fact(best_body="medium")
+       yield Fact(best_sweetness="dry")
+
+
+All `DefFacts` inside a KnowledgeEngine will be called every time the `reset`
+method is called.
+
+.. note::
+
+   The decorated method MUST be generators.
+
+
+
 KnowledgeEngine
 ---------------
 
-This is where all the magic happens.
+This is the place where all the magic happens.
 
 The first step is to make a subclass of it and use `Rule` to decorate its
 methods.
@@ -215,8 +240,91 @@ After that, you can instantiate it, populate it with facts, and finally run it.
    Hi Roberto! How is the weather in Madrid?
 
 
+Handling facts
+++++++++++++++
+
+The following methods are used to manipulate the set of facts the engine knows
+about.
+
+
+`declare`
+~~~~~~~~~
+
+Adds a new fact to the factlist (the list of facts known by the engine).
+
+.. code-block:: python
+
+   >>> engine = KnowledgeEngine()
+   >>> engine.reset()
+   >>> engine.declare(Fact(score=5))
+   <f-1>
+   >>> engine.facts
+   <f-0> InitialFact()
+   <f-1> Fact(score=5)
+
+.. note::
+
+   The same fact can't be declared twice unless `facts.duplication` is set to
+   `True`.
+
+
+`retract`
+~~~~~~~~~
+
+Removes an existing fact from the factlist.
+
+.. code-block:: python
+   :caption: Both, the index and the fact can be used with retract
+
+   >>> engine.facts
+   <f-0> InitialFact()
+   <f-1> Fact(score=5)
+   <f-2> Fact(color='red')
+   >>> engine.retract(1)
+   >>> engine.facts
+   <f-0> InitialFact()
+   <f-2> Fact(color='red')
+
+
+`modify`
+~~~~~~~~
+
+Retracts some fact from the factlist and declares a new one with some changes.
+Changes are passed as arguments.
+
+.. code-block:: python
+
+   >>> engine.facts
+   <f-0> InitialFact()
+   <f-1> Fact(color='red')
+   >>> engine.modify(engine.facts[1], color='yellow', blink=True)
+   <f-2>
+   >>> engine.facts
+   <f-0> InitialFact()
+   <f-2> Fact(color='yellow', blink=True)
+
+
+`duplicate`
+~~~~~~~~~~~
+
+Adds a new fact to the factlist using an existing fact as a template and adding
+some modifications.
+
+.. code-block:: python
+
+   >>> engine.facts
+   <f-0> InitialFact()
+   <f-1> Fact(color='red')
+   >>> engine.duplicate(engine.facts[1], color='yellow', blink=True)
+   <f-2>
+   >>> engine.facts
+   <f-0> InitialFact()
+   <f-1> Fact(color='red')
+   <f-2> Fact(color='yellow', blink=True)
+
+
 Cycle of execution: DefFacts, reset & run
------------------------------------------
++++++++++++++++++++++++++++++++++++++++++
 
 Because this topic is often a direct cause of misunderstanding, it
 deserves a special mention here, in the basics.

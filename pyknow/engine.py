@@ -83,6 +83,8 @@ class KnowledgeEngine:
         return self.declare(newfact)
 
     def duplicate(self, template_fact, **modifiers):
+        """Create a new fact from an existing one."""
+
         newfact = template_fact.copy()
         newfact.update(dict(self._get_real_modifiers(**modifiers)))
 

@@ -1,5 +1,8 @@
+Modules documentation
+=====================
+
 pyknow
-======
+------
 
 .. automodule:: pyknow
     :members:
@@ -8,7 +11,7 @@ pyknow
 
 
 pyknow.abstract
------------------
+---------------
 
 .. automodule:: pyknow.abstract
     :members:

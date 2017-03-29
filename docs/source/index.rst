@@ -9,7 +9,7 @@ User Guide
    thebasics
    reference
    cookbook
-   :maxdepth: 2
+   :maxdepth: 3
 
 
 API Documentation
