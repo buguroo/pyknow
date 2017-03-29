@@ -5,7 +5,7 @@ python:
     - "3.6"
 install:
     - pip install -r requirements/develop.txt
-    - pip install --user codecov
+    - pip install codecov
     - python setup.py develop
 script:
   - pycodestyle --show-source --show-pep8 pyknow
