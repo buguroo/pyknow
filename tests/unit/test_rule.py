@@ -1,6 +1,3 @@
-""" Rule object tests """
-
-
 import pytest
 
 

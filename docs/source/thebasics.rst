@@ -182,6 +182,10 @@ After that, you can instantiate it, populate it with facts, and finally run it.
    from pyknow import *
 
    class Greetings(KnowledgeEngine):
+       @DefFacts()
+       def _initial_action(self):
+           yield Fact(action="greet")
+
        @Rule(Fact(action='greet'),
              NOT(Fact(name=W())))
        def ask_name(self):
@@ -199,7 +203,6 @@ After that, you can instantiate it, populate it with facts, and finally run it.
            print("Hi %s! How is the weather in %s?" % (name, location))
 
    engine = Greetings()
-   engine.deffacts(Fact(action="greet"))
    engine.reset()  # Prepare the engine for the execution.
    engine.run()  # Run it!
 
@@ -212,7 +215,7 @@ After that, you can instantiate it, populate it with facts, and finally run it.
    Hi Roberto! How is the weather in Madrid?
 
 
-Cycle of execution: deffacts, reset & run
+Cycle of execution: DefFacts, reset & run
 -----------------------------------------
 
 Because this topic is often a direct cause of misunderstanding, it
@@ -222,26 +225,24 @@ For a KnowledgeEngine to run, this things must happen:
 
 #. The class must be instantiated, of course.
 
-#. (OPTIONAL) Some facts can be declared using the `deffacts` method.
-   This stores the facts internally.
-
 #. The method **reset** must be called:
 
    * This declares the special fact *InitialFact*. Necessary for some
      rules to work properly.
 
-   * All facts stored using `deffacts` are declared.
+   * Declare all facts yielded by the methods decorated with
+     `@DefFacts`.
 
 #. The method **run** must be called. This starts the cycle of execution.
 
 
-Differences between `deffacts` and `declare`
+Differences between `DefFacts` and `declare`
 ++++++++++++++++++++++++++++++++++++++++++++
 
-Both methods are used to declare facts on the engine instance, but:
+Both are used to declare facts on the engine instance, but:
 
 * `declare` adds the facts directly to the working memory.
 
-* `deffacts` stores the facts in a special permanent memory, and every
-  time **reset** is called, the facts are added to the working memory
-  using `declare`.
+* Generators declared with `DefFacts` are called by the **reset**
+  method, and all the yielded facts they are added to the working
+  memory using `declare`.

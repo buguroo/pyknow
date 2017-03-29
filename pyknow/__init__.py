@@ -4,3 +4,4 @@ from .fact import Fact, InitialFact
 from .fieldconstraint import L, W, P
 from .rule import Rule
 from .watchers import watch, unwatch
+from .deffacts import DefFacts

@@ -13,6 +13,7 @@ from pyknow.agenda import Agenda
 from pyknow.fact import InitialFact
 from pyknow.factlist import FactList
 from pyknow.rule import Rule
+from pyknow.deffacts import DefFacts
 from pyknow import watchers
 
 logging.basicConfig()
@@ -32,7 +33,6 @@ class KnowledgeEngine:
     from pyknow.strategies import DepthStrategy as __strategy__
 
     def __init__(self):
-        self._fixed_facts = []
         self.running = False
         self.facts = FactList()
         self.agenda = Agenda()
@@ -46,25 +46,6 @@ class KnowledgeEngine:
             raise TypeError("__strategy__ must be a subclass of Strategy")
         else:
             self.strategy = self.__strategy__()
-
-    def deffacts(self, *facts):
-        """
-        Declare a Fact from OUTSIDE the engine.
-        Equivalent to clips' deffacts.
-        """
-
-        if self.running:
-            warnings.warn("Declaring fixed facts while run()")
-
-        self._fixed_facts.extend(facts)
-
-    def load_initial_facts(self):
-        """
-        Declares all fixed_facts
-        """
-
-        if self._fixed_facts:
-            self.__declare(*self._fixed_facts)
 
     def modify(self, declared_fact, **modifiers):
         """
@@ -98,18 +79,23 @@ class KnowledgeEngine:
         newfact.update(dict(_get_real_modifiers()))
         return self.declare(newfact)
 
-    def get_rules(self):
-        """
-        When instanced as a knowledge-base, this will return
-        each of the rules that are assigned to it (the rule-base).
+    @DefFacts(order=-1)
+    def _declare_initial_fact(self):
+        yield InitialFact()
 
-        """
-        def _rules():
-            for _, obj in getmembers(self):
-                if isinstance(obj, Rule):
-                    obj.ke = self
-                    yield obj
-        return list(_rules())
+    def _get_by_type(self, wanted_type):
+        for _, obj in getmembers(self):
+            if isinstance(obj, wanted_type):
+                obj.ke = self
+                yield obj
+
+    def get_rules(self):
+        """Return the existing rules."""
+        return list(self._get_by_type(Rule))
+
+    def get_deffacts(self):
+        """Return the existing deffacts sorted by the internal order"""
+        return sorted(self._get_by_type(DefFacts), key=lambda d: d.order)
 
     def get_activations(self):
         """
@@ -124,14 +110,14 @@ class KnowledgeEngine:
             added, removed = self.get_activations()
             self.strategy.update_agenda(self.agenda, added, removed)
 
-    def retract(self, declared_fact):
+    def retract(self, idx_or_declared_fact):
         """
         Retracts a specific fact, using its index
 
         .. note::
             This updates the agenda
         """
-        self.__retract(declared_fact['__factid__'])
+        self.__retract(idx_or_declared_fact)
 
     def run(self, steps=float('inf')):
         """
@@ -189,9 +175,14 @@ class KnowledgeEngine:
 
         self.agenda = Agenda()
         self.facts = FactList()
+
         self.matcher.reset()
-        self.__declare(InitialFact())
-        self.load_initial_facts()
+
+        # Declare all deffacts
+        for deffact in self.get_deffacts():
+            for fact in deffact():
+                self.__declare(fact)
+
         self.running = False
 
     def __declare(self, *facts):

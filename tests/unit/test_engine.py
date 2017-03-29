@@ -153,11 +153,11 @@ def test_KnowledgeEngine_get_activations_returns_activations_added():
 
     ke = Test()
 
-    ke.deffacts(Fact(a=1))
-    ke.deffacts(Fact(b=1))
-    ke.deffacts(Fact(c=1))
-
     ke.reset()
+
+    ke.declare(Fact(a=1))
+    ke.declare(Fact(b=1))
+    ke.declare(Fact(c=1))
 
     assert len(ke.agenda.activations) == 1
 
@@ -246,8 +246,9 @@ def test_KnowledgeEngine_run_fires_all_activation():
 
 def test_KnowledgeEngine_has_initialfacts():
     from pyknow.engine import KnowledgeEngine
-    # pylint: disable=protected-access
-    assert KnowledgeEngine()._fixed_facts == []
+    from pyknow import InitialFact
+
+    assert list(KnowledgeEngine()._declare_initial_fact()) == [InitialFact()]
 
 
 def test_KnowledgeEngine_reset():
@@ -259,29 +260,28 @@ def test_KnowledgeEngine_reset():
     """
 
     from pyknow.engine import KnowledgeEngine
+    from pyknow.deffacts import DefFacts
     from pyknow import Fact
 
-    ke = KnowledgeEngine()
-    ke.deffacts(Fact(foo=1))
-    ke.deffacts(Fact(foo=1, bar=2))
+    class KE1(KnowledgeEngine):
+        @DefFacts()
+        def some_facts(self):
+            yield Fact(foo=1)
+
+    ke = KE1()
+    ke.declare(Fact(bar=9))
+    ke.declare(Fact(bar=7))
+    ke.declare(Fact(bar=8))
     ke.reset()
 
-    assert len(ke.facts) == 3
+    assert len(ke.facts) == 2  # Initialfact + Fact(foo=1)
 
-    ke = KnowledgeEngine()
-    ke.deffacts(Fact(foo=1))
-    ke.declare(Fact(foo=9))
-    ke.deffacts(Fact(foo=1, bar=2))
+    ke = KE1()
     ke.reset()
+    ke.declare(Fact(foo=2))
+    ke.declare(Fact(foo=3, bar=4))
 
-    assert len(ke.facts) == 3
-
-    ke = KnowledgeEngine()
-    ke.deffacts(Fact(foo=1))
-    ke.declare(Fact(foo=9))
-    ke.reset()
-
-    assert len(ke.facts) == 2
+    assert len(ke.facts) == 4
 
 
 @pytest.mark.slow
@@ -289,12 +289,19 @@ def test_KnowledgeEngine_reset():
 def test_rules_are_executed_once(to_declare_random):
     from random import shuffle
     from pyknow.engine import KnowledgeEngine
-    from pyknow import Rule
+    from pyknow import Rule, DefFacts
     from pyknow import Fact, L
 
     executions = []
+    to_declare = list(set(to_declare_random + [1, 2, 3]))
+    shuffle(to_declare)
 
     class Test(KnowledgeEngine):
+        @DefFacts()
+        def tested_deffacts(self):
+            for i in to_declare:
+                yield Fact(something=i)
+
         @Rule(Fact(something=L(1)),
               Fact(something=L(2)))
         def rule1(self):
@@ -307,13 +314,6 @@ def test_rules_are_executed_once(to_declare_random):
             executions.append('rule2')
 
     ke = Test()
-
-    to_declare = list(set(to_declare_random + [1, 2, 3]))
-    shuffle(to_declare)
-
-    for i in to_declare:
-        ke.deffacts(Fact(something=i))
-
     ke.reset()
     ke.run()
 
@@ -323,17 +323,22 @@ def test_rules_are_executed_once(to_declare_random):
 
 def test_default_is_and():
     """
-        Test that AND is the default operator
+    Test that AND is the default behavior
     """
     from collections import defaultdict
     from pyknow.engine import KnowledgeEngine
-    from pyknow import Rule
+    from pyknow import Rule, DefFacts
     from pyknow import Fact, L
 
     executions = []
 
     class Test(KnowledgeEngine):
         """ Test KE """
+        @DefFacts()
+        def test_facts(self):
+            for n in (1, 2, 3):
+                yield Fact(something=n)
+
         @Rule(Fact(something=1),
               Fact(something=2))
         def rule1(self):
@@ -348,8 +353,6 @@ def test_default_is_and():
             executions.append('rule2')
 
     ke = Test()
-    for n in (1, 2, 3):
-        ke.deffacts(Fact(something=n))
     ke.reset()
     ke.run()
 
@@ -359,30 +362,28 @@ def test_default_is_and():
 
 def test_or_notmatching_operator():
     """
-        Test OR operator
+    Test OR operator
     """
     from pyknow.engine import KnowledgeEngine
-    from pyknow import Rule, OR
+    from pyknow import Rule, OR, DefFacts
     from pyknow import Fact, L
 
     class Test(KnowledgeEngine):
         """ Test KE """
-        @Rule(OR(Fact(something=L(1)),
-                 Fact(something=L(2))))
+        @DefFacts()
+        def some_facts(self):
+            yield Fact(other=1)
+            yield Fact(other=2)
+
+        @Rule(OR(Fact(something=1),
+                 Fact(something=2)))
         def rule1(self):
             """ First rule, something=1 and something=2"""
             pass
 
-    static = ((1, 3), (1, 3, 5))
-    for test in static:
-        ke_ = Test()
-        ke_.reset()
-        for val in test:
-            ke_.deffacts(Fact(none=val))
-        ke_.reset()
-        assert len(ke_.agenda.activations) == 0
-
-    ke_.run()
+    ke_ = Test()
+    ke_.reset()
+    assert len(ke_.agenda.activations) == 0
 
 
 def test_or_operator():
@@ -402,18 +403,18 @@ def test_or_operator():
             pass
 
     ke_ = Test()
-    ke_.deffacts(Fact(something=1))
     ke_.reset()
+    ke_.declare(Fact(something=1))
     assert len(ke_.agenda.activations) == 1
 
     ke_ = Test()
-    ke_.deffacts(Fact(something=2))
     ke_.reset()
+    ke_.declare(Fact(something=2))
     assert len(ke_.agenda.activations) == 1
 
     ke_ = Test()
-    ke_.deffacts(Fact(something=3))
     ke_.reset()
+    ke_.declare(Fact(something=3))
     assert len(ke_.agenda.activations) == 0
 
 
@@ -439,8 +440,8 @@ def test_ke_inheritance():
             executed = True
 
     ke_ = Test()
-    ke_.deffacts(Person(name='pepe'))
     ke_.reset()
+    ke_.declare(Person(name='pepe'))
     ke_.run()
 
     assert executed
@@ -467,8 +468,8 @@ def test_nested_declarations():
             executed = True
 
     ke_ = Person_KE()
-    ke_.deffacts(Person(name="David"))
     ke_.reset()
+    ke_.declare(Person(name="David"))
     ke_.run()
     assert executed
 
@@ -494,8 +495,8 @@ def test_matching_different_number_of_arguments():
             executed = True
 
     ke_ = Person_KE()
-    ke_.deffacts(Person(name="David"))
     ke_.reset()
+    ke_.declare(Person(name="David"))
     ke_.run()
     assert executed
 
@@ -517,9 +518,9 @@ def test_matching_captured_different_facts_AND():
             executions.append(name)
 
     ke_ = Person_KE()
-    ke_.deffacts(Person(name="NotAName", surname='surname'))
-    ke_.deffacts(Person(name='name', surname="NotAName"))
     ke_.reset()
+    ke_.declare(Person(name="NotAName", surname='surname'))
+    ke_.declare(Person(name='name', surname="NotAName"))
     ke_.run()
     assert executions == ["NotAName"]
 
@@ -569,9 +570,9 @@ def test_matching_captured_same_facts_AND():
             executions.append(name)
 
     ke_ = Person_KE()
-    ke_.deffacts(Person(name='NotAName', surname="NotAName"))
-    ke_.deffacts(Person(name='name', surname="NotAName"))
     ke_.reset()
+    ke_.declare(Person(name='NotAName', surname="NotAName"))
+    ke_.declare(Person(name='name', surname="NotAName"))
     ke_.run()
     assert executions == ["NotAName"]
 
@@ -601,8 +602,8 @@ def test_matching_captured_different_facts_NOT_positive():
             executions.append(name)
 
     ke_ = Person_KE()
-    ke_.deffacts(Person(name='name', surname="NotAName"))
     ke_.reset()
+    ke_.declare(Person(name='name', surname="NotAName"))
     ke_.run()
     assert executions == ["name"]
 
@@ -632,9 +633,9 @@ def test_matching_captured_different_facts_NOT_negative():
             executions.append(name)
 
     ke_ = Person_KE()
-    ke_.deffacts(Person(name='name', surname="NotAName"))
-    ke_.deffacts(Person(name='name', surname="name"))
     ke_.reset()
+    ke_.declare(Person(name='name', surname="NotAName"))
+    ke_.declare(Person(name='name', surname="name"))
     ke_.run()
     assert executions == []
 
@@ -657,11 +658,10 @@ def test_and_negated_variable__bad_definition():
             executions.append(age)
 
     ke_ = Person_KE()
-    ke_.deffacts(Person(name="name1", age=18))
-    ke_.deffacts(Person(name="name2", age=19))
+    ke_.reset()
 
     with pytest.raises(RuntimeError):
-        ke_.reset()
+        ke_.declare(Person(age=15))
 
 
 def test_and_negated_variable__positive_match():
@@ -682,9 +682,9 @@ def test_and_negated_variable__positive_match():
             executions.append(age)
 
     ke_ = Person_KE()
-    ke_.deffacts(Person(name="name1", age=18))
-    ke_.deffacts(Person(name="name2", age=19))
     ke_.reset()
+    ke_.declare(Person(name="name1", age=18))
+    ke_.declare(Person(name="name2", age=19))
     ke_.run()
     assert set(executions) == {18, 19}
 
@@ -707,9 +707,9 @@ def test_and_negated_variable__negative_match():
             executions.append(age)
 
     ke_ = Person_KE()
-    ke_.deffacts(Person(name="name1", age=18))
-    ke_.deffacts(Person(name="name2", age=18))
     ke_.reset()
+    ke_.declare(Person(name="name1", age=18))
+    ke_.declare(Person(name="name2", age=18))
     ke_.run()
     assert executions == []
 
@@ -736,34 +736,34 @@ def test_not_aggregation():
             executions.append(age)
 
     ke_ = Person_KE()
-    ke_.deffacts(Person(name="name1", age=18))
-    ke_.deffacts(Person(name='name2', age=19))
-    ke_.deffacts(ConflictResolver(resolved=True))
     ke_.reset()
+    ke_.declare(Person(name="name1", age=18))
+    ke_.declare(Person(name='name2', age=19))
+    ke_.declare(ConflictResolver(resolved=True))
     ke_.run()
     assert executions == []
 
     executions = []
     ke_ = Person_KE()
-    ke_.deffacts(Person(name="name1", age=18))
-    ke_.deffacts(Person(name='name2', age=19))
     ke_.reset()
+    ke_.declare(Person(name="name1", age=18))
+    ke_.declare(Person(name='name2', age=19))
     ke_.run()
     assert set(executions) == {18, 19}
 
     executions = []
     ke_ = Person_KE()
-    ke_.deffacts(Person(name="name1", age=18))
-    ke_.deffacts(Person(name="name2", age=18))
     ke_.reset()
+    ke_.declare(Person(name="name1", age=18))
+    ke_.declare(Person(name="name2", age=18))
     ke_.run()
     assert executions == []
 
     ke_ = Person_KE()
-    ke_.deffacts(Person(name="name1", age=18))
-    ke_.deffacts(Person(name="name2", age=18))
-    ke_.deffacts(ConflictResolver(resolved=True))
     ke_.reset()
+    ke_.declare(Person(name="name1", age=18))
+    ke_.declare(Person(name="name2", age=18))
+    ke_.declare(ConflictResolver(resolved=True))
     ke_.run()
     assert executions == []
 

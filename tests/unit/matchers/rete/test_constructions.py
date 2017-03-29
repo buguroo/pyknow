@@ -14,11 +14,11 @@ def test_self_referencing_fact():
 
     ke = Test()
 
-    ke.deffacts(Fact(a=1, b=1))
-    ke.deffacts(Fact(a=2, b=3))
-    ke.deffacts(Fact(a=3, b=2))
-
     ke.reset()
+    ke.declare(Fact(a=1, b=1))
+    ke.declare(Fact(a=2, b=3))
+    ke.declare(Fact(a=3, b=2))
+
     ke.run()
 
     assert result == [1]
@@ -37,11 +37,11 @@ def test_self_referencing_fact_with_negation():
 
     ke = Test()
 
-    ke.deffacts(Fact(a=1, b=2))
-    ke.deffacts(Fact(a=2, b=2))
-    ke.deffacts(Fact(a=3, b=3))
-
     ke.reset()
+    ke.declare(Fact(a=1, b=2))
+    ke.declare(Fact(a=2, b=2))
+    ke.declare(Fact(a=3, b=3))
+
     ke.run()
 
     assert result == [1]
@@ -49,7 +49,6 @@ def test_self_referencing_fact_with_negation():
 
 def test_or_with_multiple_nots_get_multiple_activations():
     from pyknow import KnowledgeEngine, Rule, Fact
-
 
     executions = 0
 
@@ -67,25 +66,27 @@ def test_or_with_multiple_nots_get_multiple_activations():
 
 
 def test_initial_not_vs_and_not():
-    from pyknow import KnowledgeEngine, Rule, Fact
+    from pyknow import KnowledgeEngine, Rule, Fact, DefFacts
 
     executions = 0
 
     class Test(KnowledgeEngine):
+        @DefFacts()
+        def test_deffacts(self):
+            yield Fact(a=1)
+
         @Rule(Fact(a=1) & ~Fact(b=2))
         def test_fact_before_not(self):
             nonlocal executions
             executions +=1
 
     t = Test()
-    f1 = Fact(a=1)
-    t.deffacts(f1)
     t.reset()
     t.run()
 
     assert executions == 1
 
-    t.retract(f1)
+    t.retract(1)
     t.declare(Fact(a=1))
     t.run()
     assert executions == 2
@@ -93,20 +94,22 @@ def test_initial_not_vs_and_not():
     executions = 0
 
     class Test(KnowledgeEngine):
+        @DefFacts()
+        def test_deffacts(self):
+            yield Fact(a=1)
+
         @Rule(~Fact(b=2) & Fact(a=1))
         def test_fact_after_not(self):
             nonlocal executions
             executions +=1
 
     t = Test()
-    f1 = Fact(a=1)
-    t.deffacts(f1)
     t.reset()
     t.run()
 
     assert executions == 1
 
-    t.retract(f1)
+    t.retract(1)
     t.declare(Fact(a=1))
     t.run()
     assert executions == 2
@@ -130,8 +133,8 @@ def test_TEST_1():
     f1 = Fact(1)
     f2 = Fact(2)
     f3 = Fact(3)
-    t.deffacts(f1, f2, f3)
     t.reset()
+    t.declare(f1, f2, f3)
     t.run()
 
     assert len(executed) == 3
@@ -161,8 +164,8 @@ def test_TEST_2():
     f2 = Fact(2)
     f3 = Fact(3)
     f4 = Fact(4)
-    t.deffacts(f1, f2, f3, f4)
     t.reset()
+    t.declare(f1, f2, f3, f4)
     t.run()
 
     assert len(executed) == 4
@@ -189,8 +192,8 @@ def test_TEST_3():
     f1 = Fact(1)
     f2 = Fact(2)
     f3 = Fact('a')
-    t.deffacts(f1, f2, f3)
     t.reset()
+    t.declare(f1, f2, f3)
     t.run()
 
     assert executed == 2
@@ -212,8 +215,8 @@ def test_TEST_4():
     f1 = Fact(1)
     f2 = Fact(2)
     f3 = Fact(3)
-    t.deffacts(f1, f2, f3)
     t.reset()
+    t.declare(f1, f2, f3)
     t.run()
 
     assert executed == 1
@@ -234,8 +237,8 @@ def test_EXISTS_1():
     f1 = Fact(1)
     f2 = Fact(2)
     f3 = Fact(3)
-    t.deffacts(f1, f2, f3)
     t.reset()
+    t.declare(f1, f2, f3)
     t.run()
 
     assert executed == 1
