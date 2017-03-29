@@ -4,6 +4,7 @@
 * RETE matching algorithm.
 * Better Rule decorator system.
 * Facts are dictionaries.
+* Documentation.
 
 <1.0.0
 ++++++
