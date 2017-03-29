@@ -5,16 +5,11 @@ python:
     - "3.6"
 install:
     - pip install -r requirements/develop.txt
-    - pip install coveralls
     - python setup.py develop
 script:
-  - pydocstyle --show-source --show-pep8 pyknow
-  - cd docs/
-  - sphinx-build -W -b html -d /tmp/doctress . /tmp/html
-  - cd ..
+  - pycodestyle --show-source --show-pep8 pyknow
   - coverage erase
   - coverage run -p --branch $(which py.test) -m 'not wip' -v tests/unit
 after_success:
   - coverage combine
   - coverage report
-  - coveralls
