@@ -3,7 +3,7 @@ class Bindable:
         if not isinstance(other, str):
             raise TypeError("%s can only be binded to a string" % self)
         elif self.__bind__ is not None:
-            raise RuntimeError("%s can only be binded once" % self)
+            raise RuntimeError("%s can only be binded once" % repr(self))
         else:
             self.__bind__ = other
             return self

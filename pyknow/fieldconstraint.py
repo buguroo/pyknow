@@ -40,7 +40,10 @@ class ORFC(FieldConstraint):
 
 
 class NOTFC(FieldConstraint):
-    pass
+    def __rlshift__(self, other):
+        """Pass the binding to the internal element."""
+        self[0].__rlshift__(other)
+        return self
 
 
 class L(Bindable, FieldConstraint):
