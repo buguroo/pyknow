@@ -49,6 +49,14 @@ class KnowledgeEngine:
         else:
             raise TypeError("__strategy__ must be a subclass of Strategy")
 
+    @staticmethod
+    def _get_real_modifiers(**modifiers):
+        for k, v in modifiers.items():
+            if k.startswith('_') and k[1:].isnumeric():
+                yield (int(k[1:]), v)
+            else:
+                yield (k, v)
+
     def modify(self, declared_fact, **modifiers):
         """
 
@@ -70,15 +78,14 @@ class KnowledgeEngine:
         self.retract(declared_fact)
 
         newfact = declared_fact.copy()
+        newfact.update(dict(self._get_real_modifiers(**modifiers)))
 
-        def _get_real_modifiers():
-            for k, v in modifiers.items():
-                if k.startswith('_') and k[1:].isnumeric():
-                    yield (int(k[1:]), v)
-                else:
-                    yield (k, v)
+        return self.declare(newfact)
 
-        newfact.update(dict(_get_real_modifiers()))
+    def duplicate(self, template_fact, **modifiers):
+        newfact = template_fact.copy()
+        newfact.update(dict(self._get_real_modifiers(**modifiers)))
+
         return self.declare(newfact)
 
     @DefFacts(order=-1)

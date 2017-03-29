@@ -867,3 +867,18 @@ def test_modify_retracts_and_declare():
     assert f2.__factid__ in ke.facts
     assert f2[0] == 'test_pos'
     assert f2['key'] == 'test_key'
+
+
+def test_duplicate_declare():
+    from pyknow import KnowledgeEngine, Fact
+
+    ke = KnowledgeEngine()
+
+    f1 = ke.declare(Fact(color='red'))
+    assert len(ke.facts) == 1
+
+    f2 = ke.duplicate(f1, color='yellow', blink=True)
+    assert len(ke.facts) == 2
+    assert f2 is not f1
+    assert f2['color'] == 'yellow'
+    assert f2['blink']
