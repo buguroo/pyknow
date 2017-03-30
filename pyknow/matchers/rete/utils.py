@@ -90,6 +90,7 @@ def generate_checks(fact):
 
     yield TypeCheck(type(fact))
 
+    fact_captured = False
     for key, value in fact.items():
         if (isinstance(key, str)
                 and key.startswith('__')
@@ -97,14 +98,15 @@ def generate_checks(fact):
             # Special fact feature
             if key == '__bind__':
                 yield FactCapture(value)
+                fact_captured = True
             else:  # pragma: no cover
-                warnings.warn(
-                    "Unknown special symbol '%s' inside pattern" % key)
+                yield FeatureCheck(key, value)
         else:
             yield FeatureCheck(key, value)
 
     # Assign the matching fact to the context
-    yield FactCapture("__pattern_%s__" % id(fact))
+    if not fact_captured:
+        yield FactCapture("__pattern_%s__" % id(fact))
 
 
 def wire_rule(rule, alpha_terminals, lhs=None):
