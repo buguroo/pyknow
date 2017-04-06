@@ -4,9 +4,6 @@ PyKnow: Expert Systems for Python
 .. image:: https://img.shields.io/pypi/v/pyknow.svg
     :target: https://pypi.python.org/pypi/pyknow
 
-.. image:: https://img.shields.io/pypi/l/pyknow.svg
-    :target: https://pypi.python.org/pypi/pyknow
-
 .. image:: https://img.shields.io/pypi/pyversions/pyknow.svg
     :target: https://pypi.python.org/pypi/pyknow
 

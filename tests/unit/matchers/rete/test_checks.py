@@ -43,6 +43,21 @@ def test_featurecheck_is_borg_basic_predicate():
         is not FeatureCheck('somekey', P(lambda _: False))
 
 
+def test_featurecheck_predicate_non_dissensamblable_is_borg():
+    from functools import partial
+    from pyknow.matchers.rete.check import FeatureCheck
+    from pyknow import P
+
+    # Can't identify same construction when is not dissensamblable
+    assert FeatureCheck('somekey', P(partial((lambda x, y: True), None))) \
+        is not FeatureCheck('somekey', P(partial((lambda x, y: True), None)))
+
+    # But we can do our best using the function id() as identity.
+    partial_function = partial((lambda x, y: True), None)
+    assert FeatureCheck('somekey', P(partial_function)) \
+        is FeatureCheck('somekey', P(partial_function))
+
+
 def test_featurecheck_is_borg_basic_wildcard():
     from pyknow.matchers.rete.check import FeatureCheck
     from pyknow import W
