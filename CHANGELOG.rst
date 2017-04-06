@@ -1,3 +1,9 @@
+1.0.1
++++++
+
+* DNF of OR clause inside AND or Rule was implemented wrong.
+
+
 1.0.0
 +++++
 
@@ -5,6 +11,7 @@
 * Better Rule decorator system.
 * Facts are dictionaries.
 * Documentation.
+
 
 <1.0.0
 ++++++

@@ -350,3 +350,50 @@ def test_ANDNOT_reactivation():
 
     ke.retract(f4)
     assert not ke.agenda.activations
+
+
+def test_OR_inside_Rule():
+    from pyknow import KnowledgeEngine, OR, Fact, Rule
+
+    class KE(KnowledgeEngine):
+        @Rule(Fact(1),
+              OR(Fact('a'),
+                 Fact('b')),
+              OR(Fact('x'),
+                 Fact('y')))
+        def r1(self):
+            pass
+
+    ke = KE()
+    ke.reset()
+    assert len(ke.agenda.activations) == 0
+
+    p0 = ke.declare(Fact(1))
+    assert len(ke.agenda.activations) == 0
+
+    p1 = ke.declare(Fact('a'))
+    assert len(ke.agenda.activations) == 0
+
+    p2 = ke.declare(Fact('x'))
+    assert len(ke.agenda.activations) == 1
+
+    ke.retract(p2)
+    assert len(ke.agenda.activations) == 0
+
+    p2 = ke.declare(Fact('y'))
+    assert len(ke.agenda.activations) == 1
+
+    ke.retract(p1)
+    assert len(ke.agenda.activations) == 0
+
+    p1 = ke.declare(Fact('b'))
+    assert len(ke.agenda.activations) == 1
+
+    ke.retract(p2)
+    assert len(ke.agenda.activations) == 0
+
+    p2 = ke.declare(Fact('x'))
+    assert len(ke.agenda.activations) == 1
+
+    ke.retract(p0)
+    assert len(ke.agenda.activations) == 0

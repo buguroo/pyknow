@@ -1,8 +1,7 @@
 """
 Tests on Rule DNF
 """
-
-# pylint: disable=missing-docstring
+import pytest
 
 
 def test_or_inside_and():
@@ -185,3 +184,21 @@ def test_and_inside_or_inside_fact():
 
     result = dnf(input_)
     assert result == output
+
+
+def test_multiple_or_inside_rule():
+    from pyknow import Fact, OR, Rule, AND
+    from pyknow.matchers.rete.dnf import dnf
+
+    input_ = Rule(Fact(a=1),
+                  OR(Fact(b=1),
+                     Fact(b=2)),
+                  OR(Fact(c=1),
+                     Fact(c=2)))
+    output_ = Rule(OR(AND(Fact(a=1), Fact(b=1), Fact(c=1)),
+                      AND(Fact(a=1), Fact(b=1), Fact(c=2)),
+                      AND(Fact(a=1), Fact(b=2), Fact(c=1)),
+                      AND(Fact(a=1), Fact(b=2), Fact(c=2))))
+
+    result = dnf(input_)
+    assert result == output_

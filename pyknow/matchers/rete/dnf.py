@@ -26,7 +26,7 @@ def dnf(exp):
 
 @dnf.register(Rule)
 def _(exp):
-    last, current = None, exp.new_conditions(*[dnf(e) for e in exp])
+    last, current = None, exp.new_conditions(AND(*[dnf(e) for e in exp]))
 
     while last != current:
         last, current = (current,
@@ -61,14 +61,13 @@ def _(exp):
     if len(exp) == 1:
         return dnf(exp[0])
     elif any(isinstance(e, OR) for e in exp):  # Distributive property
-        and_part = []
-        or_part = []
+        parts = []
         for e in exp:
             if isinstance(e, OR):
-                or_part.extend(e)
+                parts.append([dnf(x) for x in e])
             else:
-                and_part.append(e)
-        return OR(*[dnf(AND(*(and_part + [dnf(e)]))) for e in or_part])
+                parts.append([dnf(e)])
+        return OR(*[dnf(AND(*p)) for p in product(*parts)])
     else:
         return AND(*[dnf(x) for x in unpack_exp(exp, AND)])
 
