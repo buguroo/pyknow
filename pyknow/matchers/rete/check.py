@@ -138,7 +138,7 @@ class FeatureCheck(Check,
                      pce.__bind__)
         except TypeError:
             key_b = ('ID',
-                     tuple(dis.get_instructions(pce.match)),
+                     id(pce.match),
                      pce.__bind__)
 
         return CheckFunction(key_a=P,
