@@ -1,3 +1,9 @@
+1.1.0
++++++
+
+* Allow any kind of callable in Predicate Field Constraints (P()).
+
+
 1.0.1
 +++++
 
