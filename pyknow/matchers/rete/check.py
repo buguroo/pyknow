@@ -132,14 +132,10 @@ class FeatureCheck(Check,
                     return {expected.__bind__: actual}
             else:
                 return False
-        try:
-            key_b = ('DIS',
-                     tuple(dis.get_instructions(pce.match)),
-                     pce.__bind__)
-        except TypeError:
-            key_b = ('ID',
-                     id(pce.match),
-                     pce.__bind__)
+
+        key_b = ('ID',
+                 id(pce.match),
+                 pce.__bind__)
 
         return CheckFunction(key_a=P,
                              key_b=key_b,

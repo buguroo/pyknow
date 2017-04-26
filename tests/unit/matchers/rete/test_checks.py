@@ -33,29 +33,20 @@ def test_featurecheck_is_borg_basic_predicate():
     from pyknow.matchers.rete.check import FeatureCheck
     from pyknow import P
 
-    assert FeatureCheck('somekey', P(lambda _: True)) \
-        is FeatureCheck('somekey', P(lambda _: True))
+    def mypredicate1(_):
+        return True
 
-    assert FeatureCheck('somekey', P(lambda _: True)) \
-        is not FeatureCheck('otherkey', P(lambda _: True))
+    def mypredicate2(_):
+        return False
 
-    assert FeatureCheck('somekey', P(lambda _: True)) \
-        is not FeatureCheck('somekey', P(lambda _: False))
+    assert FeatureCheck('somekey', P(mypredicate1)) \
+        is FeatureCheck('somekey', P(mypredicate1))
 
+    assert FeatureCheck('somekey', P(mypredicate1)) \
+        is not FeatureCheck('otherkey', P(mypredicate1))
 
-def test_featurecheck_predicate_non_dissensamblable_is_borg():
-    from functools import partial
-    from pyknow.matchers.rete.check import FeatureCheck
-    from pyknow import P
-
-    # Can't identify same construction when is not dissensamblable
-    assert FeatureCheck('somekey', P(partial((lambda x, y: True), None))) \
-        is not FeatureCheck('somekey', P(partial((lambda x, y: True), None)))
-
-    # But we can do our best using the function id() as identity.
-    partial_function = partial((lambda x, y: True), None)
-    assert FeatureCheck('somekey', P(partial_function)) \
-        is FeatureCheck('somekey', P(partial_function))
+    assert FeatureCheck('somekey', P(mypredicate1)) \
+        is not FeatureCheck('somekey', P(mypredicate2))
 
 
 def test_featurecheck_is_borg_basic_wildcard():
@@ -82,23 +73,32 @@ def test_featurecheck_is_borg_composed_predicate():
     from pyknow.matchers.rete.check import FeatureCheck
     from pyknow import P
 
-    assert FeatureCheck('somekey', P(lambda _: True) & P(lambda _: False)) \
-        is FeatureCheck('somekey', P(lambda _: True) & P(lambda _: False))
+    def mypredicate1(_):
+        return True
 
-    assert FeatureCheck('somekey', P(lambda _: True) | P(lambda _: False)) \
-        is FeatureCheck('somekey', P(lambda _: True) | P(lambda _: False))
+    def mypredicate2(_):
+        return False
 
-    assert FeatureCheck('somekey', ~P(lambda _: True)) \
-        is FeatureCheck('somekey', ~P(lambda _: True))
+    def mypredicate3(_):
+        return None
 
-    assert FeatureCheck('somekey', P(lambda _: True) & P(lambda _: False)) \
-        is not FeatureCheck('somekey', P(lambda _: True) & P(lambda _: None))
+    assert FeatureCheck('somekey', P(mypredicate1) & P(mypredicate2)) \
+        is FeatureCheck('somekey', P(mypredicate1) & P(mypredicate2))
 
-    assert FeatureCheck('somekey', P(lambda _: True) | P(lambda _: False)) \
-        is not FeatureCheck('somekey', P(lambda _: True) | P(lambda _: None))
+    assert FeatureCheck('somekey', P(mypredicate1) | P(mypredicate2)) \
+        is FeatureCheck('somekey', P(mypredicate1) | P(mypredicate2))
 
-    assert FeatureCheck('somekey', ~P(lambda _: True)) \
-        is not FeatureCheck('somekey', ~P(lambda _: False))
+    assert FeatureCheck('somekey', ~P(mypredicate1)) \
+        is FeatureCheck('somekey', ~P(mypredicate1))
+
+    assert FeatureCheck('somekey', P(mypredicate1) & P(mypredicate2)) \
+        is not FeatureCheck('somekey', P(mypredicate1) & P(mypredicate3))
+
+    assert FeatureCheck('somekey', P(mypredicate1) | P(mypredicate2)) \
+        is not FeatureCheck('somekey', P(mypredicate1) | P(mypredicate3))
+
+    assert FeatureCheck('somekey', ~P(mypredicate1)) \
+        is not FeatureCheck('somekey', ~P(mypredicate2))
 
 
 def test_featurecheck_is_borg_composed_wildcard():
