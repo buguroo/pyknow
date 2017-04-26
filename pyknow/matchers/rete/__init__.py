@@ -111,11 +111,11 @@ class ReteMatcher(Matcher):
         def weighted_check_sort(check):
             """Sort check by its type and number of times seen."""
             if isinstance(check, TypeCheck):
-                return float('inf')
+                return (float('inf'), hash(check))
             elif isinstance(check, FactCapture):
-                return float('-inf')
+                return (float('-inf'), hash(check))
             elif isinstance(check, FeatureCheck):
-                return check_rank[check]
+                return (check_rank[check], hash(check))
             else:
                 raise TypeError("Unknown check type.")  # pragma: no cover
 
