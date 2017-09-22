@@ -320,8 +320,7 @@ given FC matches this will not and vice versa.
 Variable Binding: The `<<` Operator
 -----------------------------------
 
-Any patterns and some FCs can be binded to a name using the `<<`
-operator.
+Any patterns and some FCs can be binded to a name using the `<<` operator.
 
 .. code-block:: python
    :caption: The first value of the matching fact will be binded to the name `value` and passed to the function when fired.
@@ -335,4 +334,25 @@ operator.
 
    @Rule('f1' << Fact())
    def _(f1):
+       pass
+
+
+MATCH object
+------------
+
+The MATCH objects helps generating more readable name bindings. Is syntactic
+sugar for a `Wildcard Field Constraint` binded to a name. For example:
+
+.. code-block:: python
+
+   @Rule(Fact(MATCH.myvalue))
+   def _(myvalue):
+       pass
+
+Is exactly the same as:
+
+.. code-block:: python
+
+   @Rule(Fact("myvalue" << W()))
+   def _(myvalue):
        pass
