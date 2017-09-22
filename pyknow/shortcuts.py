@@ -13,4 +13,5 @@ class _MATCH:
     def __getattr__(self, name):
         return (name << W())
 
+
 MATCH = _MATCH()
