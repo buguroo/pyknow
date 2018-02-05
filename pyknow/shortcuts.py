@@ -15,3 +15,18 @@ class _MATCH:
 
 
 MATCH = _MATCH()
+
+
+class _AS:
+    """
+    Helps replacing this:
+    "something" << Fact()
+
+    With this:
+    AS.something << Fact()
+    """
+    def __getattr__(self, name):
+        return name
+
+
+AS = _AS()

@@ -356,3 +356,30 @@ Is exactly the same as:
    @Rule(Fact("myvalue" << W()))
    def _(myvalue):
        pass
+
+
+AS object
+---------
+
+The AS object like the MATCH object is syntactic sugar for generating bindable
+names. In this case any attribute requested to the AS object will return a
+string with the same name.
+
+.. code-block:: python
+
+   @Rule(AS.myfact << Fact(W()))
+   def _(myfact):
+       pass
+
+Is exactly the same as:
+
+.. code-block:: python
+
+   @Rule("myfact" << Fact(W()))
+   def _(myfact):
+       pass
+
+.. warning::
+
+   This behavior will vary in future releases of PyKnow and the string flavour
+   of the operator may disappear.
