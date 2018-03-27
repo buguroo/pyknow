@@ -1,6 +1,7 @@
 from itertools import chain
 
 from pyknow.pattern import Bindable
+from pyknow.utils import freeze
 from pyknow.conditionalelement import OperableCE
 from pyknow.conditionalelement import ConditionalElement
 
@@ -11,13 +12,21 @@ class Fact(OperableCE, Bindable, dict):
     def __init__(self, *args, **kwargs):
         self.update(dict(chain(enumerate(args), kwargs.items())))
 
+    def __setitem__(self, key, value):
+        if self.__factid__ is None:
+            super().__setitem__(key, freeze(value))
+        else:
+            raise RuntimeError("A fact can't be modified after declaration.")
+
     def update(self, mapping):
         for k, v in mapping.items():
             self[k] = v
 
     def copy(self):
         args = [v for k, v in self.items() if isinstance(k, int)]
-        kwargs = {k: v for k, v in self.items() if not isinstance(k, int)}
+        kwargs = {k: v
+                  for k, v in self.items()
+                  if not isinstance(k, int) and not self.is_special(k)}
         return self.__class__(*args, **kwargs)
 
     def has_field_constraints(self):
