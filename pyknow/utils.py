@@ -3,6 +3,8 @@ import collections.abc
 
 from frozendict import frozendict
 
+from .fieldconstraint import P
+
 
 @singledispatch
 def freeze(obj):
@@ -28,3 +30,7 @@ def freeze_list(obj):
 @freeze.register(collections.abc.MutableSet)
 def freeze_set(obj):
     return frozenset(freeze(v) for v in obj)
+
+
+def anyof(*what):
+    return P(lambda y: y in what)
