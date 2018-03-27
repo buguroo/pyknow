@@ -42,7 +42,7 @@ by CLIPS_.
        def red_light(self):
            print("Don't walk")
 
-       @Rule('light' << Light(color=L('yellow') | L('blinking-yellow')))
+       @Rule(AS.light << Light(color=L('yellow') | L('blinking-yellow')))
        def cautious(self, light):
            print("Be cautious because light is", light["color"])
 
