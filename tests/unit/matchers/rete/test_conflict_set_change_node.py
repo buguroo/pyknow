@@ -40,11 +40,12 @@ def test_conflictsetchange_valid_adds_to_memory():
 
     csn = ConflictSetNode(Rule())
 
-    csn.activate(Token.valid(Fact(__factid__=1, test='data'),
-                             {'mycontextdata': 'data'}))
+    f = Fact(test='data')
+    f.__factid__ = 1
 
-    assert TokenInfo([Fact(__factid__=1, test='data')],
-                     {'mycontextdata': 'data'}) in csn.memory
+    csn.activate(Token.valid(f, {'mycontextdata': 'data'}))
+
+    assert TokenInfo([f], {'mycontextdata': 'data'}) in csn.memory
 
 
 def test_conflictsetchange_invalid_removes_from_memory():
@@ -54,11 +55,13 @@ def test_conflictsetchange_invalid_removes_from_memory():
     from pyknow.rule import Rule
 
     csn = ConflictSetNode(Rule())
-    csn.memory.append(TokenInfo([Fact(__factid__=1, test='data')],
-                                {'mycontextdata': 'data'}))
 
-    csn.activate(Token.invalid(Fact(__factid__=1, test='data'),
-                               {'mycontextdata': 'data'}))
+    f = Fact(test='data')
+    f.__factid__ = 1
+
+    csn.memory.append(TokenInfo([f], {'mycontextdata': 'data'}))
+
+    csn.activate(Token.invalid(f, {'mycontextdata': 'data'}))
 
     assert not csn.memory
 
@@ -68,11 +71,14 @@ def test_conflictsetchange_get_activations_data():
     from pyknow.matchers.rete.token import Token
     from pyknow.rule import Rule
     from pyknow.fact import Fact
-    from pyknow.activation import Activation
 
     rule = Rule()
     csn = ConflictSetNode(rule)
-    csn.activate(Token.valid(Fact(__factid__=1, first=1), {'data': 'test'}))
+
+    f = Fact(first=1)
+    f.__factid__ = 1
+
+    csn.activate(Token.valid(f, {'data': 'test'}))
 
     added, removed = csn.get_activations()
 
@@ -80,5 +86,5 @@ def test_conflictsetchange_get_activations_data():
     assert len(removed) == 0
 
     assert list(added)[0].rule is rule
-    assert Fact(__factid__=1, first=1) in list(added)[0].facts
+    assert f in list(added)[0].facts
     assert list(added)[0].context == {'data': 'test'}

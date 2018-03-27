@@ -1,3 +1,12 @@
+1.2.0
++++++
+
+* Freeze fact values as the default behavior to address Issue #9.
+* Added `pyknow.utils.anyof` to mitigate Issue #7.
+* Raise RuntimeError if a fact value is modified after declare().
+* Added MATCH and AS objects.
+
+
 1.1.1
 +++++
 

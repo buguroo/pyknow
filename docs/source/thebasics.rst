@@ -126,8 +126,13 @@ You can use logic operators to express complex *LHS* conditions.
 
 .. code-block:: python
 
-   @Rule((User('admin') | User('root'))
-         & ~Fact('drop-privileges'))
+   @Rule(
+       AND(
+           OR(User('admin'),
+              User('root')),
+           NOT(Fact('drop-privileges'))
+       )
+   )
    def the_user_has_power():
        """
        The user is a privileged one and we are not dropping privileges.
@@ -222,8 +227,8 @@ After that, you can instantiate it, populate it with facts, and finally run it.
            self.declare(Fact(location=input("Where are you? ")))
 
        @Rule(Fact(action='greet'),
-             Fact(name="name" << W()),
-             Fact(location="location" << W()))
+             Fact(name=MATCH.name),
+             Fact(location=MATCH.location))
        def greet(self, name, location):
            print("Hi %s! How is the weather in %s?" % (name, location))
 

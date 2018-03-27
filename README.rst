@@ -10,8 +10,8 @@ PyKnow: Expert Systems for Python
 .. image:: https://travis-ci.org/buguroo/pyknow.svg?branch=master
     :target: https://travis-ci.org/buguroo/pyknow
 
-.. image:: https://readthedocs.org/projects/pyknow/badge/?version=latest
-    :target: https://readthedocs.org/projects/pyknow/?badge=latest
+.. image:: https://readthedocs.org/projects/pyknow/badge/?version=stable
+    :target: https://readthedocs.org/projects/pyknow/?badge=stable
     :alt: Documentation Status
 
 .. image:: https://codecov.io/gh/buguroo/pyknow/branch/develop/graph/badge.svg
@@ -42,7 +42,7 @@ by CLIPS_.
        def red_light(self):
            print("Don't walk")
 
-       @Rule('light' << Light(color=L('yellow') | L('blinking-yellow')))
+       @Rule(AS.light << Light(color=L('yellow') | L('blinking-yellow')))
        def cautious(self, light):
            print("Be cautious because light is", light["color"])
 

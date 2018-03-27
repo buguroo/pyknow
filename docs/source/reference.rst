@@ -164,10 +164,10 @@ otherwise.
 .. code-block:: python
    :caption: Match for all numbers `a`, `b`, `c` where a > b > c
 
-   @Rule(Number('a' << W()),
-         Number('b' << W()),
+   @Rule(Number(MATCH.a),
+         Number(MATCH.b),
          TEST(lambda a, b: a > b),
-         Number('c' << W()),
+         Number(MATCH.c),
          TEST(lambda b, c: b > c))
    def _(a, b, c):
        pass
@@ -198,10 +198,10 @@ specified CE.
 .. code-block:: python
    :caption: Match when for every Student fact there is a Reading, Writing and Arithmetic fact with the same name.
 
-   @Rule(FORALL(Student(W('name')),
-                Reading(W('name')),
-                Writing(W('name')),
-                Arithmetic(W('name')))
+   @Rule(FORALL(Student(MATCH.name),
+                Reading(MATCH.name),
+                Writing(MATCH.name),
+                Arithmetic(MATCH.name)))
    def all_students_passed():
        pass
 
@@ -320,8 +320,7 @@ given FC matches this will not and vice versa.
 Variable Binding: The `<<` Operator
 -----------------------------------
 
-Any patterns and some FCs can be binded to a name using the `<<`
-operator.
+Any patterns and some FCs can be binded to a name using the `<<` operator.
 
 .. code-block:: python
    :caption: The first value of the matching fact will be binded to the name `value` and passed to the function when fired.
@@ -330,9 +329,67 @@ operator.
    def _(value):
        pass
 
+
+.. deprecated:: 1.2.0
+
+   Use *MATCH* object instead.
+
+
 .. code-block:: python
    :caption: The whole matching fact will be binded to `f1` and passed to the function when fired.
 
    @Rule('f1' << Fact())
    def _(f1):
        pass
+
+.. deprecated:: 1.2.0
+
+   Use *AS* object instead.
+
+
+MATCH object
+------------
+
+The MATCH objects helps generating more readable name bindings. Is syntactic
+sugar for a `Wildcard Field Constraint` binded to a name. For example:
+
+.. code-block:: python
+
+   @Rule(Fact(MATCH.myvalue))
+   def _(myvalue):
+       pass
+
+Is exactly the same as:
+
+.. code-block:: python
+
+   @Rule(Fact("myvalue" << W()))
+   def _(myvalue):
+       pass
+
+
+AS object
+---------
+
+The AS object like the MATCH object is syntactic sugar for generating bindable
+names. In this case any attribute requested to the AS object will return a
+string with the same name.
+
+.. code-block:: python
+
+   @Rule(AS.myfact << Fact(W()))
+   def _(myfact):
+       pass
+
+Is exactly the same as:
+
+.. code-block:: python
+
+   @Rule("myfact" << Fact(W()))
+   def _(myfact):
+       pass
+
+.. warning::
+
+   This behavior will vary in future releases of PyKnow and the string flavour
+   of the operator may disappear.
