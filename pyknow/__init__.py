@@ -5,4 +5,4 @@ from .fieldconstraint import L, W, P
 from .rule import Rule
 from .watchers import watch, unwatch
 from .deffacts import DefFacts
-from .shortcuts import MATCH
+from .shortcuts import MATCH, AS
