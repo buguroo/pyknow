@@ -393,3 +393,78 @@ Is exactly the same as:
 
    This behavior will vary in future releases of PyKnow and the string flavour
    of the operator may disappear.
+
+
+Nested matching
+---------------
+
+.. versionadded:: 1.3.0
+
+Nested matching is useful to match against Fact values which contains nested
+structures like dicts or lists.
+
+.. code-block:: python
+
+   >>> Fact(name="scissors", against={"scissors": 0, "rock": -1, "paper": 1})
+   >>> Fact(name="paper", against={"scissors": -1, "rock": 1, "paper": 0})
+   >>> Fact(name="rock", against={"scissors": 1, "rock": 0, "paper": -1})
+
+Nested matching take the form field__subkey=value. (That’s a
+double-underscore). For example:
+
+.. code-block:: python
+
+   >>> @Rule(Fact(name=MATCH.name, against__scissors=1, against__paper=-1)) 
+   ... def what_wins_to_scissors_and_losses_to_paper(self, name):
+   ...     print(name)
+
+
+Is possible to match against an arbitrary deep structure following the same method.
+
+.. code-block:: python
+
+   >>> class Ship(Fact):
+   ...    pass
+   ...
+   >>> Ship(data={
+   ...     "name": "SmallShip",
+   ...     "position": {
+   ...         "x": 300,
+   ...         "y": 200},
+   ...     "parent": {
+   ...         "name": "BigShip",
+   ...         "position": {
+   ...             "x": 150,
+   ...             "y": 300}}})
+
+In this example we can check for collision between a ship and its parent with
+the following rule:
+
+.. code-block:: python
+
+   >>> @Rule(Ship(data__name=MATCH.name1,
+   ...            data__position__x=MATCH.x,
+   ...            data__position__y=MATCH.y,
+   ...            data__parent__name=MATCH.name2,
+   ...            data__parent__position__x=MATCH.x,
+   ...            data__parent__position__y=MATCH.y))
+   ... def collision_detected(self, name1, name2, **_):
+   ...     print("COLLISION!", name1, name2)
+
+If the nested data structure contains list, tuples or any other sequence you
+can use numeric indexes as needed.
+
+.. code-block:: python
+
+   >>> Ship(data={
+   ...     "name": "SmallShip",
+   ...     "position": {
+   ...         "x": 300,
+   ...         "y": 200},
+   ...     "enemies": [
+   ...         {"name": "Destroyer"},
+   ...         {"name": "BigShip"}]})
+   >>>
+   >>> @Rule(Ship(data__enemies__0__name="Destroyer"))
+   ... def next_enemy_is_destroyer(self):
+   ...     print("Bye byee!")
