@@ -1,25 +1,16 @@
-from collections import defaultdict
 from itertools import chain
 
 from pyknow.pattern import Bindable
-from pyknow.utils import freeze, is_nested, flattern, get_base
+from pyknow.utils import freeze
 from pyknow.conditionalelement import OperableCE
 from pyknow.conditionalelement import ConditionalElement
-from pyknow.fieldconstraint import W
 
 
 class Fact(OperableCE, Bindable, dict):
     """Base Fact class"""
 
     def __init__(self, *args, **kwargs):
-        F = defaultdict(W)
-        for k, v in kwargs.items():
-            if is_nested(k):
-                base = get_base(k)
-                F[base] &= flattern(k, v)
-            else:
-                F[k] = v
-        self.update(dict(chain(enumerate(args), F.items())))
+        self.update(dict(chain(enumerate(args), kwargs.items())))
 
     def __setitem__(self, key, value):
         if self.__factid__ is None:

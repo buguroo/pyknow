@@ -1,10 +1,9 @@
-from functools import singledispatch, reduce
+from functools import singledispatch
 import collections.abc
 
 from frozendict import frozendict
 
 from .fieldconstraint import P
-from .conditionalelement import ConditionalElement
 
 
 @singledispatch
@@ -35,42 +34,3 @@ def freeze_set(obj):
 
 def anyof(*what):
     return P(lambda y: y in what)
-
-
-"""
-N = {}
-F = defaultdict(W)
-for k, v in N.items():
-    if is_nested(k):
-        base = getbase(k)
-        F[base] &= flattern(k , v)
-
-"""
-
-
-def get_base(s):
-    return s.split("__")[0]
-
-
-def is_nested(s):
-    return "__" in s.strip('_')
-
-
-def flattern(key, fn):
-    base, *path = key.split("__")
-    if not isinstance(fn, ConditionalElement):
-        _fn = (lambda x: x == fn)
-    else:
-        _fn = fn
-
-    def _extract_and_apply(current):
-        for p in path:
-            if p.isnumeric():
-                p = int(p)
-            try:
-                current = current[p]
-            except (KeyError, IndexError, TypeError):
-                return False
-        return _fn(current)
-
-    return P(_extract_and_apply)
