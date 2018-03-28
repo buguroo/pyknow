@@ -188,3 +188,10 @@ pyknow.matchers.rete.utils
     :members:
     :undoc-members:
     :show-inheritance:
+
+
+pyknow.operator
+---------------
+
+.. automodule:: pyknow.operator
+    :members:

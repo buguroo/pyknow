@@ -6,27 +6,50 @@ import fnmatch
 from .conditionalelement import ConditionalElement
 from .fieldconstraint import P
 
+__all__ = ['TRUTH', 'LT', 'LE', 'EQ', 'NE', 'GE', 'GT', 'IS', 'IS_NOT',
+           'CONTAINS', 'BETWEEN', 'CALL', 'REGEX', 'LIKE', 'ILIKE']
 
-def from_operator2(o):
-    def _from_operator2(b):
+
+def _from_operator2(o):
+    def __from_operator2(b):
         if isinstance(b, ConditionalElement):
             raise TypeError(
                 "A ConditionalElement can't be used as an operator condition.")
         else:
             return P(lambda a: o(a, b))
-    return _from_operator2
+    return __from_operator2
 
 
+#: Return True if obj is true, and False otherwise. This is equivalent to using
+#: the bool constructor.
 TRUTH = P(bool)
-LT = from_operator2(op.lt)
-LE = from_operator2(op.le)
-EQ = from_operator2(op.eq)
-NE = from_operator2(op.ne)
-GE = from_operator2(op.ge)
-GT = from_operator2(op.gt)
-IS = from_operator2(op.is_)
-IS_NOT = from_operator2(op.is_not)
-CONTAINS = from_operator2(op.contains)
+
+#: Less than operator.
+LT = _from_operator2(op.lt)
+
+#: Less than or equal operator.
+LE = _from_operator2(op.le)
+
+#: Equal operator.
+EQ = _from_operator2(op.eq)
+
+#: Not equal operator.
+NE = _from_operator2(op.ne)
+
+#: Greater than or equal operator.
+GE = _from_operator2(op.ge)
+
+#: Greater than operator.
+GT = _from_operator2(op.gt)
+
+#: Tests object identity.
+IS = _from_operator2(op.is_)
+
+#: Tests object identity.
+IS_NOT = _from_operator2(op.is_not)
+
+#: Return the outcome of the test b in a
+CONTAINS = _from_operator2(op.contains)
 
 
 def BETWEEN(a, b):
@@ -44,8 +67,8 @@ def BETWEEN(a, b):
 
 class _CALL:
     """
-    An instance of this class can be used as a syntactic sugar for predicates
-    which invoque functions who call a captured value method.
+    Syntactic sugar for predicates which invoque functions who call a captured
+    value method.
 
     >>> @Rule(Fact(quantity=P(lambda q: q.isnumeric()))
         def something(...):
