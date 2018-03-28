@@ -1,3 +1,31 @@
+"""
+The operator module contains a set of predicate functions constructors based on
+the P() field constraint.
+
+These operators can be composed together and binded like normal Field
+Constraints.
+
+Example:
+
+>>> WIDTH = 640
+>>> HEIGHT = 480
+>>>
+>>> class Player(Fact):
+...      pass
+...
+>>>
+>>> @Rule(
+...      Player(
+...          x=MATCH.x & GE(0) & LE(WIDTH),
+...          y=MATCH.y & BETWEEN(0, HEIGHT),
+...          name=MATCH.name & (CALL.startswith("@") | CALL.endswith("_ADM"))
+...      )
+... )
+... def admin_in_visible_area(self, x, y, name):
+...     pass
+...
+
+"""
 from itertools import chain
 import operator as op
 import re

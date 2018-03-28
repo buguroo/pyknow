@@ -143,6 +143,11 @@ You can use logic operators to express complex *LHS* conditions.
 
 For a `Rule` to be useful, it must be a method of a `KnowledgeEngine` subclass.
 
+.. note::
+
+   For a list of more complex operators you can check the
+   :py:mod:`pyknow.operator` module.
+
 
 `Facts` vs `Patterns`
 +++++++++++++++++++++
