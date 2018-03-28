@@ -397,3 +397,41 @@ def test_OR_inside_Rule():
 
     ke.retract(p0)
     assert len(ke.agenda.activations) == 0
+
+
+def test_nested_values_dict():
+    from pyknow import KnowledgeEngine, Fact, Rule
+
+    class KE(KnowledgeEngine):
+        @Rule(Fact(key__with__nested__dicts=1))
+        def r1(self):
+            pass
+
+    ke = KE()
+    ke.reset()
+    assert len(ke.agenda.activations) == 0
+
+    p0 = ke.declare(Fact(key={"with": {"dicts": 1}}))
+    assert len(ke.agenda.activations) == 0
+
+    p1 = ke.declare(Fact(key={"with": {"nested": {"dicts": 1}}}))
+    assert len(ke.agenda.activations) == 1
+
+
+def test_nested_values_dict_and_lists():
+    from pyknow import KnowledgeEngine, Fact, Rule
+
+    class KE(KnowledgeEngine):
+        @Rule(Fact(key__0__with__nested__1__dicts=1))
+        def r1(self):
+            pass
+
+    ke = KE()
+    ke.reset()
+    assert len(ke.agenda.activations) == 0
+
+    p0 = ke.declare(Fact(key={"with": {"nested": [{"other": 1}, {"dicts": 1}]}}))
+    assert len(ke.agenda.activations) == 0
+
+    p1 = ke.declare(Fact(key=[{"with": {"nested": [{"other": 1}, {"dicts": 1}]}}]))
+    assert len(ke.agenda.activations) == 1

@@ -90,6 +90,8 @@ class FeatureCheck(Check,
                         and not self.what.endswith('__')):
                     try:
                         for p in self.what.split('__'):
+                            if p.isnumeric():
+                                p = int(p)
                             record = record[p]
                     except (IndexError, KeyError, TypeError):
                         return False
