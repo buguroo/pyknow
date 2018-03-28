@@ -1,5 +1,7 @@
-import operator as op
 from itertools import chain
+import operator as op
+import re
+import fnmatch
 
 from .conditionalelement import ConditionalElement
 from .fieldconstraint import P
@@ -41,6 +43,21 @@ def BETWEEN(a, b):
 
 
 class _CALL:
+    """
+    An instance of this class can be used as a syntactic sugar for predicates
+    which invoque functions who call a captured value method.
+
+    >>> @Rule(Fact(quantity=P(lambda q: q.isnumeric()))
+        def something(...):
+            ...
+
+    Is equivalent to:
+
+    >>> @Rule(Fact(quantity=CALL.isnumeric()))
+        def something(...):
+            ...
+
+    """
     def __getattr__(self, name):
         def _call(*args, **kwargs):
             if any((isinstance(x, ConditionalElement)
@@ -52,4 +69,20 @@ class _CALL:
                 return P(lambda x: getattr(x, name)(*args, **kwargs))
         return _call
 
+
 CALL = _CALL()
+
+
+def REGEX(pattern, flags=0):
+    """Regular expression matching."""
+    return P(lambda x: re.match(pattern, x, flags=flags))
+
+
+def LIKE(pattern):
+    """Unix shell-style wildcards. Case-sensitive"""
+    return P(lambda x: fnmatch.fnmatchcase(x, pattern))
+
+
+def ILIKE(pattern):
+    """Unix shell-style wildcards. Case-insensitive"""
+    return P(lambda x: fnmatch.fnmatch(x.lower(), pattern.lower()))
