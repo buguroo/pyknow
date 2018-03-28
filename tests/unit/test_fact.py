@@ -34,3 +34,13 @@ def test_fact_setitem_do_raise_after_declare():
 
     with pytest.raises(RuntimeError):
         f[0] = 1
+
+
+def test_double_underscore_raise_on_declare():
+    ke = KnowledgeEngine()
+    ke.reset()
+
+    ke.declare(Fact(__startwithdoubleunderscore__=True))
+
+    with pytest.raises(KeyError):
+        ke.declare(Fact(key__with__double__underscores=True))
