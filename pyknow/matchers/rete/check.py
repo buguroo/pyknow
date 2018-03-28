@@ -83,14 +83,23 @@ class FeatureCheck(Check,
         return cls._instances[key]
 
     def __call__(self, data, is_fact=True):
-        record = data
         if is_fact:
-            if not self.what.startswith('__') and not self.what.endswith('__'):
+            if isinstance(self.what, str):
+                record = data
+                if (not self.what.startswith('__')
+                        and not self.what.endswith('__')):
+                    try:
+                        for p in self.what.split('__'):
+                            record = record[p]
+                    except (IndexError, KeyError, TypeError):
+                        return False
+            else:
                 try:
-                    for p in self.what.split('__'):
-                        record = record[p]
+                    record = data[self.what]
                 except (IndexError, KeyError, TypeError):
                     return False
+        else:
+            record = data
 
         res = self.check(record, self.expected)
 
