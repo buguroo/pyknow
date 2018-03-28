@@ -32,6 +32,9 @@ class Fact(OperableCE, Bindable, dict):
     def has_field_constraints(self):
         return any(isinstance(v, ConditionalElement) for v in self.values())
 
+    def has_nested_accessor(self):
+        return any(("__" in str(k).strip('__') for k in self.keys()))
+
     @staticmethod
     def is_special(key):
         return (isinstance(key, str)

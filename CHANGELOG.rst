@@ -1,3 +1,12 @@
+1.3.0
++++++
+
+* `pyknow.operator` module.
+* Nested matching.
+* Added Talk 'Sistemas Expertos en Python con PyKnow - PyConES 2017' to docs
+  folder.
+
+
 1.2.0
 +++++
 

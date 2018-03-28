@@ -59,5 +59,5 @@ by CLIPS_.
 You can find some more examples on GitHub_.
 
 .. _CLIPS: http://clipsrules.sourceforge.net
-.. _GitHub: https://github.com/buguroo/pyknow/tree/develop/docs/examples
+.. _GitHub: https://github.com/buguroo/pyknow/tree/develop/docs
 
