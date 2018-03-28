@@ -320,7 +320,7 @@ given FC matches this will not and vice versa.
 Variable Binding: The `<<` Operator
 -----------------------------------
 
-Any patterns and some FCs can be binded to a name using the `<<` operator.
+Any pattern and some FCs can be binded to a name using the `<<` operator.
 
 .. code-block:: python
    :caption: The first value of the matching fact will be binded to the name `value` and passed to the function when fired.
