@@ -200,6 +200,9 @@ class KnowledgeEngine:
         if any(f.has_field_constraints() for f in facts):
             raise TypeError(
                 "Declared facts cannot contain conditional elements")
+        elif any(f.has_nested_accessor() for f in facts):
+            raise KeyError(
+                "Cannot declare facts containing double underscores as keys.")
         else:
             last_inserted = None
             for fact in facts:
