@@ -476,8 +476,8 @@ Mutable objects
 PyKnow's matching algorithm depends on the values of the declared facts being
 immutable.
 
-When a `Fact` gets declared, all its values are transformed to an immutable
-type if they are not. For this matter the method `pyknow.utils.freeze` is used
+When a `Fact` is created, all its values are transformed to an immutable type
+if they are not. For this matter the method `pyknow.utils.freeze` is used
 internally.
 
 
