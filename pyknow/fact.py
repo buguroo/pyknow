@@ -29,9 +29,11 @@ class Fact(OperableCE, Bindable, dict):
                 if not self.is_special(k)}
 
     def copy(self):
-        args = [v for k, v in self.items() if isinstance(k, int)]
+        """Return a copy of this `Fact`."""
+        content = [(k, v) for k, v in self.items()]
+        args = [v for k, v in sorted(content)]
         kwargs = {k: v
-                  for k, v in self.items()
+                  for k, v in content
                   if not isinstance(k, int) and not self.is_special(k)}
         return self.__class__(*args, **kwargs)
 
