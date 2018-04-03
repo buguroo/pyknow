@@ -60,3 +60,5 @@ target/
 
 # Jupyter notebook checkpoints
 .ipynb_checkpoints
+
+.python-version

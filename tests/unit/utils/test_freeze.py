@@ -1,7 +1,6 @@
 import pytest
-from frozendict import frozendict
 
-from pyknow.utils import freeze
+from pyknow.utils import freeze, unfreeze, frozenlist, frozendict
 
 
 def test_freeze_hashable():
@@ -16,15 +15,24 @@ def test_freeze_hashable():
 
 
 def test_freezedicts():
-    assert freeze({"a": 1, "b": 2}) == frozendict({"a": 1, "b": 2})
+    actual = freeze({"a": 1, "b": 2})
+    expected = frozendict({"a": 1, "b": 2})
+    assert actual == expected
+    assert isinstance(actual, type(expected))
 
 
 def test_freezelist():
-    assert freeze([1, 2, 3]) == (1, 2, 3)
+    actual = freeze([1, 2, 3])
+    expected = frozenlist([1, 2, 3])
+    assert actual == expected
+    assert isinstance(actual, type(expected))
 
 
 def test_freezeset():
-    assert freeze({1, 2, 3}) == frozenset({1, 2, 3})
+    actual = freeze({1, 2, 3})
+    expected = frozenset({1, 2, 3})
+    assert actual == expected
+    assert isinstance(actual, type(expected))
 
 
 def test_implement_freeze():
@@ -49,3 +57,24 @@ def test_implement_freeze():
         return (obj.a, obj.b)
 
     assert freeze(MyClass(1, 2)) == (1, 2)
+
+
+def test_unfreeze_frozendict():
+    actual = unfreeze(frozendict({"a": 1, "b": 2}))
+    expected = {"a": 1, "b": 2}
+    assert actual == expected
+    assert isinstance(actual, type(expected))
+
+
+def test_unfreeze_frozenlist():
+    actual = unfreeze(frozenlist([1, 2, 3]))
+    expected = [1, 2, 3]
+    assert actual == expected
+    assert isinstance(actual, type(expected))
+
+
+def test_unfreeze_frozenset():
+    actual = unfreeze(frozenset({1, 2, 3}))
+    expected = {1, 2, 3}
+    assert actual == expected
+    assert isinstance(actual, type(expected))

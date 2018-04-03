@@ -6,6 +6,11 @@ from frozendict import frozendict
 from .fieldconstraint import P
 
 
+class frozenlist(tuple):
+    def __repr__(self):
+        return "frozenlist([%s])" % (super().__repr__()[1:-1], )
+
+
 @singledispatch
 def freeze(obj):
     if isinstance(obj, collections.abc.Hashable):
@@ -17,19 +22,39 @@ def freeze(obj):
              "own freeze method") % (obj, type(obj)))
 
 
-@freeze.register(collections.abc.MutableMapping)
-def freeze_mapping(obj):
+@freeze.register(dict)
+def freeze_dict(obj):
     return frozendict((k, freeze(v)) for k, v in obj.items())
 
 
-@freeze.register(collections.abc.MutableSequence)
+@freeze.register(list)
 def freeze_list(obj):
-    return tuple(freeze(v) for v in obj)
+    return frozenlist(freeze(v) for v in obj)
 
 
-@freeze.register(collections.abc.MutableSet)
+@freeze.register(set)
 def freeze_set(obj):
     return frozenset(freeze(v) for v in obj)
+
+
+@singledispatch
+def unfreeze(obj):
+    return obj
+
+
+@unfreeze.register(frozendict)
+def unfreeze_frozendict(obj):
+    return {k: unfreeze(v) for k, v in obj.items()}
+
+
+@unfreeze.register(frozenlist)
+def unfreeze_frozenlist(obj):
+    return [unfreeze(x) for x in obj]
+
+
+@unfreeze.register(frozenset)
+def unfreeze_frozenset(obj):
+    return {unfreeze(x) for x in obj}
 
 
 def anyof(*what):
