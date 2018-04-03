@@ -1,3 +1,13 @@
+1.4.0
++++++
+
+* Order integer facts keys after making a copy.
+* as_dict method for Fact.
+* freeze and unfreeze method documentation.
+* unfreeze method in pyknow.utils.
+* Zebra example from Clips.
+
+
 1.3.0
 +++++
 
