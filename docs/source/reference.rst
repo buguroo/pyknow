@@ -468,3 +468,82 @@ can use numeric indexes as needed.
    >>> @Rule(Ship(data__enemies__0__name="Destroyer"))
    ... def next_enemy_is_destroyer(self):
    ...     print("Bye byee!")
+
+
+Mutable objects
+---------------
+
+PyKnow's matching algorithm depends on the values of the declared facts being
+immutable.
+
+When a `Fact` gets declared, all its values are transformed to an immutable
+type if they are not. For this matter the method `pyknow.utils.freeze` is used
+internally.
+
+
+.. code-block:: python
+
+   >>> class MutableTest(KnowledgeEngine):
+   ...     @Rule(Fact(v1=MATCH.v1, v2=MATCH.v2, v3=MATCH.v3))
+   ...     def is_immutable(self, v1, v2, v3):
+   ...         print(type(v1), "is Immutable!")
+   ...         print(type(v2), "is Immutable!")
+   ...         print(type(v3), "is Immutable!")
+   ...
+   >>> ke = MutableTest()
+   >>> ke.reset()
+   >>> ke.declare(Fact(v1={"a": 1, "b": 2}, v2=[1, 2, 3], v3={1, 2, 3}))
+   >>> ke.run()
+   frozendict is Immutable
+   frozenlist is Immutable
+   frozenset is Immutable
+   >>>
+
+
+.. note::
+
+   You can import `frozendict` and `frozenlist` from `pyknow.utils` module.
+   However `frozenset` is a Python built-in type.
+
+
+Register your own mutable freezer
++++++++++++++++++++++++++++++++++
+
+If you need to include your own custom mutable types as fact values you have to
+register a specialized type freezer for your custom type.
+
+.. code-block:: python
+
+   >>> from pyknow.utils import freeze
+   >>> @freeze.register(MyType)
+   ... def freeze_mytype(obj):
+   ...     return ... # My frozen version of my type
+
+
+Unfreeze frozen objects
++++++++++++++++++++++++
+
+To easily unfreeze the frozen objects `pyknow.utils` contains an `unfreeze` method.
+
+.. code-block:: python
+
+   >>> class MutableTest(KnowledgeEngine):
+   ...     @Rule(Fact(v1=MATCH.v1, v2=MATCH.v2, v3=MATCH.v3))
+   ...     def is_immutable(self, v1, v2, v3):
+   ...         print(type(unfreeze(v1)), "is Mutable!")
+   ...         print(type(unfreeze(v2)), "is Mutable!")
+   ...         print(type(unfreeze(v3)), "is Mutable!")
+   ...
+   >>> ke = MutableTest()
+   >>> ke.reset()
+   >>> ke.declare(Fact(v1={"a": 1, "b": 2}, v2=[1, 2, 3], v3={1, 2, 3}))
+   >>> ke.run()
+   dict is Mutable
+   list is Mutable
+   set is Mutable
+   >>>
+
+.. note::
+
+   The same `freeze` registration procedure shown above also applies to
+   `unfreeze`.
