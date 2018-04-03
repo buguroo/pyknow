@@ -1,7 +1,7 @@
 from itertools import chain
 
 from pyknow.pattern import Bindable
-from pyknow.utils import freeze
+from pyknow.utils import freeze, unfreeze
 from pyknow.conditionalelement import OperableCE
 from pyknow.conditionalelement import ConditionalElement
 
@@ -21,6 +21,12 @@ class Fact(OperableCE, Bindable, dict):
     def update(self, mapping):
         for k, v in mapping.items():
             self[k] = v
+
+    def as_dict(self):
+        """Return a dictionary containing this `Fact` data."""
+        return {k: unfreeze(v)
+                for k, v in self.items()
+                if not self.is_special(k)}
 
     def copy(self):
         args = [v for k, v in self.items() if isinstance(k, int)]
