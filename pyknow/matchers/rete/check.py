@@ -12,7 +12,11 @@ from pyknow.watchers import MATCH
 
 
 CheckFunction = namedtuple('CheckFunction',
-                           ['key_a', 'key_b', 'expected', 'check'])
+                           ['key_a',
+                            'key_b',
+                            'multi',
+                            'expected',
+                            'check'])
 
 
 class TypeCheck(Check, namedtuple('_TypeCheck', ['fact_type'])):
@@ -60,7 +64,11 @@ class FactCapture(Check, namedtuple('_FactCapture', ['bind'])):
 
 class FeatureCheck(Check,
                    namedtuple('_FeatureCheck',
-                              ['what', 'how', 'check', 'expected'])):
+                              ['what',
+                               'how',
+                               'multi',
+                               'check',
+                               'expected'])):
 
     _instances = dict()
 
@@ -77,6 +85,7 @@ class FeatureCheck(Check,
                 cls,
                 what,
                 how,
+                check_function.multi,
                 check_function.check,
                 check_function.expected)
 
@@ -97,7 +106,13 @@ class FeatureCheck(Check,
                         return False
             else:
                 try:
-                    record = data[self.what]
+                    if self.multi:
+                        numidx = sorted(
+                            x for x in data.keys()
+                            if isinstance(x, int) and x >= self.what)
+                        record = tuple(data[k] for k in numidx)
+                    else:
+                        record = data[self.what]
                 except (IndexError, KeyError, TypeError):
                     return False
         else:
@@ -131,6 +146,7 @@ class FeatureCheck(Check,
 
         return CheckFunction(key_a=L,
                              key_b=(pce.value, pce.__bind__),
+                             multi=False,
                              expected=pce,
                              check=equal_literal)
 
@@ -151,6 +167,7 @@ class FeatureCheck(Check,
 
         return CheckFunction(key_a=P,
                              key_b=key_b,
+                             multi=False,
                              expected=pce,
                              check=match_predicate)
 
@@ -163,7 +180,8 @@ class FeatureCheck(Check,
                 return {expected.__bind__: actual}
 
         return CheckFunction(key_a=W,
-                             key_b=pce.__bind__,
+                             key_b=(pce.__bind__, pce.__multi__),
+                             multi=pce.__multi__,
                              expected=pce,
                              check=wildcard_match)
 
@@ -182,6 +200,7 @@ class FeatureCheck(Check,
 
         return CheckFunction(key_a=NOTFC,
                              key_b=key_b,
+                             multi=False,
                              expected=key_b,
                              check=not_equal)
 
@@ -210,6 +229,7 @@ class FeatureCheck(Check,
 
         return CheckFunction(key_a=ANDFC,
                              key_b=key_b,
+                             multi=False,
                              expected=key_b,
                              check=and_match)
 
@@ -227,6 +247,7 @@ class FeatureCheck(Check,
 
         return CheckFunction(key_a=ORFC,
                              key_b=key_b,
+                             multi=False,
                              expected=key_b,
                              check=or_match)
 

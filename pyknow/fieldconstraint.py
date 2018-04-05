@@ -63,13 +63,19 @@ class L(Bindable, FieldConstraint):
 
 class W(Bindable, FieldConstraint):
     """Wildcard Field Constraint"""
-    def __new__(cls, __bind__=None):
+    def __new__(cls, __bind__=None, __multi__=False):
         obj = super(W, cls).__new__(cls)
         obj.__bind__ = __bind__
+        obj.__multi__ = __multi__
         return obj
 
     def __repr__(self):  # pragma: no cover
-        return "W()" if self.__bind__ is None else "W(%r)" % self.__bind__
+        sign = "+" if self.__multi__ else ""
+        body = ("W(%r)" % self.__bind__ if self.__bind__ else "W()")
+        return sign + body
+
+    def __pos__(self):
+        return W(__bind__=self.__bind__, __multi__=True)
 
 
 class P(Bindable, FieldConstraint):

@@ -11,7 +11,7 @@ class _MATCH:
     MATCH.something
     """
     def __getattr__(self, name):
-        return (name << W())
+        return name << W()
 
 
 MATCH = _MATCH()
