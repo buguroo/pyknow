@@ -196,3 +196,83 @@ def test_Rule_can_decorate_method_with_mixed_args():
     obj.mymethod('x', 'y', a='a')
 
     assert called
+
+
+def test_Rule_method_can_skip_captured_values():
+    from pyknow import KnowledgeEngine, Fact, Rule, AS, MATCH
+
+    called = False
+
+    class TestRule(KnowledgeEngine):
+        @Rule(AS.fact << Fact(MATCH.value))
+        def myrule(self):
+            nonlocal called
+            called = True
+
+    obj = TestRule()
+    obj.reset()
+    obj.declare(Fact("SOMETHING"))
+    obj.run()
+
+    assert called
+
+
+def test_Rule_method_receive_partial_captured_values():
+    from pyknow import KnowledgeEngine, Fact, Rule, MATCH
+
+    called = False
+
+    class TestRule(KnowledgeEngine):
+        @Rule(Fact(MATCH.value1, MATCH.value2))
+        def myrule(self, value1):
+            assert value1 == "SOMETHING1"
+            nonlocal called
+            called = True
+
+    obj = TestRule()
+    obj.reset()
+    obj.declare(Fact("SOMETHING1", "SOMETHING2"))
+    obj.run()
+
+    assert called
+
+
+def test_Rule_method_receive_partial_captured_optional_values():
+    from pyknow import KnowledgeEngine, Fact, Rule, MATCH
+
+    called = False
+
+    class TestRule(KnowledgeEngine):
+        @Rule(Fact(MATCH.value1, MATCH.value2))
+        def myrule(self, value1=None):
+            assert value1 == "SOMETHING1"
+            nonlocal called
+            called = True
+
+    obj = TestRule()
+    obj.reset()
+    obj.declare(Fact("SOMETHING1", "SOMETHING2"))
+    obj.run()
+
+    assert called
+
+
+def test_Rule_method_receive_non_named_values_in_kwargs():
+    from pyknow import KnowledgeEngine, Fact, Rule, MATCH
+
+    called = False
+
+    class TestRule(KnowledgeEngine):
+        @Rule(Fact(MATCH.value1, MATCH.value2))
+        def myrule(self, value1, **kws):
+            assert value1 == "SOMETHING1"
+            assert kws == {"value2": "SOMETHING2"}
+            nonlocal called
+            called = True
+
+    obj = TestRule()
+    obj.reset()
+    obj.declare(Fact("SOMETHING1", "SOMETHING2"))
+    obj.run()
+
+    assert called

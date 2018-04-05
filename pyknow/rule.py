@@ -1,5 +1,6 @@
 from collections.abc import Iterable
 from functools import update_wrapper
+import inspect
 
 from pyknow import watchers
 from pyknow.conditionalelement import ConditionalElement
@@ -24,6 +25,7 @@ class Rule(ConditionalElement):
         obj = super(Rule, cls).__new__(cls, *args)
 
         obj._wrapped = None
+        obj._wrapped_args = []
         obj._wrapped_self = None
         obj.salience = salience
 
@@ -68,11 +70,23 @@ class Rule(ConditionalElement):
                 raise AttributeError("Mandatory function not provided.")
             else:
                 self._wrapped = args[0]
+
+                signature = inspect.signature(self._wrapped)
+                if not any(p.kind == inspect.Parameter.VAR_KEYWORD
+                           for p in signature.parameters.values()):
+                    # There is not **kwargs defined. Pass only the defined
+                    # names.
+                    self._wrapped_args = set(signature.parameters.keys())
+
                 return update_wrapper(self, self._wrapped)
-        elif self._wrapped_self is None:
-            return self._wrapped(*args, **kwargs)
         else:
-            return self._wrapped(self._wrapped_self, *args, **kwargs)
+            if self._wrapped_args:
+                kwargs = {k: v for k, v in kwargs.items()
+                          if k in self._wrapped_args}
+            if self._wrapped_self is None:
+                return self._wrapped(*args, **kwargs)
+            else:
+                return self._wrapped(self._wrapped_self, *args, **kwargs)
 
     def __repr__(self):  # pragma: no cover
         return "%s => %r" % (super().__repr__(), self._wrapped)

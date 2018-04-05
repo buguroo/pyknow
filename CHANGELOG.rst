@@ -1,3 +1,12 @@
+1.5.0
++++++
+
+* Added Python version 3.7 to tox.ini.
+* Monkey and bananas example.
+* Fixed bug, numeric index args gets repeated in a weird way introduced in `1.4.0`.
+* Pass only the defined args in absence of kwargs.
+
+
 1.4.0
 +++++
 
