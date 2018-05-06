@@ -1,35 +1,30 @@
-from collections import defaultdict, deque
-from itertools import chain
-import operator as op
+from functools import lru_cache
+import bisect
 
 from pyknow.abstract import Strategy
 
 
-def listdict():
-    """ Defaultdict of a list """
-    return defaultdict(deque)
-
-
 class DepthStrategy(Strategy):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    @lru_cache()
+    def get_key(self, activation):
+        salience = activation.rule.salience
+        facts = sorted((f['__factid__'] for f in activation.facts),
+                       reverse=True)
+        return (salience, facts)
 
     def _update_agenda(self, agenda, added, removed):
-        activations = list(agenda.activations)
-        activations.extend(added)
+        for act in added:
+            act.key = self.get_key(act)
+            bisect.insort_left(agenda.activations, act)
 
         for act in removed:
             try:
-                activations.remove(act)
-            except ValueError:
+                act.key = self.get_key(act)
+                idx = bisect.bisect_left(agenda.activations, act)
+                if agenda.activations[idx] == act:
+                    del agenda.activations[idx]
+                elif agenda.activations[idx + 1] == act:
+                    del agenda.activations[idx + 1]
+            except IndexError:
                 # Already executed rule.
                 pass
-
-        sorted_activations = sorted(
-            enumerate(activations),
-            key=lambda x: (x[1].rule.salience,
-                           sorted((f['__factid__'] for f in x[1].facts),
-                                  reverse=True)),
-            reverse=True)
-
-        return (act for _, act in sorted_activations)

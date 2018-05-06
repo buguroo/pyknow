@@ -2,13 +2,10 @@
 Activations represent rules that matches against a specific factlist.
 
 """
-from functools import lru_cache
-from collections.abc import Iterable
-
-from pyknow.rule import Rule
-from pyknow.fact import Fact
+from functools import total_ordering
 
 
+@total_ordering
 class Activation:
     """
     Activation object
@@ -16,6 +13,7 @@ class Activation:
     def __init__(self, rule, facts, context=None):
         self.rule = rule
         self.facts = set(facts)
+        self.key = None
         if context is None:
             self.context = dict()
         else:
@@ -29,9 +27,13 @@ class Activation:
         try:
             return (self.context == other.context
                     and self.facts == other.facts
-                    and self.rule == other.rule)
+                    and self.rule == other.rule
+                    and self.key == other.key)
         except AttributeError:
             return False
+
+    def __lt__(self, other):
+        return self.key < other.key
 
     def __hash__(self):
         return hash((self.rule,

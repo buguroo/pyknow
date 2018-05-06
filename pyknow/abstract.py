@@ -50,7 +50,4 @@ class Strategy(metaclass=abc.ABCMeta):
                     getattr(act.rule, '__name__', None),
                     ", ".join(str(f) for f in act.facts))
 
-        # Resolve conflicts using the appropiate strategy.
-        new_activations = deque(self._update_agenda(agenda, added, removed))
-        if new_activations != agenda.activations:
-            agenda.activations = new_activations
+        self._update_agenda(agenda, added, removed)

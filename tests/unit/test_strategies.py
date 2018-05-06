@@ -118,12 +118,11 @@ def test_DepthStrategy_update_agenda_assertion_order_affects_agenda_order_1():
 
     st = DepthStrategy()
 
-    oldact = a.activations
     st.update_agenda(a, first, [])
-    assert list(a.activations) == list(reversed(first))
+    assert a.activations == first
 
     st.update_agenda(a, second, first)
-    assert list(a.activations) == list(reversed(second))
+    assert a.activations == second
 
 
 def test_DepthStrategy_update_agenda_asertion_order_affects_agenda_order_2():
@@ -161,10 +160,56 @@ def test_DepthStrategy_update_agenda_asertion_order_affects_agenda_order_2():
     st = DepthStrategy()
 
     st.update_agenda(a, second, [])
-    assert list(a.activations) == list(reversed(second))
+    assert a.activations == second
 
     st.update_agenda(a, first, second)
-    assert list(a.activations) == list(reversed(first))
+    assert a.activations == first
+
+
+def test_DepthStrategy_update_agenda_asertion_order_affects_agenda_order_3():
+    """
+
+    From Clips docs on Depth Strategy::
+
+      Newly activated rules are placed above all rules of the same salience.
+      For example, given that facta activates rule1 and rule2 and factb
+      activates rule3 and rule4, then if facta is asserted before factb, rule3
+      and rule4 will be above rule1 and rule2 on the agenda. However, the
+      position of rule1 relative to rule2 and rule3 relative to rule4 will be
+      arbitrary.
+
+    """
+    from pyknow.strategies import DepthStrategy
+    from pyknow.activation import Activation
+    from pyknow import Rule
+    from pyknow.agenda import Agenda
+    from pyknow import Fact
+    from pyknow.factlist import FactList
+
+    fl = FactList()
+
+    f1 = Fact(1)
+    fl.declare(f1)
+
+    f2 = Fact(2)
+    fl.declare(f2)
+
+    act1 = Activation(rule=Rule(), facts=(f1, ))
+    act2 = Activation(rule=Rule(), facts=(f1, ))
+    act3 = Activation(rule=Rule(), facts=(f2, ))
+    act4 = Activation(rule=Rule(), facts=(f2, ))
+
+    a = Agenda()
+
+    st = DepthStrategy()
+
+    st.update_agenda(a, [act1, act2, act3, act4], [])
+    order = list(a.activations)
+
+    assert (order.index(act4) > order.index(act1)
+            and order.index(act4) > order.index(act2))
+    assert (order.index(act3) > order.index(act1)
+            and order.index(act3) > order.index(act2))
 
 
 def test_DepthStrategy_update_agenda_different_salience():
@@ -207,6 +252,6 @@ def test_DepthStrategy_update_agenda_different_salience():
 
     order = list(a.activations)
     assert (order.index(act4)
-            < order.index(act3)
-            < order.index(act2)
-            < order.index(act1))
+            > order.index(act3)
+            > order.index(act2)
+            > order.index(act1))
