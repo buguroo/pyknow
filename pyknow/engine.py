@@ -140,12 +140,13 @@ class KnowledgeEngine:
             added, removed = self.get_activations()
             self.strategy.update_agenda(self.agenda, added, removed)
 
-            for idx, act in enumerate(self.agenda.activations):
-                watchers.AGENDA.debug(
-                    "%d: %r %r",
-                    idx,
-                    act.rule.__name__,
-                    ", ".join(str(f) for f in act.facts))
+            if watchers.ACTIVATIONS.level <= logging.DEBUG:
+                for idx, act in enumerate(self.agenda.activations):
+                    watchers.AGENDA.debug(
+                        "%d: %r %r",
+                        idx,
+                        act.rule.__name__,
+                        ", ".join(str(f) for f in act.facts))
 
             activation = self.agenda.get_next()
 
