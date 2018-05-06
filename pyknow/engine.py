@@ -141,7 +141,7 @@ class KnowledgeEngine:
             added, removed = self.get_activations()
             self.strategy.update_agenda(self.agenda, added, removed)
 
-            if logging.NOTSET < watchers.ACTIVATIONS.level <= logging.DEBUG:
+            if logging.NOTSET < watchers.AGENDA.level <= logging.DEBUG:
                 for idx, act in enumerate(self.agenda.activations):
                     watchers.AGENDA.debug(
                         "%d: %r %r",
