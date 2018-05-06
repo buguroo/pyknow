@@ -4,6 +4,7 @@
 """
 
 from inspect import getmembers
+from itertools import chain
 import logging
 import warnings
 
@@ -187,10 +188,9 @@ class KnowledgeEngine:
 
         self.matcher.reset()
 
-        # Declare all deffacts
-        for deffact in self.get_deffacts():
-            for fact in deffact():
-                self.__declare(fact)
+        # Declare all facts yielded by deffacts
+        self.__declare(
+            *chain.from_iterable(df() for df in self.get_deffacts()))
 
         self.running = False
 
