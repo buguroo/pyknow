@@ -1,6 +1,7 @@
 """Abstract base classes for the RETE implementation."""
 import abc
-from pyknow.watchers import MATCHER
+
+from pyknow import watchers
 
 
 class Node(metaclass=abc.ABCMeta):
@@ -18,7 +19,7 @@ class Node(metaclass=abc.ABCMeta):
 
     def reset(self):
         """Reset itself and recursively all its children."""
-        MATCHER.debug("Node <%s> reset", self)
+        watchers.MATCHER.debug("Node <%s> reset", self)
         self._reset()
         for child in self.children:
             child.node.reset()
@@ -37,7 +38,11 @@ class OneInputNode(Node):
 
     def activate(self, token):
         """Make a copy of the received token and call `self._activate`."""
-        MATCHER.debug("Node <%s> activated with token %r", self, token)
+
+        if watchers.worth('MATCHER', 'DEBUG'):  # pragma: no cover
+            watchers.MATCHER.debug(
+                "Node <%s> activated with token %r", self, token)
+
         return self._activate(token.copy())
 
     @abc.abstractproperty
@@ -51,7 +56,8 @@ class TwoInputNode(Node):
 
     def activate_left(self, token):
         """Make a copy of the received token and call `_activate_left`."""
-        MATCHER.debug("Node <%s> activated left with token %r", self, token)
+        watchers.MATCHER.debug(
+            "Node <%s> activated left with token %r", self, token)
         return self._activate_left(token.copy())
 
     @abc.abstractproperty
@@ -61,7 +67,8 @@ class TwoInputNode(Node):
 
     def activate_right(self, token):
         """Make a copy of the received token and call `_activate_right`."""
-        MATCHER.debug("Node <%s> activated right with token %r", self, token)
+        watchers.MATCHER.debug(
+            "Node <%s> activated right with token %r", self, token)
         return self._activate_right(token.copy())
 
     @abc.abstractproperty

@@ -19,6 +19,13 @@ def define_watcher(name):
     return logging.getLogger('.'.join((__name__, name)))
 
 
+def worth(what, level_name):
+    """Returns `True` if the watcher `what` would log under `level_name`."""
+    return (logging.NOTSET
+            < globals()[what].level
+            <= getattr(logging, level_name))
+
+
 def watch(*what, level=logging.DEBUG):
     """
     Enable watchers.

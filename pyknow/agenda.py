@@ -1,6 +1,3 @@
-from collections import deque
-
-
 class Agenda:
     """
 
@@ -12,19 +9,20 @@ class Agenda:
 
     """
     def __init__(self):
-        self.activations = deque()
+        # Ordered list of activations, rightmost activation is the next to run.
+        self.activations = list()
 
     def __repr__(self):  # pragma: no cover
         return "\n".join(
             "{idx}: {rule} {facts}".format(idx=idx,
-                                           rule=act.rule.__name__,
-                                           facts=act.facts)
+                                           rule=act.activation.rule.__name__,
+                                           facts=act.activation.facts)
             for idx, act in enumerate(self.activations))
 
     def get_next(self):
         """Returns the next activation, removes it from activations list."""
 
         try:
-            return self.activations.popleft()
+            return self.activations.pop()
         except IndexError:
             return None
