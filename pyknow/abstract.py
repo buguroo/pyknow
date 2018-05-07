@@ -36,7 +36,7 @@ class Strategy(metaclass=abc.ABCMeta):
         pass
 
     def update_agenda(self, agenda, added, removed):
-        if logging.NOTSET < watchers.ACTIVATIONS.level <= logging.INFO:
+        if watchers.worth('ACTIVATIONS', 'INFO'):  # pragma: no cover
             for act in removed:
                 watchers.ACTIVATIONS.info(
                     " <== %r: %s %s",
