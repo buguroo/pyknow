@@ -250,14 +250,14 @@ class ConflictSetNode(mixins.AnyChild,
         else:
             self.rule = rule
 
-        self.added = list()
-        self.removed = list()
+        self.added = set()
+        self.removed = set()
 
         super().__init__()
 
     def _reset(self):
         """Wipe the node internal memory."""
-        self.memory = list()
+        self.memory = set()
 
     def _activate(self, token):
         """Activate this node for the given token."""
@@ -271,11 +271,11 @@ class ConflictSetNode(mixins.AnyChild,
 
         if token.is_valid():
             if info not in self.memory:
-                self.memory.append(info)
+                self.memory.add(info)
                 if activation in self.removed:
                     self.removed.remove(activation)
                 else:
-                    self.added.append(activation)
+                    self.added.add(activation)
         else:
             try:
                 self.memory.remove(info)
@@ -285,14 +285,14 @@ class ConflictSetNode(mixins.AnyChild,
                 if activation in self.added:
                     self.added.remove(activation)
                 else:
-                    self.removed.append(activation)
+                    self.removed.add(activation)
 
     def get_activations(self):
         """Return a list of activations."""
         res = (self.added, self.removed)
 
-        self.added = list()
-        self.removed = list()
+        self.added = set()
+        self.removed = set()
 
         return res
 

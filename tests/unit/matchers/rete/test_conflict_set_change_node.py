@@ -59,7 +59,7 @@ def test_conflictsetchange_invalid_removes_from_memory():
     f = Fact(test='data')
     f.__factid__ = 1
 
-    csn.memory.append(TokenInfo([f], {'mycontextdata': 'data'}))
+    csn.memory.add(TokenInfo([f], {'mycontextdata': 'data'}))
 
     csn.activate(Token.invalid(f, {'mycontextdata': 'data'}))
 

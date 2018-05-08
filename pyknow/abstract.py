@@ -36,7 +36,7 @@ class Strategy(metaclass=abc.ABCMeta):
         pass
 
     def update_agenda(self, agenda, added, removed):
-        if watchers.ACTIVATIONS.level <= logging.INFO:
+        if watchers.worth('ACTIVATIONS', 'INFO'):  # pragma: no cover
             for act in removed:
                 watchers.ACTIVATIONS.info(
                     " <== %r: %s %s",
@@ -50,7 +50,4 @@ class Strategy(metaclass=abc.ABCMeta):
                     getattr(act.rule, '__name__', None),
                     ", ".join(str(f) for f in act.facts))
 
-        # Resolve conflicts using the appropiate strategy.
-        new_activations = deque(self._update_agenda(agenda, added, removed))
-        if new_activations != agenda.activations:
-            agenda.activations = new_activations
+        self._update_agenda(agenda, added, removed)

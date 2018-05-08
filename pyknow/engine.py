@@ -4,6 +4,7 @@
 """
 
 from inspect import getmembers
+from itertools import chain
 import logging
 import warnings
 
@@ -140,12 +141,13 @@ class KnowledgeEngine:
             added, removed = self.get_activations()
             self.strategy.update_agenda(self.agenda, added, removed)
 
-            for idx, act in enumerate(self.agenda.activations):
-                watchers.AGENDA.debug(
-                    "%d: %r %r",
-                    idx,
-                    act.rule.__name__,
-                    ", ".join(str(f) for f in act.facts))
+            if watchers.worth('AGENDA', 'DEBUG'):  # pragma: no cover
+                for idx, act in enumerate(self.agenda.activations):
+                    watchers.AGENDA.debug(
+                        "%d: %r %r",
+                        idx,
+                        act.rule.__name__,
+                        ", ".join(str(f) for f in act.facts))
 
             activation = self.agenda.get_next()
 
@@ -186,10 +188,9 @@ class KnowledgeEngine:
 
         self.matcher.reset()
 
-        # Declare all deffacts
-        for deffact in self.get_deffacts():
-            for fact in deffact():
-                self.__declare(fact)
+        # Declare all facts yielded by deffacts
+        self.__declare(
+            *chain.from_iterable(df() for df in self.get_deffacts()))
 
         self.running = False
 

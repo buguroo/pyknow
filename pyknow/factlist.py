@@ -68,8 +68,7 @@ class FactList(OrderedDict):
 
         fact_id = self._get_fact_id(fact)
 
-        if (self.duplication
-                or fact_id not in self.reference_counter.elements()):
+        if self.duplication or fact_id not in self.reference_counter:
             # Assign the ID to the fact
             idx = self.last_index
             fact.__factid__ = idx
@@ -113,6 +112,8 @@ class FactList(OrderedDict):
         # Decrement value reference counter
         fact_id = self._get_fact_id(fact)
         self.reference_counter[fact_id] -= 1
+        if self.reference_counter[fact_id] == 0:
+            self.reference_counter.pop(fact_id)
 
         watchers.FACTS.info(" <== %s: %r", fact, fact)
         self.removed.append(fact)

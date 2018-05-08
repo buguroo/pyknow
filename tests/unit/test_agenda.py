@@ -9,7 +9,6 @@ def test_agenda_has_activations():
     from pyknow.agenda import Agenda
     from collections import deque
     assert hasattr(Agenda(), "activations")
-    assert isinstance(Agenda().activations, deque)
 
 
 def test_agenda_get_next():
