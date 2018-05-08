@@ -1,3 +1,9 @@
+1.6.0
++++++
+
+* Improved overall performance.
+
+
 1.5.0
 +++++
 
