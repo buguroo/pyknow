@@ -83,6 +83,19 @@ Let's enumerate some facts about `Facts`, so... metafacts ;)
           def save_to_db(self):
               return DjangoUser.create(**self)
 
+#. `Fact` fields can be validated automatically for you if you define them
+   using `Field`. `Field` uses the Schema_ library internally for data
+   validation.
+
+   .. code-block:: python
+
+      class User(Fact):
+          uid = Field(int, mandatory=True)
+          username = Field(str, mandatory=True)
+          password = Field(str, mandatory=True)
+          description = Field(str)
+
+
 
 Rules
 -----
@@ -364,3 +377,6 @@ Both are used to declare facts on the engine instance, but:
 * Generators declared with `DefFacts` are called by the **reset**
   method, and all the yielded facts they are added to the working
   memory using `declare`.
+
+
+.. _Schema: https://github.com/keleshev/schema
