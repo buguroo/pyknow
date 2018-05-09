@@ -1,4 +1,5 @@
 from itertools import chain
+from functools import lru_cache
 import abc
 import collections
 
@@ -27,7 +28,7 @@ class Field(BaseField):
         self.default = default
 
     def validate(self, data):
-        self.validator.validate(data)
+        self.validator.validate(unfreeze(data))
 
 
 class Validable(type):
@@ -45,15 +46,20 @@ class Fact(OperableCE, Bindable, dict, metaclass=Validable):
     """Base Fact class"""
 
     def __init__(self, *args, **kwargs):
-        for name, field in self.__fields__.items():
-            if (field.default is not Field.NODEFAULT
-                    and name not in kwargs):
-                if isinstance(field.default, collections.abc.Callable):
-                    kwargs[name] = field.default()
-                else:
-                    kwargs[name] = field.default
-
         self.update(dict(chain(enumerate(args), kwargs.items())))
+
+    @lru_cache()
+    def __missing__(self, key):
+        if key not in self.__fields__:
+            raise KeyError(key)
+        else:
+            default = self.__fields__[key].default
+            if default is Field.NODEFAULT:
+                raise KeyError(key)
+            elif isinstance(default, collections.abc.Callable):
+                return default()
+            else:
+                return default
 
     def __setitem__(self, key, value):
         if self.__factid__ is None:
@@ -68,9 +74,12 @@ class Fact(OperableCE, Bindable, dict, metaclass=Validable):
                     field.validate(self[name])
                 except Exception as exc:
                     raise ValueError(
-                        "Invalid value %r on field %r" % (self[name], name))
+                        "Invalid value on field %r for fact %r"
+                        % (name, self))
             elif field.mandatory:
-                raise ValueError("Mandatory slot %r is not defined" % name)
+                raise ValueError(
+                    "Mandatory field %r is not defined for fact %r"
+                    % (name, self))
             else:
                 pass
 
