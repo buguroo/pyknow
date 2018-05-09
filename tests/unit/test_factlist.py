@@ -2,6 +2,7 @@
 Factlist related tests
 """
 # pylint: disable=invalid-name
+import pytest
 
 
 def test_factlist_is_ordereddict():
@@ -72,3 +73,17 @@ def test_factlist_changes():
 
     flist.retract(f1)
     assert flist.changes[1] == [f1]
+
+
+def test_factlist_raises_valueerror_on_invalid_fact():
+    from pyknow.factlist import FactList
+    from pyknow import Fact, Field
+
+    class MockFact(Fact):
+        must_be_string = Field(str, mandatory=True)
+
+    flist = FactList()
+    f0 = MockFact(must_be_string=0)
+
+    with pytest.raises(ValueError):
+        flist.declare(f0)

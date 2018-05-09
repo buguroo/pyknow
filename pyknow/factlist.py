@@ -66,6 +66,9 @@ class FactList(OrderedDict):
         if not isinstance(fact, Fact):
             raise ValueError('The fact must descend the Fact class.')
 
+        # Validate fact, will raise on validation error.
+        fact.validate()
+
         fact_id = self._get_fact_id(fact)
 
         if self.duplication or fact_id not in self.reference_counter:

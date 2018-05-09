@@ -1,4 +1,9 @@
 from itertools import chain
+from functools import lru_cache
+import abc
+import collections
+
+from schema import Schema
 
 from pyknow.pattern import Bindable
 from pyknow.utils import freeze, unfreeze
@@ -6,17 +11,77 @@ from pyknow.conditionalelement import OperableCE
 from pyknow.conditionalelement import ConditionalElement
 
 
-class Fact(OperableCE, Bindable, dict):
+class BaseField(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def validate(self, data):
+        """Raise an exception on invalid data."""
+        pass
+
+
+class Field(BaseField):
+
+    NODEFAULT = object()
+
+    def __init__(self, schema_definition, mandatory=False, default=NODEFAULT):
+        self.validator = Schema(schema_definition)
+        self.mandatory = mandatory
+        self.default = default
+
+    def validate(self, data):
+        self.validator.validate(unfreeze(data))
+
+
+class Validable(type):
+    def __new__(mcl, name, bases, nmspc):
+
+        # Register fields
+        nmspc["__fields__"] = {k: v
+                               for k, v in nmspc.items()
+                               if isinstance(v, BaseField)}
+
+        return super(Validable, mcl).__new__(mcl, name, bases, nmspc)
+
+
+class Fact(OperableCE, Bindable, dict, metaclass=Validable):
     """Base Fact class"""
 
     def __init__(self, *args, **kwargs):
         self.update(dict(chain(enumerate(args), kwargs.items())))
+
+    @lru_cache()
+    def __missing__(self, key):
+        if key not in self.__fields__:
+            raise KeyError(key)
+        else:
+            default = self.__fields__[key].default
+            if default is Field.NODEFAULT:
+                raise KeyError(key)
+            elif isinstance(default, collections.abc.Callable):
+                return default()
+            else:
+                return default
 
     def __setitem__(self, key, value):
         if self.__factid__ is None:
             super().__setitem__(key, freeze(value))
         else:
             raise RuntimeError("A fact can't be modified after declaration.")
+
+    def validate(self):
+        for name, field in self.__fields__.items():
+            if name in self:
+                try:
+                    field.validate(self[name])
+                except Exception as exc:
+                    raise ValueError(
+                        "Invalid value on field %r for fact %r"
+                        % (name, self))
+            elif field.mandatory:
+                raise ValueError(
+                    "Mandatory field %r is not defined for fact %r"
+                    % (name, self))
+            else:
+                pass
 
     def update(self, mapping):
         for k, v in mapping.items():
