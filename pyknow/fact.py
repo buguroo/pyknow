@@ -1,4 +1,5 @@
 from itertools import chain
+import abc
 
 from schema import Schema
 
@@ -8,9 +9,11 @@ from pyknow.conditionalelement import OperableCE
 from pyknow.conditionalelement import ConditionalElement
 
 
-class BaseField:
+class BaseField(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
     def validate(self, data):
-        raise NotImplementedError
+        """Raise an exception on invalid data."""
+        pass
 
 
 class Field(BaseField):
