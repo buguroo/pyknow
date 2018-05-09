@@ -1,6 +1,6 @@
 import pytest
 
-from pyknow.fact import Fact
+from pyknow.fact import Fact, Field
 from pyknow.engine import KnowledgeEngine
 
 
@@ -44,3 +44,57 @@ def test_double_underscore_raise_on_declare():
 
     with pytest.raises(KeyError):
         ke.declare(Fact(key__with__double__underscores=True))
+
+
+def test_fields_got_registered_in_fact():
+
+    class MockFact(Fact):
+        myfield = Field(int)
+        somethingelse = int
+
+    f1 = MockFact()
+
+    assert "myfield" in f1.__fields__
+    assert "somethingelse" not in f1.__fields__
+
+
+def test_field_with_default_returns_default_value():
+
+    class MockFact(Fact):
+        myfield = Field(int, default=0)
+
+    f1 = MockFact()
+
+    assert f1["myfield"] == 0
+
+
+def test_validate_returns_none_on_validation_success():
+
+    class MockFact(Fact):
+        myfield = Field(int)
+
+    f1 = MockFact(myfield=0)
+
+    assert f1.validate() is None
+
+
+def test_validate_raise_valueerror_on_validation_error():
+
+    class MockFact(Fact):
+        myfield = Field(int)
+
+    f1 = MockFact(myfield="A")
+
+    with pytest.raises(ValueError):
+        f1.validate()
+
+
+def test_validate_raise_valueerror_on_missing_field():
+
+    class MockFact(Fact):
+        myfield = Field(int, mandatory=True)
+
+    f1 = MockFact()
+
+    with pytest.raises(ValueError):
+        f1.validate()
