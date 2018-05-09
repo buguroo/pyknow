@@ -6,7 +6,6 @@
 from inspect import getmembers
 from itertools import chain
 import logging
-import warnings
 
 from pyknow import abstract
 
@@ -225,5 +224,5 @@ class KnowledgeEngine:
         """
 
         if not self.facts:
-            warnings.warn("Declaring fact before reset()")
+            watchers.ENGINE.warning("Declaring fact before reset()")
         return self.__declare(*facts)
