@@ -68,6 +68,16 @@ def test_field_with_default_returns_default_value():
     assert f1["myfield"] == 0
 
 
+def test_field_with_default_calls_it_if_its_callable():
+
+    class MockFact(Fact):
+        myfield = Field(int, default=lambda: 0)
+
+    f1 = MockFact()
+
+    assert f1["myfield"] == 0
+
+
 def test_validate_returns_none_on_validation_success():
 
     class MockFact(Fact):

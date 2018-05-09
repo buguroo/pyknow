@@ -84,17 +84,17 @@ Let's enumerate some facts about `Facts`, so... metafacts ;)
               return DjangoUser.create(**self)
 
 #. `Fact` fields can be validated automatically for you if you define them
-   using `Field`. `Field` uses the Schema_ library internally for data
-   validation.
+   using `Field`. `Field` uses the Schema_ library internally for data validation.
+   Also, a field can be declared *mandatory* or have a *default*.
 
    .. code-block:: python
+      from uuid import uuid4
 
       class User(Fact):
-          uid = Field(int, mandatory=True)
+          uid = Field(int, default=uuid4)
           username = Field(str, mandatory=True)
           password = Field(str, mandatory=True)
-          description = Field(str)
-
+          description = Field(str, default="Just another user")
 
 
 Rules

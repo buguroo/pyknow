@@ -25,7 +25,7 @@ among them.
      "Rule" -> "CE" [label="contains"];
      "Rule" -> "Pattern" [label="contains"];
 
-     "Pattern" -> "Fact" [label="which is a special kind of"];
+     "Pattern" -> "Fact" [label="which is a special usage for"];
 
      "KnowledgeEngine" -> "Rule" [label="contains"];
      "Fact" -> "KnowledgeEngine" [label="declare"];

@@ -1,5 +1,6 @@
 from itertools import chain
 import abc
+import collections
 
 from schema import Schema
 
@@ -44,17 +45,15 @@ class Fact(OperableCE, Bindable, dict, metaclass=Validable):
     """Base Fact class"""
 
     def __init__(self, *args, **kwargs):
-        self.update(dict(chain(enumerate(args), kwargs.items())))
+        for name, field in self.__fields__.items():
+            if (field.default is not Field.NODEFAULT
+                    and name not in kwargs):
+                if isinstance(field.default, collections.abc.Callable):
+                    kwargs[name] = field.default()
+                else:
+                    kwargs[name] = field.default
 
-    def __missing__(self, key):
-        if key not in self.__fields__:
-            raise KeyError(key)
-        else:
-            default = self.__fields__[key].default
-            if default is Field.NODEFAULT:
-                raise KeyError(key)
-            else:
-                return default
+        self.update(dict(chain(enumerate(args), kwargs.items())))
 
     def __setitem__(self, key, value):
         if self.__factid__ is None:
