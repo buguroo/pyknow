@@ -3,8 +3,8 @@
 
 """
 
-from inspect import getmembers
 from itertools import chain
+import inspect
 import logging
 
 from pyknow import abstract
@@ -95,7 +95,7 @@ class KnowledgeEngine:
         yield InitialFact()
 
     def _get_by_type(self, wanted_type):
-        for _, obj in getmembers(self):
+        for _, obj in inspect.getmembers(self):
             if isinstance(obj, wanted_type):
                 obj.ke = self
                 yield obj
@@ -173,10 +173,13 @@ class KnowledgeEngine:
     def halt(self):
         self.running = False
 
-    def reset(self):
+    def reset(self, **kwargs):
         """
         Performs a reset as per CLIPS behaviour (resets the
         agenda and factlist and declares InitialFact())
+
+        Any keyword argument passed to `reset` will be passed to @DefFacts
+        which have those arguments on their signature.
 
         .. note:: If persistent facts have been added, they'll be
                   re-declared.
@@ -187,9 +190,22 @@ class KnowledgeEngine:
 
         self.matcher.reset()
 
+        deffacts = []
+        for deffact in self.get_deffacts():
+            signature = inspect.signature(deffact)
+            if not any(p.kind == inspect.Parameter.VAR_KEYWORD
+                       for p in signature.parameters.values()):
+                # There is not **kwargs defined. Pass only the defined
+                # names.
+                args = set(signature.parameters.keys())
+                deffacts.append(
+                    deffact(**{k: v for k, v in kwargs.items()
+                               if k in args}))
+            else:
+                deffacts.append(deffact(**kwargs))
+
         # Declare all facts yielded by deffacts
-        self.__declare(
-            *chain.from_iterable(df() for df in self.get_deffacts()))
+        self.__declare(*chain.from_iterable(deffacts))
 
         self.running = False
 
