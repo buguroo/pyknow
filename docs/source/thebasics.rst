@@ -212,6 +212,13 @@ method is called.
 
    The decorated method MUST be generators.
 
+   
+.. versionadded:: 1.7.0
+
+   The `reset()` method accepts any number of keyword parameters whose gets
+   passed to `DefFacts` decorated methods if those methods present the same
+   parameters.
+
 
 
 KnowledgeEngine
