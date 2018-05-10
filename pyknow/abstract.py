@@ -1,6 +1,4 @@
-from collections import deque
 import abc
-import logging
 
 from pyknow import watchers
 

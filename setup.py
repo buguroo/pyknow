@@ -10,7 +10,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(HERE, 'README.rst')).read()
 NEWS = open(os.path.join(HERE, 'TODO.rst')).read()
 
-VERSION = '1.6.0'
+VERSION = '1.7.0'
 
 setup(name='pyknow',
       version=VERSION,
@@ -31,5 +31,6 @@ setup(name='pyknow',
       include_package_data=True,
       zip_safe=False,
       install_requires=[
-        'frozendict==1.2'
+        'frozendict==1.2',
+        'schema==0.6.7'
       ])

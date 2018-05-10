@@ -59,5 +59,6 @@ FACTS = define_watcher('FACTS')
 AGENDA = define_watcher('AGENDA')
 MATCH = define_watcher('MATCH')
 MATCHER = define_watcher('MATCHER')
+ENGINE = define_watcher('ENGINE')
 
 ALL = tuple(k for k in globals() if k.isupper() and k != 'ALL')

@@ -5,13 +5,13 @@ from pyknow.utils import freeze, unfreeze, frozenlist, frozendict
 
 def test_freeze_hashable():
     test_frozenset = frozenset({1, 2, 3})
-    assert freeze(test_frozenset) is test_frozenset
+    assert freeze(test_frozenset) == test_frozenset
 
     test_tuple = (1, 2, 3)
-    assert freeze(test_tuple) is test_tuple
+    assert freeze(test_tuple) == test_tuple
 
     test_frozendict = frozendict({"a": 1, "b": 2})
-    assert freeze(test_frozendict) is test_frozendict
+    assert freeze(test_frozendict) == test_frozendict
 
 
 def test_freezedicts():

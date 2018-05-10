@@ -882,3 +882,77 @@ def test_duplicate_declare():
     assert f2 is not f1
     assert f2['color'] == 'yellow'
     assert f2['blink']
+
+
+def test_reset_kwargs_are_passed_to_deffacts_named():
+    from pyknow import KnowledgeEngine, DefFacts, Fact
+
+    passed = False
+
+    class KE(KnowledgeEngine):
+        @DefFacts()
+        def init(self, arg):
+            nonlocal passed
+            passed = arg
+            yield Fact()
+
+    ke = KE()
+    ke.reset(arg=True)
+    assert passed is True
+
+
+def test_reset_kwargs_are_passed_to_deffacts_kwargs():
+    from pyknow import KnowledgeEngine, DefFacts, Fact
+
+    passed = False
+
+    class KE(KnowledgeEngine):
+        @DefFacts()
+        def init(self, **kwargs):
+            nonlocal passed
+            passed = kwargs
+            yield Fact()
+
+    ke = KE()
+    ke.reset(arg=True)
+    assert passed == {"arg": True}
+
+
+def test_reset_kwargs_are_passed_to_deffacts_mixed():
+    from pyknow import KnowledgeEngine, DefFacts, Fact
+
+    passed = False
+
+    class KE(KnowledgeEngine):
+        @DefFacts()
+        def init(self, arg0, **kwargs):
+            nonlocal passed
+            passed = (arg0, kwargs)
+            yield Fact()
+
+    ke = KE()
+    ke.reset(arg0=0, arg1=1)
+    assert passed == (0, {"arg1": True})
+
+
+def test_reset_kwargs_are_passed_to_multiple_deffacts():
+    from pyknow import KnowledgeEngine, DefFacts, Fact
+
+    passed = set()
+
+    class KE(KnowledgeEngine):
+        @DefFacts()
+        def init0(self, arg0):
+            nonlocal passed
+            passed.add(arg0)
+            yield Fact()
+
+        @DefFacts()
+        def init1(self, arg1):
+            nonlocal passed
+            passed.add(arg1)
+            yield Fact()
+
+    ke = KE()
+    ke.reset(arg0=0, arg1=1)
+    assert passed == {0, 1}

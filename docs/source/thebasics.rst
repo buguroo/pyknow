@@ -83,6 +83,19 @@ Let's enumerate some facts about `Facts`, so... metafacts ;)
           def save_to_db(self):
               return DjangoUser.create(**self)
 
+#. `Fact` fields can be validated automatically for you if you define them
+   using `Field`. `Field` uses the Schema_ library internally for data validation.
+   Also, a field can be declared *mandatory* or have a *default*.
+
+   .. code-block:: python
+      from uuid import uuid4
+
+      class User(Fact):
+          uid = Field(int, default=uuid4)
+          username = Field(str, mandatory=True)
+          password = Field(str, mandatory=True)
+          description = Field(str, default="Just another user")
+
 
 Rules
 -----
@@ -198,6 +211,13 @@ method is called.
 .. note::
 
    The decorated method MUST be generators.
+
+   
+.. versionadded:: 1.7.0
+
+   The `reset()` method accepts any number of keyword parameters whose gets
+   passed to `DefFacts` decorated methods if those methods present the same
+   parameters.
 
 
 
@@ -333,13 +353,10 @@ some modifications.
    <f-2> Fact(color='yellow', blink=True)
 
 
-Cycle of execution: DefFacts, reset & run
-+++++++++++++++++++++++++++++++++++++++++
+Engine execution procedure
+++++++++++++++++++++++++++
 
-Because this topic is often a direct cause of misunderstanding, it
-deserves a special mention here, in the basics.
-
-For a KnowledgeEngine to run, this things must happen:
+This is the usual process to execute a `KnowledgeEngine`.
 
 #. The class must be instantiated, of course.
 
@@ -354,6 +371,30 @@ For a KnowledgeEngine to run, this things must happen:
 #. The **run** method must be called. This starts the cycle of execution.
 
 
+Cycle of execution
+++++++++++++++++++
+
+In a conventional programming style, the starting point, the stopping point,
+and the sequence of operations are defined explicitly by the programmer. With
+PyKnow, the program flow does not need to be defined quite so explicitly. The
+knowledge (`Rules`) and the data (`Facts`) are separated, and the
+`KnowledgeEngine` is used to apply the knowledge to the data.
+
+The basic execution cycle is as follows:
+
+#. If the rule firing limit has been reached the execution is halted.
+
+#. The top rule on the agenda is selected for execution. If there are no rules
+   on the agenda, the execution is halted.
+
+#. The RHS actions of the selected rule are executed (the method is called). As
+   a result, rules may be **activated** or **deactivated**. Activated rules (those
+   rules whose conditions are currently satisfied) are placed on the **agenda**.
+   The placement on the agenda is determined by the **salience** of the rule and
+   the current **conflict resolution strategy**. Deactivated rules are removed
+   from the agenda.
+
+
 Difference between `DefFacts` and `declare`
 +++++++++++++++++++++++++++++++++++++++++++
 
@@ -364,3 +405,6 @@ Both are used to declare facts on the engine instance, but:
 * Generators declared with `DefFacts` are called by the **reset**
   method, and all the yielded facts they are added to the working
   memory using `declare`.
+
+
+.. _Schema: https://github.com/keleshev/schema

@@ -1,3 +1,13 @@
+1.7.0
++++++
+
+* Implemented the template system.
+* Replaced warnings by watchers messages.
+* Fixed freeze() with frozen objects.
+* Fixed unfreeze() with unfrozen objects.
+* Parametrized DefFacts via reset() kwargs.
+
+
 1.6.0
 +++++
 
