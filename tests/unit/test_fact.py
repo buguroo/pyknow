@@ -108,3 +108,44 @@ def test_validate_raise_valueerror_on_missing_field():
 
     with pytest.raises(ValueError):
         f1.validate()
+
+
+def test_fields_are_not_present_in_class():
+    class MockFact(Fact):
+        myfield = Field(int)
+
+    assert not hasattr(MockFact, 'myfield')
+
+
+def test_fields_are_not_present_in_instance():
+    class MockFact(Fact):
+        myfield = Field(int)
+
+    obj = MockFact()
+
+    assert not hasattr(obj, 'myfield')
+
+
+def test_fields_are_inherited():
+    class MockFactBase(Fact):
+        mybasefield = Field(str, default="base")
+
+    class MockFact(MockFactBase):
+        myfield = Field(str, default="class")
+
+    obj = MockFact()
+    assert obj["myfield"] == "class"
+    assert obj["mybasefield"] == "base"
+
+
+def test_inherited_fields_can_be_overwritten():
+    class MockFactBase(Fact):
+        mybasefield = Field(str, default="base")
+
+    class MockFact(MockFactBase):
+        mybasefield = Field(str, default="notbase")
+        myfield = Field(str, default="class")
+
+    obj = MockFact()
+    assert obj["myfield"] == "class"
+    assert obj["mybasefield"] == "notbase"

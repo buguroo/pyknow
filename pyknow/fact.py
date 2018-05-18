@@ -35,11 +35,19 @@ class Validable(type):
     def __new__(mcl, name, bases, nmspc):
 
         # Register fields
-        nmspc["__fields__"] = {k: v
-                               for k, v in nmspc.items()
-                               if isinstance(v, BaseField)}
+        newnamespace = {"__fields__": dict()}
+        for base in bases:
+            if isinstance(base, Validable):
+                for key, value in base.__fields__.items():
+                    newnamespace["__fields__"][key] = value
 
-        return super(Validable, mcl).__new__(mcl, name, bases, nmspc)
+        for key, value in nmspc.items():
+            if isinstance(value, BaseField):
+                newnamespace["__fields__"][key] = value
+            else:
+                newnamespace[key] = value
+
+        return super(Validable, mcl).__new__(mcl, name, bases, newnamespace)
 
 
 class Fact(OperableCE, Bindable, dict, metaclass=Validable):
