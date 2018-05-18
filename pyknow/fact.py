@@ -55,8 +55,8 @@ class Fact(OperableCE, Bindable, dict, metaclass=Validable):
 
     def __init__(self, *args, **kwargs):
         self.update(dict(chain(enumerate(args), kwargs.items())))
+        self.__defaults = dict()
 
-    @lru_cache()
     def __missing__(self, key):
         if key not in self.__fields__:
             raise KeyError(key)
@@ -64,10 +64,12 @@ class Fact(OperableCE, Bindable, dict, metaclass=Validable):
             default = self.__fields__[key].default
             if default is Field.NODEFAULT:
                 raise KeyError(key)
+            elif key in self.__defaults:
+                return self.__defaults[key]
             elif isinstance(default, collections.abc.Callable):
-                return default()
+                return self.__defaults.setdefault(key, default())
             else:
-                return default
+                return self.__defaults.setdefault(key, default)
 
     def __setitem__(self, key, value):
         if self.__factid__ is None:

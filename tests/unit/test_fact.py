@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 import pytest
 
 from pyknow.fact import Fact, Field
@@ -149,3 +151,23 @@ def test_inherited_fields_can_be_overwritten():
     obj = MockFact()
     assert obj["myfield"] == "class"
     assert obj["mybasefield"] == "notbase"
+
+
+def test_fields_default_are_called_once_per_instance():
+    mymock = MagicMock(return_value="TEST")
+
+    class MockFact(Fact):
+        myfield = Field(str, default=mymock)
+
+    mymock.assert_not_called()
+
+    f1 = MockFact()
+    assert mymock.call_count == 0
+    assert f1["myfield"] == "TEST"
+    assert mymock.call_count == 1
+    f1["myfield"]
+    assert mymock.call_count == 1
+
+    f2 = MockFact()
+    assert f2["myfield"] == "TEST"
+    assert mymock.call_count == 2
